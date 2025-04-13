@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: geofilm
+      POSTGRES_USER: wolverine307
+      POSTGRES_PASSWORD: admin307204
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - geofilm_network
+
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - geofilm_network
+
+  app:
+    image: geofilm-app:latest
+    build: .
+    container_name: geofilm_app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/geofilm
+      SPRING_DATASOURCE_USERNAME: wolverine307
+      SPRING_DATASOURCE_PASSWORD: admin307204
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - geofilm_network
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: geofilm_frontend
+    ports:
+      - "5173:80"
+    networks:
+      - geofilm_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  geofilm_network:
