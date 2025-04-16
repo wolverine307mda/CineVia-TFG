@@ -647,6 +647,20 @@ export default {
   min-height: 600px;
   overflow: hidden;
   border-radius: 0 0 20px 20px;
+  mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 10%,
+      black 90%,
+      transparent 100%
+  );
 }
 
 .slider-track {
@@ -775,29 +789,7 @@ export default {
 /* Responsive */
 @media (max-width: 768px) {
   .hero-slider {
-    height: 70vh;
-    min-height: 500px;
-  }
-
-  .slide-title {
-    font-size: 2.2rem;
-  }
-
-  .slide-subtitle {
-    font-size: 1.2rem;
-  }
-
-  .slider-nav {
-    width: 40px;
-    height: 40px;
-  }
-
-  .prev {
-    left: 1rem;
-  }
-
-  .next {
-    right: 1rem;
+    display: none;
   }
 }
 
