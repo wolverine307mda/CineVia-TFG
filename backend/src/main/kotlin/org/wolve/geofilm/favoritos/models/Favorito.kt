@@ -1,12 +1,16 @@
 package org.wolve.geofilm.favoritos.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.wolve.geofilm.users.models.Usuario
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 
 @Entity
 @Table(name = "favoritos")
-data class Favorito(
+class Favorito(
+
     @Id
     @GeneratedValue
     val id: UUID = UUID.randomUUID(),
@@ -20,13 +24,31 @@ data class Favorito(
     val tipo: TipoFavorito,
 
     @Column(nullable = true)
-    val produccionId: UUID?,
+    val produccionId: UUID? = null,
 
     @Column(nullable = true)
-    val ubicacionId: UUID?,
+    val ubicacionId: UUID? = null,
 
     @Column(nullable = true)
-    val actorId: UUID?
-)
+    val actorId: UUID? = null,
 
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    val createdAt: LocalDateTime? = null,
 
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    val updatedAt: LocalDateTime? = null
+
+) {
+    constructor() : this(
+        id = UUID.randomUUID(),
+        usuario = Usuario(),
+        tipo = TipoFavorito.ACTOR,
+        produccionId = null,
+        ubicacionId = null,
+        actorId = null,
+        createdAt = null,
+        updatedAt = null
+    )
+}

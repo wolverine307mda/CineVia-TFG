@@ -22,6 +22,10 @@ data class Profesional(
     @Column(nullable = false)
     val fechaNacimiento: Date,
 
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = false, columnDefinition = "date default CURRENT_DATE")
+    val fechaInicio: Date,
+
     @Column(nullable = false)
     val lugarNacimiento: String,
 
@@ -35,6 +39,7 @@ data class Profesional(
         id = GuidGenerator().generarId(),
         nombre = "",
         fechaNacimiento = Date(),
+        fechaInicio = Date(),
         lugarNacimiento = "",
         biografia = ""
     )

@@ -1,8 +1,11 @@
 package org.wolve.geofilm.ubicaciones.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import org.wolve.geofilm.utils.GuidGenerator
 import org.wolve.geofilm.producciones.produccion.models.Produccion
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "ubicaciones")
@@ -22,7 +25,15 @@ data class Ubicacion(
 
     @ManyToOne
     @JoinColumn(name = "produccion_id", columnDefinition = "varchar(255)")
-    var produccion: Produccion? = null
+    var produccion: Produccion? = null,
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    val createdAt: LocalDateTime? = LocalDateTime.now(),
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    val updatedAt: LocalDateTime? = LocalDateTime.now()
 ) {
     constructor() : this(GuidGenerator().generarId(), "", 0.0, 0.0, null)
 }

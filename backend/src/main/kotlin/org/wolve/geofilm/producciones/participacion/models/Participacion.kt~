@@ -17,18 +17,18 @@ data class Participacion(
 
     @ManyToOne
     @JoinColumn(name = "produccion_id", nullable = false, columnDefinition = "varchar(255)")
-    var produccion: Produccion,
+    val produccion: Produccion,
 
     @ManyToOne
     @JoinColumn(name = "profesional_id", nullable = false, columnDefinition = "varchar(255)")
-    var profesional: Profesional,
+    val profesional: Profesional,
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var rol: RolParticipacion,
+    val rol: RolParticipacion,
 
     @Column(nullable = true)
-    var papel: String? = null,
+    val papel: String? = null,
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

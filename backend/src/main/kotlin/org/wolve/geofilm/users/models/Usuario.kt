@@ -21,13 +21,13 @@ data class Usuario(
     @Column(nullable = false)
     val nombre: String = "",
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     val apellido: String = "",
 
     @Column(nullable = false, unique = true)
     val email: String = "",
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     val telefono: String = "",
 
     @Column(nullable = false)
@@ -36,9 +36,6 @@ data class Usuario(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     val rol: RolUsuario = RolUsuario.USUARIO,
-
-    @Column(nullable = false)
-    val fechaRegistro: LocalDateTime = LocalDateTime.now(),
 
     @Column(nullable = true)
     val fechaNacimiento: LocalDateTime? = null,

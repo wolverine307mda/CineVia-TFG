@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     kotlin("plugin.noarg") version "1.9.25"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.9.0"
     id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
@@ -15,6 +16,12 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
 }
 
 repositories {
@@ -93,7 +100,7 @@ dependencies {
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
-    archiveFileName.set("geofilm.jar")
+    archiveFileName.set("app.jar")
 }
 
 tasks.test {
