@@ -10,105 +10,178 @@
     </div>
 
     <!-- Panel de Filtros Avanzados -->
-    <div class="filters-panel">
-      <!-- Sección de Búsqueda -->
-      <section class="search-section">
-        <div class="search-box">
-          <i class="fas fa-search"></i>
-          <input
-              type="text"
-              v-model="searchQuery"
-              placeholder="Buscar películas..."
-              @input="applyFilters"
-          />
-          <button class="clear-btn" @click="clearSearch" v-if="searchQuery">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </section>
-
-      <!-- Filtros principales -->
-      <section class="filters-grid">
-        <!-- Género -->
-        <div class="filter-group">
-          <label class="filter-label">
-            <i class="fas fa-tags"></i> Género
-          </label>
-          <v-select
-              v-model="selectedGenres"
-              :options="genres"
-              multiple
-              placeholder="Todos los géneros"
-              class="styled-select"
-              label="name"
-              :reduce="genre => genre.value"
-              @input="applyFilters"
-          />
-        </div>
-
-        <!-- Año -->
-        <div class="filter-group">
-          <label class="filter-label">
-            <i class="fas fa-calendar-alt"></i> Año
-          </label>
-          <div class="date-range">
-            <date-picker
-                v-model="yearRange"
-                type="year"
-                range
-                placeholder="Seleccionar rango"
-                :clearable="false"
-                @change="applyFilters"
-                class="styled-datepicker"
-            />
-          </div>
-        </div>
-
-        <!-- Valoración -->
-        <div class="filter-group">
-          <label class="filter-label">
-            <i class="fas fa-star"></i> Valoración
-          </label>
-          <div class="rating-filter">
-            <input
-                type="range"
-                v-model="ratingFilter"
-                min="0"
-                max="10"
-                step="0.5"
-                @input="applyFilters"
-            />
-            <span class="rating-value">{{ ratingFilter }}+</span>
-          </div>
-        </div>
-
-        <!-- Duración -->
-        <div class="filter-group">
-          <label class="filter-label">
-            <i class="fas fa-clock"></i> Duración
-          </label>
-          <div class="duration-buttons">
-            <button
-                v-for="duration in durationOptions"
-                :key="duration.value"
-                :class="{ active: selectedDuration === duration.value }"
-                @click="setDuration(duration.value)"
-            >
-              {{ duration.label }}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Acciones -->
-      <section class="filter-actions">
-        <button class="reset-btn" @click="resetFilters">
-          <i class="fas fa-undo"></i> Reiniciar Filtros
+    <div class="advanced-filters">
+      <!-- Encabezado del panel -->
+      <div class="filters-header">
+        <h2 class="filters-title">
+          <i class="fas fa-sliders-h"></i> Filtros Avanzados
+        </h2>
+        <button class="toggle-filters" @click="toggleFilters">
+          {{ filtersVisible ? 'Ocultar filtros' : 'Mostrar filtros' }}
+          <i :class="filtersVisible ? 'fas fa-chevron-up' : 'fas fa-chevron-down'"></i>
         </button>
-        <span class="results-count">
-      Mostrando {{ filteredMovies.length }} de {{ movies.length }} películas
-    </span>
-      </section>
+      </div>
+
+      <!-- Contenido colapsable -->
+      <transition name="slide-fade">
+        <div class="filters-content" v-show="filtersVisible">
+          <!-- Búsqueda rápida -->
+          <div class="search-container">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input
+                  type="text"
+                  v-model="searchQuery"
+                  placeholder="Buscar por título, director o actor..."
+                  @input="applyFilters"
+              />
+              <button class="clear-btn" @click="clearSearch" v-if="searchQuery">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filtros en acordeón -->
+          <div class="filter-accordion">
+            <!-- Filtro por género -->
+            <div class="accordion-item" :class="{ 'expanded': expandedSection === 'genre' }">
+              <div class="accordion-header" @click="toggleSection('genre')">
+                <i class="fas fa-tags"></i>
+                <span>Géneros</span>
+                <i class="accordion-icon fas fa-chevron-down"></i>
+              </div>
+              <transition name="expand">
+                <div class="accordion-content" v-show="expandedSection === 'genre'">
+                  <div class="genre-tags">
+                    <button
+                        v-for="genre in genres"
+                        :key="genre.value"
+                        :class="{ 'active': selectedGenres.includes(genre.value) }"
+                        @click="toggleGenre(genre.value)"
+                    >
+                      {{ genre.name }}
+                    </button>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Filtro por año -->
+            <div class="accordion-item" :class="{ 'expanded': expandedSection === 'year' }">
+              <div class="accordion-header" @click="toggleSection('year')">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Año de lanzamiento</span>
+                <i class="accordion-icon fas fa-chevron-down"></i>
+              </div>
+              <transition name="expand">
+                <div class="accordion-content" v-show="expandedSection === 'year'">
+                  <div class="year-range">
+                    <date-picker
+                        v-model="yearRange"
+                        type="year"
+                        range
+                        placeholder="Seleccionar rango"
+                        :clearable="false"
+                        @change="applyFilters"
+                        class="styled-datepicker"
+                    />
+                    <div class="quick-years">
+                      <button @click="setYearRange(2020, 2023)">Últimos 3 años</button>
+                      <button @click="setYearRange(2010, 2019)">2010s</button>
+                      <button @click="setYearRange(2000, 2009)">2000s</button>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Filtro por valoración -->
+            <div class="accordion-item" :class="{ 'expanded': expandedSection === 'rating' }">
+              <div class="accordion-header" @click="toggleSection('rating')">
+                <i class="fas fa-star"></i>
+                <span>Valoración</span>
+                <i class="accordion-icon fas fa-chevron-down"></i>
+              </div>
+              <transition name="expand">
+                <div class="accordion-content" v-show="expandedSection === 'rating'">
+                  <div class="rating-filter">
+                    <div class="rating-stars">
+                      <i
+                          v-for="n in 5"
+                          :key="n"
+                          class="fas fa-star"
+                          :class="{ 'active': ratingFilter >= (n * 2) }"
+                          @click="ratingFilter = (n * 2)"
+                      ></i>
+                    </div>
+                    <div class="rating-slider">
+                      <input
+                          type="range"
+                          v-model="ratingFilter"
+                          min="0"
+                          max="10"
+                          step="0.5"
+                          @input="applyFilters"
+                      />
+                      <div class="rating-labels">
+                        <span>0</span>
+                        <span>5</span>
+                        <span>10</span>
+                      </div>
+                    </div>
+                    <div class="selected-rating">
+                      Mínimo: <strong>{{ ratingFilter }}+</strong>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
+            <!-- Filtro por duración -->
+            <div class="accordion-item" :class="{ 'expanded': expandedSection === 'duration' }">
+              <div class="accordion-header" @click="toggleSection('duration')">
+                <i class="fas fa-clock"></i>
+                <span>Duración</span>
+                <i class="accordion-icon fas fa-chevron-down"></i>
+              </div>
+              <transition name="expand">
+                <div class="accordion-content" v-show="expandedSection === 'duration'">
+                  <div class="duration-options">
+                    <div
+                        v-for="duration in durationOptions"
+                        :key="duration.value"
+                        class="duration-option"
+                        :class="{ 'active': selectedDuration === duration.value }"
+                        @click="setDuration(duration.value)"
+                    >
+                      <div class="duration-icon">
+                        <i :class="duration.icon"></i>
+                      </div>
+                      <div class="duration-label">
+                        <span>{{ duration.label }}</span>
+                        <small>{{ duration.description }}</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+          </div>
+
+          <!-- Acciones del filtro -->
+          <div class="filter-actions">
+            <button class="apply-btn" @click="applyFilters">
+              <i class="fas fa-check"></i> Aplicar Filtros
+            </button>
+            <button class="reset-btn" @click="resetFilters">
+              <i class="fas fa-undo"></i> Limpiar Todo
+            </button>
+            <div class="results-count">
+              {{ filteredMovies.length }} resultados
+            </div>
+          </div>
+        </div>
+      </transition>
     </div>
 
     <!-- Listado de Películas -->
@@ -394,10 +467,30 @@ export default {
         { name: 'Thriller', value: 'Thriller' }
       ],
       durationOptions: [
-        { label: 'Corta (<90 min)', value: 'short' },
-        { label: 'Media (90-150 min)', value: 'medium' },
-        { label: 'Larga (>150 min)', value: 'long' },
-        { label: 'Cualquiera', value: '' }
+        {
+          label: 'Corta',
+          value: 'short',
+          description: '(Menos de 90 min)',
+          icon: 'fas fa-hourglass-start'
+        },
+        {
+          label: 'Media',
+          value: 'medium',
+          description: '(90-150 min)',
+          icon: 'fas fa-hourglass-half'
+        },
+        {
+          label: 'Larga',
+          value: 'long',
+          description: '(Más de 150 min)',
+          icon: 'fas fa-hourglass-end'
+        },
+        {
+          label: 'Cualquiera',
+          value: '',
+          description: '(Sin filtro)',
+          icon: 'fas fa-hourglass'
+        }
       ]
     }
   },
@@ -454,27 +547,47 @@ export default {
       this.darkMode = !this.darkMode
       localStorage.setItem('darkMode', this.darkMode)
     },
-
-    applyFilters() {
-      this.currentPage = 1
+    toggleFilters() {
+      this.filtersVisible = !this.filtersVisible
     },
-
+    toggleSection(section) {
+      this.expandedSection = this.expandedSection === section ? null : section
+    },
+    toggleGenre(genre) {
+      if (this.selectedGenres.includes(genre)) {
+        this.selectedGenres = this.selectedGenres.filter(g => g !== genre)
+      } else {
+        this.selectedGenres = [...this.selectedGenres, genre]
+      }
+      this.applyFilters()
+    },
+    setYearRange(start, end) {
+      this.yearRange = [new Date(start, 0, 1), new Date(end, 11, 31)]
+      this.applyFilters()
+    },
+    setDuration(duration) {
+      this.selectedDuration = duration
+      this.applyFilters()
+    },
+    applyFilters() {
+      this.$emit('filters-changed', {
+        searchQuery: this.searchQuery,
+        selectedGenres: this.selectedGenres,
+        yearRange: this.yearRange,
+        ratingFilter: this.ratingFilter,
+        selectedDuration: this.selectedDuration
+      })
+    },
     resetFilters() {
       this.searchQuery = ''
       this.selectedGenres = []
       this.yearRange = null
       this.ratingFilter = 0
       this.selectedDuration = ''
-      this.currentPage = 1
-    },
-
-    clearSearch() {
-      this.searchQuery = ''
       this.applyFilters()
     },
-
-    setDuration(duration) {
-      this.selectedDuration = duration
+    clearSearch() {
+      this.searchQuery = ''
       this.applyFilters()
     },
 
@@ -522,31 +635,30 @@ export default {
 </script>
 
 <style scoped>
+/* Variables de color para ambos modos */
 :root {
-  --color-primary: #6c5ce7;
-  --color-primary-light: #a29bfe;
-  --color-primary-dark: #5649c0;
-  --color-secondary: #f8f9fa;
-  --color-text: #2d3436;
-  --color-text-light: #f8f9fa;
-  --color-bg: #ffffff;
-  --color-bg-dark: #121212;
-  --color-card: #ffffff;
-  --color-card-dark: #1e1e1e;
-  --color-filter-panel: #f1f3f5;
-  --color-filter-panel-dark: #2a2a2a;
-  --color-border: #e0e0e0;
-  --color-border-dark: #333333;
-  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --filter-bg: rgba(255, 255, 255, 0.95);
+  --filter-border: rgba(0, 0, 0, 0.1);
+  --filter-text: #333;
+  --filter-header-bg: #f8f9fa;
+  --filter-section-bg: #ffffff;
+  --filter-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --filter-active: #6c5ce7;
+  --filter-active-light: rgba(108, 92, 231, 0.1);
+  --filter-hover: #f1f3f5;
+  --filter-divider: #e9ecef;
 }
-
 .dark-mode {
-  --color-secondary: #2a2a3a;
-  --color-text: #e9ecef;
-  --color-bg: #121212;
-  --color-card: #1e1e1e;
-  --color-filter-panel: #2a2a2a;
-  --color-border: #333333;
+  --filter-bg: rgba(30, 30, 30, 0.98);
+  --filter-border: rgba(255, 255, 255, 0.1);
+  --filter-text: #e9ecef;
+  --filter-header-bg: #2a2a2a;
+  --filter-section-bg: #1e1e1e;
+  --filter-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --filter-active: #a78bfa;
+  --filter-active-light: rgba(167, 139, 250, 0.15);
+  --filter-hover: #2a2a2a;
+  --filter-divider: #333;
 }
 
 .movies-container {
@@ -591,306 +703,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-}
-
-.theme-toggle {
-  background: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 50px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: var(--transition);
-}
-
-.theme-toggle:hover {
-  background: var(--color-primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
-}
-
-/* Panel de Filtros - Versión Mejorada */
-.filters-panel {
-  background-color: rgba(255, 255, 255, 0.5);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border);
-  transition: var(--transition);
-}
-
-.dark-mode .filters-panel {
-  background-color: rgba(30, 30, 30, 0.9);
-  border-color: var(--color-border-dark);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}
-
-/* Cuadro de Búsqueda Mejorado */
-.search-section {
-  margin-bottom: 1.5rem;
-  position: relative;
-}
-
-.search-box {
-  position: relative;
-  max-width: 600px;
-  margin: 0 auto;
-  border-radius: 50px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.dark-mode .search-box {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-.search-box i {
-  position: absolute;
-  left: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-primary);
-  font-size: 1.1rem;
-  z-index: 2;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.9rem 1.5rem 0.9rem 3.5rem;
-  border: none;
-  background: transparent;
-  color: var(--color-text);
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.dark-mode .search-box input {
-  color: white;
-}
-
-.search-box input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 400;
-}
-
-.search-box input:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.dark-mode .search-box input:focus {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.clear-btn {
-  position: absolute;
-  right: 1.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 2;
-}
-
-.clear-btn:hover {
-  color: var(--color-primary);
-}
-
-/* Filtros Grid */
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.filter-group {
-  margin-bottom: 1rem;
-}
-
-.filter-label {
-  display: block;
-  margin-bottom: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.95rem;
-}
-
-/* Select Estilizado */
-.styled-select {
-  background-color: var(--color-card);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  transition: var(--transition);
-}
-
-.dark-mode .styled-select {
-  background-color: #2a2a2a;
-  border-color: #444;
-}
-
-.styled-select >>> .vs__dropdown-toggle {
-  border: none;
-  padding: 0.7rem 1rem;
-  background: transparent;
-}
-
-.styled-select >>> .vs__selected {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.3rem 0.6rem;
-}
-
-.styled-select >>> .vs__search {
-  color: var(--color-text);
-  padding: 0.3rem 0.6rem;
-}
-
-.styled-select >>> .vs__dropdown-menu {
-  background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .styled-select >>> .vs__dropdown-menu {
-  background-color: #2a2a2a;
-  border-color: #444;
-}
-
-/* Datepicker Estilizado */
-.styled-datepicker {
-  width: 100%;
-}
-
-.styled-datepicker >>> .dp__input {
-  background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  height: 42px;
-  padding: 0.7rem 1rem;
-  border-radius: 8px;
-}
-
-.dark-mode .styled-datepicker >>> .dp__input {
-  background-color: #2a2a2a;
-  border-color: #444;
-}
-
-/* Filtro de Rating */
-.rating-filter {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 0;
-}
-
-.rating-filter input[type="range"] {
-  flex: 1;
-  -webkit-appearance: none;
-  height: 6px;
-  background: var(--color-border);
-  border-radius: 3px;
-  outline: none;
-}
-
-.rating-filter input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  background: var(--color-primary);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.rating-value {
-  font-weight: 600;
-  color: var(--color-primary);
-  min-width: 40px;
-  text-align: center;
-}
-
-/* Botones de Duración */
-.duration-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.duration-buttons button {
-  flex: 1;
-  min-width: 100px;
-  padding: 0.6rem 0.8rem;
-  background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-text);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.duration-buttons button:hover {
-  border-color: var(--color-primary-light);
-}
-
-.duration-buttons button.active {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-/* Acciones de Filtro */
-.filter-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-}
-
-.reset-btn {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: var(--transition);
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-}
-
-.reset-btn:hover {
-  background-color: rgba(108, 92, 231, 0.1);
-}
-
-.results-count {
-  font-size: 0.9rem;
-  color: var(--color-text);
-  opacity: 0.8;
 }
 
 /* Listado de Películas */
@@ -996,6 +808,438 @@ export default {
 
   .duration-buttons button {
     min-width: auto;
+  }
+}
+
+/* Panel principal */
+.advanced-filters {
+  background: var(--filter-bg);
+  border-radius: 12px;
+  border: 1px solid var(--filter-border);
+  box-shadow: var(--filter-shadow);
+  overflow: hidden;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+/* Encabezado */
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--filter-header-bg);
+  border-bottom: 1px solid var(--filter-divider);
+}
+
+.filters-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--filter-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filters-title i {
+  color: var(--filter-active);
+}
+
+.toggle-filters {
+  background: none;
+  border: none;
+  color: var(--filter-active);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.toggle-filters:hover {
+  background: var(--filter-active-light);
+}
+
+/* Contenido */
+.filters-content {
+  padding: 1.5rem;
+}
+
+/* Búsqueda */
+.search-container {
+  margin-bottom: 1.5rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--filter-section-bg);
+  border-radius: 8px;
+  border: 1px solid var(--filter-border);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.search-box:focus-within {
+  border-color: var(--filter-active);
+  box-shadow: 0 0 0 2px var(--filter-active-light);
+}
+
+.search-box i {
+  position: absolute;
+  left: 1rem;
+  color: var(--filter-active);
+  font-size: 1rem;
+}
+
+.search-box input {
+  flex: 1;
+  padding: 0.875rem 1rem 0.875rem 2.5rem;
+  border: none;
+  background: transparent;
+  color: var(--filter-text);
+  font-size: 0.95rem;
+}
+
+.search-box input::placeholder {
+  color: rgba(var(--filter-text), 0.6);
+}
+
+.clear-btn {
+  background: none;
+  border: none;
+  color: rgba(var(--filter-text), 0.5);
+  padding: 0 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  color: var(--filter-active);
+}
+
+/* Acordeón de filtros */
+.filter-accordion {
+  margin-bottom: 1rem;
+}
+
+.accordion-item {
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--filter-border);
+  background: var(--filter-section-bg);
+}
+
+.accordion-item.expanded {
+  border-color: var(--filter-active);
+}
+
+.accordion-header {
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 500;
+  color: var(--filter-text);
+  transition: all 0.2s ease;
+}
+
+.accordion-header:hover {
+  background: var(--filter-hover);
+}
+
+.accordion-header i:first-child {
+  color: var(--filter-active);
+  width: 1.25rem;
+  text-align: center;
+}
+
+.accordion-icon {
+  margin-left: auto;
+  transition: transform 0.3s ease;
+}
+
+.accordion-item.expanded .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  padding: 0 1.25rem 1.25rem;
+  border-top: 1px solid var(--filter-divider);
+}
+
+/* Estilos específicos para cada tipo de filtro */
+.genre-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genre-tags button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--filter-border);
+  background: var(--filter-section-bg);
+  color: var(--filter-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genre-tags button:hover {
+  border-color: var(--filter-active);
+}
+
+.genre-tags button.active {
+  background: var(--filter-active);
+  color: white;
+  border-color: var(--filter-active);
+}
+
+.year-range {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quick-years {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-years button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--filter-border);
+  background: var(--filter-section-bg);
+  color: var(--filter-text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-years button:hover {
+  border-color: var(--filter-active);
+}
+
+.rating-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.rating-stars i {
+  font-size: 1.5rem;
+  color: var(--filter-divider);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rating-stars i.active {
+  color: #fbbf24;
+}
+
+.rating-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rating-slider input[type="range"] {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  background: var(--filter-divider);
+  border-radius: 3px;
+  outline: none;
+}
+
+.rating-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--filter-active);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.rating-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: rgba(var(--filter-text), 0.7);
+}
+
+.selected-rating {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--filter-text);
+}
+
+.selected-rating strong {
+  color: var(--filter-active);
+}
+
+.duration-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.duration-option {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--filter-border);
+  background: var(--filter-section-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.duration-option:hover {
+  border-color: var(--filter-active);
+}
+
+.duration-option.active {
+  border-color: var(--filter-active);
+  background: var(--filter-active-light);
+}
+
+.duration-icon {
+  font-size: 1.5rem;
+  color: var(--filter-active);
+  margin-bottom: 0.5rem;
+}
+
+.duration-label span {
+  display: block;
+  font-weight: 500;
+  color: var(--filter-text);
+}
+
+.duration-label small {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(var(--filter-text), 0.7);
+}
+
+/* Acciones */
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--filter-divider);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.apply-btn, .reset-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.apply-btn {
+  background: var(--filter-active);
+  color: white;
+  border: none;
+}
+
+.apply-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.reset-btn {
+  background: none;
+  border: 1px solid var(--filter-border);
+  color: var(--filter-text);
+}
+
+.reset-btn:hover {
+  border-color: var(--filter-active);
+  color: var(--filter-active);
+}
+
+.results-count {
+  font-size: 0.9rem;
+  color: rgba(var(--filter-text), 0.8);
+  margin-left: auto;
+}
+
+/* Transiciones */
+.slide-fade-enter-active, .slide-fade-leave-active {
+  transition: all 0.3s ease;
+}
+.slide-fade-enter-from, .slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.expand-enter-active, .expand-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+.expand-enter-from, .expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+.expand-enter-to, .expand-leave-from {
+  max-height: 500px;
+  opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .apply-btn, .reset-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .results-count {
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .duration-options {
+    grid-template-columns: 1fr;
   }
 }
 </style>
