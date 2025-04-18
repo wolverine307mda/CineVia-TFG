@@ -7,6 +7,7 @@ data class ProfesionalResponse(
     val nombre: String,
     val foto: String? = null,
     val fechaNacimiento: Date,
+    val fechaInicio: Date,
     val lugarNacimiento: String,
     val biografia: String? = null
 )

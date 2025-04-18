@@ -11,6 +11,7 @@ import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.exception.ProfesionalNotFoundException
 import org.wolve.geofilm.producciones.profesional.mapper.ProfesionalMapper
+import org.wolve.geofilm.producciones.profesional.model.Profesional
 import org.wolve.geofilm.producciones.profesional.repository.ProfesionalRepository
 import java.util.*
 
@@ -46,6 +47,7 @@ class ProfesionalServiceImpl(
             nombre = profesionalRequest.nombre,
             foto = profesionalRequest.foto,
             fechaNacimiento = profesionalRequest.fechaNacimiento,
+            fechaInicio = profesionalRequest.fechaInicio,
             lugarNacimiento = profesionalRequest.lugarNacimiento,
             biografia = profesionalRequest.biografia
         )
@@ -82,5 +84,16 @@ class ProfesionalServiceImpl(
     ): ProfesionalListResponse {
         val page = profesionalRepository.findByFechaNacimientoBetween(fechaInicio, fechaFin, pageable)
         return profesionalMapper.toPageResponse(page)
+    }
+
+    @Transactional(readOnly = true)
+    override fun findEntityById(id: String): Profesional {
+        return profesionalRepository.findById(id)
+            .orElseThrow { ProfesionalNotFoundException("Profesional no encontrado con id: $id") }
+    }
+
+    @Transactional(readOnly = true)
+    override fun existsById(id: String): Boolean {
+        return profesionalRepository.existsById(id)
     }
 }

@@ -14,6 +14,7 @@ class ProfesionalMapper {
         nombre = request.nombre,
         foto = request.foto,
         fechaNacimiento = request.fechaNacimiento,
+        fechaInicio = request.fechaInicio,
         lugarNacimiento = request.lugarNacimiento,
         biografia = request.biografia
     )
@@ -23,6 +24,7 @@ class ProfesionalMapper {
         nombre = entity.nombre,
         foto = entity.foto,
         fechaNacimiento = entity.fechaNacimiento,
+        fechaInicio = entity.fechaInicio,
         lugarNacimiento = entity.lugarNacimiento,
         biografia = entity.biografia
     )

@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalListResponse
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
+import org.wolve.geofilm.producciones.profesional.model.Profesional
 import java.util.*
 
 interface IProfesionalService {
@@ -21,4 +22,7 @@ interface IProfesionalService {
         fechaFin: Date,
         pageable: Pageable
     ): ProfesionalListResponse
+
+    fun findEntityById(id: String): Profesional
+    fun existsById(id: String): Boolean
 }

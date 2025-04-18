@@ -5,18 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
+import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundException
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
-import org.wolve.geofilm.producciones.saga.repository.SagaRepository
-import java.util.*
 
 @Service
 class ProduccionServiceImpl @Autowired constructor(
     private val produccionRepository: ProduccionRepository,
-    private val sagaRepository: SagaRepository,
     private val produccionMapper: ProduccionMapper
 ) : IProduccionService {
 
@@ -39,9 +37,11 @@ class ProduccionServiceImpl @Autowired constructor(
     override fun createProduccion(request: ProduccionRequest): ProduccionResponse {
         val produccion = produccionMapper.toProduccionEntity(request)
         val saved = produccionRepository.save(produccion)
-        return produccionMapper.toProduccionResponse(saved)    }
+        return produccionMapper.toProduccionResponse(saved)
+    }
 
     @CacheEvict(value = ["producciones", "produccionesByTitulo"], allEntries = true)
+    @Transactional
     override fun updateProduccion(id: String, request: ProduccionRequest): ProduccionResponse? {
         val optionalProduccion = produccionRepository.findById(id)
         if (optionalProduccion.isPresent) {
@@ -65,7 +65,21 @@ class ProduccionServiceImpl @Autowired constructor(
     }
 
     @CacheEvict(value = ["producciones", "produccionesByTitulo"], allEntries = true)
+    @Transactional
     override fun deleteProduccion(id: String) {
         produccionRepository.deleteById(id)
+    }
+
+    override fun findEntityById(id: String): Produccion {
+        return produccionRepository.findById(id)
+            .orElseThrow { ProduccionNotFoundException(id) }
+    }
+
+    override fun existsById(id: String): Boolean {
+        return produccionRepository.existsById(id)
+    }
+
+    override fun countParticipacionesByProduccionId(produccionId: String): Long {
+        return produccionRepository.countParticipacionesById(produccionId)
     }
 }
