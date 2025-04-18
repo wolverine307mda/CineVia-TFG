@@ -48,25 +48,16 @@
 export default {
   name: 'MovieCard',
   props: {
-    movie: {
-      type: Object,
-      required: true
-    },
-    darkMode: {
-      type: Boolean,
-      default: false
-    }
+    movie: Object,
+    darkMode: Boolean
   },
   methods: {
     toggleFavorite() {
       this.$emit('toggle-favorite', this.movie.id)
     },
-
     viewDetails() {
-      // Navegar a la página de detalles
       this.$router.push(`/movie/${this.movie.id}`)
     },
-
     truncateText(text, length) {
       if (!text) return ''
       return text.length > length ? text.substring(0, length) + '...' : text
@@ -78,18 +69,19 @@ export default {
 <style scoped>
 .movie-card {
   background-color: rgba(230, 228, 231, 0.75);
+  color: #222;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transition: var(--transition);
+  transition: all 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.dark-mode .movie-card {
-  background-color: rgba(42, 42, 42, 0.92);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+.dark-mode {
+  background-color: rgba(28, 28, 30, 0.95);
+  color: #f0f0f0;
 }
 
 .movie-card:hover {
@@ -106,12 +98,10 @@ export default {
 
 .card-image img {
   position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: var(--transition);
+  transition: transform 0.3s ease;
 }
 
 .movie-card:hover .card-image img {
@@ -132,12 +122,12 @@ export default {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: var(--transition);
+  transition: background-color 0.3s ease;
   z-index: 2;
 }
 
 .favorite-btn:hover {
-  background-color: var(--color-primary);
+  background-color: var(--color-primary, #6c5ce7);
 }
 
 .favorite-btn i.fas {
@@ -175,21 +165,18 @@ export default {
 }
 
 .movie-title {
-  margin: 0;
   font-size: 1.2rem;
   font-weight: 700;
-  line-height: 1.3;
-  flex: 1;
+  margin: 0;
 }
 
 .movie-year {
-  background-color: var(--color-primary);
+  background-color: var(--color-primary, #6c5ce7);
   color: white;
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-left: 0.5rem;
 }
 
 .movie-meta {
@@ -198,13 +185,13 @@ export default {
   gap: 0.8rem;
   margin-bottom: 0.8rem;
   font-size: 0.85rem;
-  color: var(--color-text);
+  color: inherit;
   opacity: 0.8;
 }
 
 .movie-meta i {
   margin-right: 0.3rem;
-  color: var(--color-primary);
+  color: var(--color-primary, #6c5ce7);
 }
 
 .genre-tags {
@@ -216,11 +203,16 @@ export default {
 
 .genre-tag {
   background-color: rgba(108, 92, 231, 0.2);
-  color: var(--color-primary);
+  color: var(--color-primary, #6c5ce7);
   padding: 0.2rem 0.6rem;
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 600;
+}
+
+.dark-mode .genre-tag {
+  background-color: rgba(108, 92, 231, 0.3);
+  color: #d6d0ff;
 }
 
 .movie-plot {
@@ -234,22 +226,24 @@ export default {
   align-self: flex-start;
   background: none;
   border: none;
-  color: var(--color-primary);
-  text-decoration: none;
+  color: var(--color-primary, #6c5ce7);
   font-weight: 600;
   font-size: 0.9rem;
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  transition: var(--transition);
   cursor: pointer;
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
+  transition: background-color 0.3s ease;
 }
 
 .details-btn:hover {
-  color: var(--color-primary-dark);
   background-color: rgba(108, 92, 231, 0.1);
+}
+
+.dark-mode .details-btn:hover {
+  background-color: rgba(108, 92, 231, 0.2);
 }
 
 .details-btn i {
@@ -261,10 +255,9 @@ export default {
     flex-direction: column;
     gap: 0.3rem;
   }
-
   .movie-year {
-    align-self: flex-start;
     margin-left: 0;
+    align-self: flex-start;
   }
 }
 </style>
