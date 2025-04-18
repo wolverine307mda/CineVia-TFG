@@ -1,23 +1,23 @@
 -- Insertar datos en la tabla profesionales (actores y directores)
 INSERT INTO profesionales (id, nombre, fecha_nacimiento, lugar_nacimiento, biografia, foto, fecha_inicio) VALUES
-('p001', 'Tom Hanks', '1956-07-09', 'Concord, California, USA', 'Dos veces ganador del Oscar, conocido por películas como Forrest Gump y Toy Story.', 'tom_hanks.jpg', '1978-01-01'),
-('p002', 'Meryl Streep', '1949-06-22', 'Summit, New Jersey, USA', 'Actriz con más nominaciones al Oscar en la historia.', 'meryl_streep.jpg', '1971-01-01'),
-('p003', 'Christopher Nolan', '1970-07-30', 'London, England', 'Director aclamado por Inception, The Dark Knight y Dunkirk.', 'chris_nolan.jpg', '1998-01-01'),
-('p004', 'Penélope Cruz', '1974-04-28', 'Alcobendas, Spain', 'Primera actriz española en ganar un Oscar.', 'penelope_cruz.jpg', '1989-01-01'),
-('p005', 'Leonardo DiCaprio', '1974-11-11', 'Los Angeles, California, USA', 'Ganador del Oscar por The Revenant.', 'leo_dicaprio.jpg', '1989-01-01'),
-('p006', 'Quentin Tarantino', '1963-03-27', 'Knoxville, Tennessee, USA', 'Director conocido por Pulp Fiction y Kill Bill.', 'tarantino.jpg', '1987-01-01'),
-('p007', 'Scarlett Johansson', '1984-11-22', 'New York City, USA', 'Actriz conocida por su papel de Black Widow en Marvel.', 'scarlett_j.jpg', '1994-01-01'),
-('p008', 'Guillermo del Toro', '1964-10-09', 'Guadalajara, Mexico', 'Director ganador del Oscar por The Shape of Water.', 'del_toro.jpg', '1985-01-01'),
-('p009', 'Cate Blanchett', '1969-05-14', 'Melbourne, Australia', 'Actriz ganadora de dos premios Oscar.', 'cate_blanchett.jpg', '1992-01-01'),
-('p010', 'Denzel Washington', '1954-12-28', 'Mount Vernon, New York, USA', 'Uno de los actores más respetados de Hollywood.', 'denzel_w.jpg', '1977-01-01');
+                                                                                                              ('p001', 'Tom Hanks', '1956-07-09', 'Concord, California, USA', 'Dos veces ganador del Oscar, conocido por películas como Forrest Gump y Toy Story.', 'tom_hanks.jpg', '1978-01-01'),
+                                                                                                              ('p002', 'Meryl Streep', '1949-06-22', 'Summit, New Jersey, USA', 'Actriz con más nominaciones al Oscar en la historia.', 'meryl_streep.jpg', '1971-01-01'),
+                                                                                                              ('p003', 'Christopher Nolan', '1970-07-30', 'London, England', 'Director aclamado por Inception, The Dark Knight y Dunkirk.', 'chris_nolan.jpg', '1998-01-01'),
+                                                                                                              ('p004', 'Penélope Cruz', '1974-04-28', 'Alcobendas, Spain', 'Primera actriz española en ganar un Oscar.', 'penelope_cruz.jpg', '1989-01-01'),
+                                                                                                              ('p005', 'Leonardo DiCaprio', '1974-11-11', 'Los Angeles, California, USA', 'Ganador del Oscar por The Revenant.', 'leo_dicaprio.jpg', '1989-01-01'),
+                                                                                                              ('p006', 'Quentin Tarantino', '1963-03-27', 'Knoxville, Tennessee, USA', 'Director conocido por Pulp Fiction y Kill Bill.', 'tarantino.jpg', '1987-01-01'),
+                                                                                                              ('p007', 'Scarlett Johansson', '1984-11-22', 'New York City, USA', 'Actriz conocida por su papel de Black Widow en Marvel.', 'scarlett_j.jpg', '1994-01-01'),
+                                                                                                              ('p008', 'Guillermo del Toro', '1964-10-09', 'Guadalajara, Mexico', 'Director ganador del Oscar por The Shape of Water.', 'del_toro.jpg', '1985-01-01'),
+                                                                                                              ('p009', 'Cate Blanchett', '1969-05-14', 'Melbourne, Australia', 'Actriz ganadora de dos premios Oscar.', 'cate_blanchett.jpg', '1992-01-01'),
+                                                                                                              ('p010', 'Denzel Washington', '1954-12-28', 'Mount Vernon, New York, USA', 'Uno de los actores más respetados de Hollywood.', 'denzel_w.jpg', '1977-01-01');
 
 -- Insertar sagas
 INSERT INTO sagas (id, nombre, descripcion, fecha_inicio, fecha_fin, is_acabada, imagen) VALUES
-('s001', 'El Señor de los Anillos', 'Trilogía épica de fantasía basada en los libros de J.R.R. Tolkien.', '2001-12-19', '2003-12-17', true, 'lotr_saga.jpg'),
-('s002', 'Star Wars', 'Saga de space opera creada por George Lucas.', '1977-05-25', NULL, false, 'star_wars.jpg'),
-('s003', 'Harry Potter', 'Saga de fantasía basada en los libros de J.K. Rowling.', '2001-11-16', '2011-07-15', true, 'harry_potter.jpg'),
-('s004', 'Marvel Cinematic Universe', 'Universo cinematográfico de superhéroes de Marvel.', '2008-05-02', NULL, false, 'mcu.jpg'),
-('s005', 'James Bond', 'Serie de películas de espionaje basadas en Ian Fleming.', '1962-10-05', NULL, false, 'james_bond.jpg');
+                                                                                             ('s001', 'El Señor de los Anillos', 'Trilogía épica de fantasía basada en los libros de J.R.R. Tolkien.', '2001-12-19', '2003-12-17', true, 'lotr_saga.jpg'),
+                                                                                             ('s002', 'Star Wars', 'Saga de space opera creada por George Lucas.', '1977-05-25', NULL, false, 'star_wars.jpg'),
+                                                                                             ('s003', 'Harry Potter', 'Saga de fantasía basada en los libros de J.K. Rowling.', '2001-11-16', '2011-07-15', true, 'harry_potter.jpg'),
+                                                                                             ('s004', 'Marvel Cinematic Universe', 'Universo cinematográfico de superhéroes de Marvel.', '2008-05-02', NULL, false, 'mcu.jpg'),
+                                                                                             ('s005', 'James Bond', 'Serie de películas de espionaje basadas en Ian Fleming.', '1962-10-05', NULL, false, 'james_bond.jpg');
 
 -- Insertar producciones (películas y series)
 INSERT INTO producciones (id, titulo, tipo, estreno, duracion, clasificacion_edad, sinopsis, informacion, imagen, saga_id) VALUES
@@ -121,14 +121,14 @@ INSERT INTO ubicaciones (id, nombre, latitud, longitud, produccion_id) VALUES
 ('u005', 'Albuquerque, Nuevo México', 35.0844, -106.6504, 'pr015');
 
 -- Insertar usuarios
-INSERT INTO usuarios (id, nombre, apellido, email, username, password, rol, telefono, fecha_nacimiento, fecha_registro, avatar) VALUES
-('11111111-1111-1111-1111-111111111111', 'Admin', 'Admin', 'admin@geofilm.com', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'ADMINISTRADOR', '600000000', '1980-01-01', NOW(), 'admin_avatar.jpg'),
-('22222222-2222-2222-2222-222222222222', 'Usuario', 'Normal', 'user@geofilm.com', 'user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '611111111', '1990-05-15', NOW(), 'user_avatar.jpg'),
-('33333333-3333-3333-3333-333333333333', 'María', 'García', 'maria@geofilm.com', 'maria', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '622222222', '1995-08-20', NOW(), 'maria_avatar.jpg');
+INSERT INTO usuarios (id, nombre, apellido, email, username, password, rol, telefono, fecha_nacimiento, created_at, avatar) VALUES
+                                                                                                                                ('11111111-1111-1111-1111-111111111111', 'Admin', 'Admin', 'admin@geofilm.com', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'ADMINISTRADOR', '600000000', '1980-01-01', NOW(), 'admin_avatar.jpg'),
+                                                                                                                                ('22222222-2222-2222-2222-222222222222', 'Usuario', 'Normal', 'user@geofilm.com', 'user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '611111111', '1990-05-15', NOW(), 'user_avatar.jpg'),
+                                                                                                                                ('33333333-3333-3333-3333-333333333333', 'María', 'García', 'maria@geofilm.com', 'maria', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '622222222', '1995-08-20', NOW(), 'maria_avatar.jpg');
 
 -- Insertar reviews
 INSERT INTO reviews (id, usuario_id, produccion_id, comentario, puntuacion) VALUES
-('r001', '22222222-2222-2222-2222-222222222222', 'pr001', 'Una obra maestra del cine fantástico.', 5),
-('r002', '33333333-3333-3333-3333-333333333333', 'pr001', 'Los paisajes de Nueva Zelanda son increíbles.', 4),
-('r003', '22222222-2222-2222-2222-222222222222', 'pr010', 'Tom Hanks está brillante en este papel.', 5),
-('r004', '33333333-3333-3333-3333-333333333333', 'pr011', 'Una película mágica y oscura a la vez.', 5);
+                                                                                ('r001', '22222222-2222-2222-2222-222222222222', 'pr001', 'Una obra maestra del cine fantástico.', 5),
+                                                                                ('r002', '33333333-3333-3333-3333-333333333333', 'pr001', 'Los paisajes de Nueva Zelanda son increíbles.', 4),
+                                                                                ('r003', '22222222-2222-2222-2222-222222222222', 'pr010', 'Tom Hanks está brillante en este papel.', 5),
+                                                                                ('r004', '33333333-3333-3333-3333-333333333333', 'pr011', 'Una película mágica y oscura a la vez.', 5);
