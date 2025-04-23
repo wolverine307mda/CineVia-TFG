@@ -7,6 +7,7 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
+import javax.sql.DataSource
 
 @SpringBootApplication
 class GeoFilmApplication {
@@ -16,23 +17,31 @@ class GeoFilmApplication {
 
     private val logger = LoggerFactory.getLogger(GeoFilmApplication::class.java)
 
-    // Este Bean ejecuta Flyway manualmente después de que Hibernate cree las tablas.
+    // Bean manual para configurar Flyway (porque spring.flyway.enabled=false)
+    @Bean
+    fun flyway(dataSource: DataSource): Flyway {
+        return Flyway.configure()
+            .dataSource(dataSource) // Usa la misma conexión de base de datos que Spring Boot
+            .locations("classpath:db/migration") // Ruta donde tienes tus scripts SQL de Flyway
+            .baselineOnMigrate(true) // Crea una baseline si es necesario (evita errores en BD existentes)
+            .load()
+    }
+
+    // Este Bean se ejecuta al arrancar la aplicación
+    // y lanza las migraciones de Flyway después de que Hibernate haya creado las tablas
     @Bean
     fun flywayRunner(flyway: Flyway): ApplicationRunner {
         return ApplicationRunner {
-            // Ejecutamos la migración de Flyway después de que Hibernate haya creado las tablas
+            // Ejecuta las migraciones de Flyway
             flyway.migrate()
-            logger.info("Migración de Flyway ejecutada con éxito.")
+            logger.info("✅ Migración de Flyway ejecutada con éxito.")
 
-            // Crear la URL con el puerto
+            // Mostrar en consola la URL base de la app
             val urlPort = "http://localhost:$serverPort"
             val urlSwagger = "http://localhost:$serverPort/swagger-ui/index.html\n"
 
-
-            // Loggear el puerto en el que la aplicación está corriendo, con un enlace
-            logger.info("La aplicación está corriendo en: $urlPort")
-            logger.info("Este es el enlace a Swagger: $urlSwagger")
-
+            logger.info("🚀 La aplicación está corriendo en: $urlPort")
+            logger.info("🔍 Swagger disponible en: $urlSwagger")
         }
     }
 }
