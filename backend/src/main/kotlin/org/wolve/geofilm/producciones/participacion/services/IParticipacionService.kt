@@ -1,15 +1,32 @@
 package org.wolve.geofilm.producciones.participacion.services
 
-import org.wolve.geofilm.producciones.participacion.dto.*
-import org.wolve.geofilm.producciones.participacion.models.Participacion
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 interface IParticipacionService {
-    fun findAll(): List<ParticipacionResponse>
-    fun findById(id: String): ParticipacionResponse
-    fun create(request: ParticipacionRequest): ParticipacionResponse
-    fun update(id: String, request: ParticipacionRequest): ParticipacionResponse
-    fun delete(id: String)
-    fun findByProfesionalId(profesionalId: String): List<ParticipacionProfesionalResponse>
-    fun findByProduccionId(produccionId: String): List<ParticipacionProduccionResponse>
-    fun findEntityById(id: String): Participacion
+    fun createParticipacion(request: ParticipacionRequest): ParticipacionResponse
+    fun getParticipacionById(id: String): ParticipacionResponse
+    fun getAllParticipaciones(
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ParticipacionResponse>
+    fun getByProduccion(
+        produccionId: String,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ParticipacionResponse>
+    fun getByProfesional(
+        profesionalId: String,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ParticipacionResponse>
+    fun updateParticipacion(id: String, request: ParticipacionRequest): ParticipacionResponse
+    fun deleteParticipacion(id: String)
 }

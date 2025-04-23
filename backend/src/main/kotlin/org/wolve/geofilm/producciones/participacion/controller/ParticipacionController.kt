@@ -1,7 +1,6 @@
 package org.wolve.geofilm.producciones.participacion.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -10,120 +9,151 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.wolve.geofilm.producciones.participacion.dto.*
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
 import org.wolve.geofilm.producciones.participacion.services.IParticipacionService
+import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 @RestController
-@RequestMapping("/api/v1/participaciones")
-@Tag(name = "Participaciones", description = "API para gestionar participaciones de profesionales en producciones")
+@RequestMapping("/api/participaciones")
+@Tag(name = "Participaciones", description = "Endpoints para la gestión de Participaciones")
 class ParticipacionController(
     private val participacionService: IParticipacionService
 ) {
 
-    @Operation(summary = "Obtener todas las participaciones", description = "Retorna una lista de todas las participaciones registradas")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Lista de participaciones obtenida exitosamente",
-            content = [Content(mediaType = "application/json",
-                schema = Schema(implementation = ParticipacionResponse::class))])])
-        @GetMapping
-        fun getAllParticipaciones(): ResponseEntity<List<ParticipacionResponse>> {
-            return ResponseEntity.ok(participacionService.findAll())
-        }
+    @Operation(summary = "Crear una nueva participación")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Participación creada",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ParticipacionResponse::class))]),
+            ApiResponse(responseCode = "400", description = "Datos inválidos",
+                content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Producción o profesional no encontrado",
+                content = [Content()])
+        ]
+    )
+    @PostMapping
+    fun createParticipacion(@RequestBody request: ParticipacionRequest): ResponseEntity<ParticipacionResponse> {
+        val response = participacionService.createParticipacion(request)
+        return ResponseEntity.status(HttpStatus.CREATED).body(response)
+    }
 
-        @Operation(summary = "Obtener una participación por ID", description = "Retorna una participación específica basada en su ID")
-        @ApiResponses(value = [
+    @Operation(summary = "Obtener una participación por ID")
+    @ApiResponses(
+        value = [
             ApiResponse(responseCode = "200", description = "Participación encontrada",
                 content = [Content(mediaType = "application/json",
                     schema = Schema(implementation = ParticipacionResponse::class))]),
             ApiResponse(responseCode = "404", description = "Participación no encontrada",
-                content = [Content()])])
-        @GetMapping("/{id}")
-        fun getParticipacionById(
-            @Parameter(description = "ID de la participación a buscar", required = true)
-            @PathVariable id: String
-        ): ResponseEntity<ParticipacionResponse> {
-            return ResponseEntity.ok(participacionService.findById(id))
-        }
+                content = [Content()])
+        ]
+    )
+    @GetMapping("/{id}")
+    fun getParticipacionById(@PathVariable id: String): ResponseEntity<ParticipacionResponse> {
+        val response = participacionService.getParticipacionById(id)
+        return ResponseEntity.ok(response)
+    }
 
-        @Operation(summary = "Crear una nueva participación", description = "Registra una nueva participación de un profesional en una producción")
-        @ApiResponses(value = [
-            ApiResponse(responseCode = "201", description = "Participación creada exitosamente",
+    @Operation(summary = "Obtener todas las participaciones (paginadas)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado paginado de participaciones",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ParticipacionResponse::class))]),
-            ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o participación ya existe",
-                content = [Content()])])
-        @PostMapping
-        fun createParticipacion(
-            @Parameter(description = "Datos de la participación a crear", required = true)
-            @RequestBody request: ParticipacionRequest
-        ): ResponseEntity<ParticipacionResponse> {
-            return ResponseEntity.status(HttpStatus.CREATED).body(participacionService.create(request))
-        }
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping
+    fun getAllParticipaciones(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "createdAt") sortBy: List<String>,
+        @RequestParam(defaultValue = "desc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ParticipacionResponse>> {
+        val response = participacionService.getAllParticipaciones(page, size, sortBy, sortDirection)
+        return ResponseEntity.ok(response)
+    }
 
-        @Operation(summary = "Actualizar una participación", description = "Actualiza los datos de una participación existente")
-        @ApiResponses(value = [
-            ApiResponse(responseCode = "200", description = "Participación actualizada exitosamente",
+    @Operation(summary = "Obtener participaciones por producción")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado paginado de participaciones",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ParticipacionResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Participación no encontrada",
-                content = [Content()]),
-            ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o conflicto en roles",
-                content = [Content()])])
-        @PutMapping("/{id}")
-        fun updateParticipacion(
-            @Parameter(description = "ID de la participación a actualizar", required = true)
-            @PathVariable id: String,
-
-            @Parameter(description = "Datos actualizados de la participación", required = true)
-            @RequestBody request: ParticipacionRequest
-        ): ResponseEntity<ParticipacionResponse> {
-            return ResponseEntity.ok(participacionService.update(id, request))
-        }
-
-        @Operation(summary = "Eliminar una participación", description = "Elimina una participación específica del sistema")
-        @ApiResponses(value = [
-            ApiResponse(responseCode = "204", description = "Participación eliminada exitosamente",
-                content = [Content()]),
-            ApiResponse(responseCode = "404", description = "Participación no encontrada",
-                content = [Content()]),
-            ApiResponse(responseCode = "409", description = "Conflicto - Participación asociada a profesional o producción",
-                content = [Content()])])
-        @DeleteMapping("/{id}")
-        fun deleteParticipacion(
-            @Parameter(description = "ID de la participación a eliminar", required = true)
-            @PathVariable id: String
-        ): ResponseEntity<Unit> {
-            participacionService.delete(id)
-            return ResponseEntity.noContent().build()
-        }
-
-        @Operation(summary = "Obtener participaciones por profesional", description = "Retorna todas las participaciones de un profesional específico")
-        @ApiResponses(value = [
-            ApiResponse(responseCode = "200", description = "Lista de participaciones obtenida exitosamente",
-                content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ParticipacionProfesionalResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
-                content = [Content()])])
-        @GetMapping("/profesional/{profesionalId}")
-        fun getParticipacionesByProfesional(
-            @Parameter(description = "ID del profesional a consultar", required = true)
-            @PathVariable profesionalId: String
-        ): ResponseEntity<List<ParticipacionProfesionalResponse>> {
-            return ResponseEntity.ok(participacionService.findByProfesionalId(profesionalId))
-        }
-
-        @Operation(summary = "Obtener participaciones por producción", description = "Retorna todas las participaciones de una producción específica")
-        @ApiResponses(value = [
-            ApiResponse(responseCode = "200", description = "Lista de participaciones obtenida exitosamente",
-                content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ParticipacionProduccionResponse::class))]),
+                    schema = Schema(implementation = PaginatedResponse::class))]),
             ApiResponse(responseCode = "404", description = "Producción no encontrada",
-                content = [Content()])])
-        @GetMapping("/produccion/{produccionId}")
-        fun getParticipacionesByProduccion(
-            @Parameter(description = "ID de la producción a consultar", required = true)
-            @PathVariable produccionId: String
-        ): ResponseEntity<List<ParticipacionProduccionResponse>> {
-            return ResponseEntity.ok(participacionService.findByProduccionId(produccionId))
-        }
+                content = [Content()])
+        ]
+    )
+    @GetMapping("/produccion/{produccionId}")
+    fun getByProduccion(
+        @PathVariable produccionId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "createdAt") sortBy: List<String>,
+        @RequestParam(defaultValue = "desc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ParticipacionResponse>> {
+        val response = participacionService.getByProduccion(
+            produccionId, page, size, sortBy, sortDirection
+        )
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Obtener participaciones por profesional")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado paginado de participaciones",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
+                content = [Content()])
+        ]
+    )
+    @GetMapping("/profesional/{profesionalId}")
+    fun getByProfesional(
+        @PathVariable profesionalId: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "createdAt") sortBy: List<String>,
+        @RequestParam(defaultValue = "desc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ParticipacionResponse>> {
+        val response = participacionService.getByProfesional(
+            profesionalId, page, size, sortBy, sortDirection
+        )
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Actualizar una participación")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Participación actualizada",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ParticipacionResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Participación, producción o profesional no encontrado",
+                content = [Content()])
+        ]
+    )
+    @PutMapping("/{id}")
+    fun updateParticipacion(
+        @PathVariable id: String,
+        @RequestBody request: ParticipacionRequest
+    ): ResponseEntity<ParticipacionResponse> {
+        val response = participacionService.updateParticipacion(id, request)
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Eliminar una participación")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "204", description = "Participación eliminada",
+                content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Participación no encontrada",
+                content = [Content()])
+        ]
+    )
+    @DeleteMapping("/{id}")
+    fun deleteParticipacion(@PathVariable id: String): ResponseEntity<Void> {
+        participacionService.deleteParticipacion(id)
+        return ResponseEntity.noContent().build()
+    }
 }
