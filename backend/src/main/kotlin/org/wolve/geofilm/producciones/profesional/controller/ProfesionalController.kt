@@ -1,156 +1,175 @@
 package org.wolve.geofilm.producciones.profesional.controller
 
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.wolve.geofilm.producciones.profesional.dto.ProfesionalListResponse
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.service.IProfesionalService
-import java.util.*
+import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 @RestController
 @RequestMapping("/api/profesionales")
-@Tag(name = "Profesionales", description = "Endpoints para la gestión de profesionales")
+@Tag(name = "Profesionales", description = "Endpoints para la gestión de Profesionales")
 class ProfesionalController(
     private val profesionalService: IProfesionalService
 ) {
 
-    @Operation(summary = "Obtener un profesional por ID")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Profesional encontrado"),
-        ApiResponse(responseCode = "404", description = "Profesional no encontrado")
-    ])
+    @Operation(summary = "Obtiene todos los profesionales (paginados)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado paginado de profesionales",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping
+    fun getAllProfesionales(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "nombre") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProfesionalResponse>> {
+        val response = profesionalService.getAllProfesionales(page, size, sortBy, sortDirection)
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Busca profesionales por nombre")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Profesionales encontrados",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping("/buscar")
+    fun searchByNombre(
+        @RequestParam nombre: String,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "nombre") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProfesionalResponse>> {
+        val response = profesionalService.searchByNombre(nombre, page, size, sortBy, sortDirection)
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Obtiene un profesional por ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Profesional encontrado",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProfesionalResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
+                content = [Content()])
+        ]
+    )
     @GetMapping("/{id}")
-    fun getProfesionalById(
-        @PathVariable
-        @Parameter(description = "ID del profesional", example = "123e4567-e89b-12d3-a456-426614174000")
-        id: String
-    ): ResponseEntity<ProfesionalResponse> {
-        return ResponseEntity.ok(profesionalService.findById(id))
+    fun getProfesionalById(@PathVariable id: String): ResponseEntity<ProfesionalResponse> {
+        val profesional = profesionalService.getProfesionalById(id)
+        return if (profesional != null) {
+            ResponseEntity.ok(profesional)
+        } else {
+            ResponseEntity(HttpStatus.NOT_FOUND)
+        }
     }
 
-    @Operation(summary = "Crear un nuevo profesional")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "201", description = "Profesional creado exitosamente"),
-        ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
-    ])
+    @Operation(summary = "Crea un nuevo profesional")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "201", description = "Profesional creado",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProfesionalResponse::class))]),
+            ApiResponse(responseCode = "400", description = "Datos inválidos",
+                content = [Content()])
+        ]
+    )
     @PostMapping
-    fun createProfesional(
-        @RequestBody
-        @Parameter(description = "Datos del profesional a crear", required = true)
-        profesionalRequest: ProfesionalRequest
-    ): ResponseEntity<ProfesionalResponse> {
-        return ResponseEntity.status(HttpStatus.CREATED).body(profesionalService.create(profesionalRequest))
+    fun createProfesional(@RequestBody request: ProfesionalRequest): ResponseEntity<ProfesionalResponse> {
+        val profesionalResponse = profesionalService.createProfesional(request)
+        return ResponseEntity.status(HttpStatus.CREATED).body(profesionalResponse)
     }
 
-    @Operation(summary = "Actualizar un profesional existente")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Profesional actualizado exitosamente"),
-        ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
-        ApiResponse(responseCode = "404", description = "Profesional no encontrado")
-    ])
+    @Operation(summary = "Actualiza un profesional existente")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Profesional actualizado",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProfesionalResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
+                content = [Content()])
+        ]
+    )
     @PutMapping("/{id}")
     fun updateProfesional(
-        @PathVariable
-        @Parameter(description = "ID del profesional a actualizar", example = "123e4567-e89b-12d3-a456-426614174000")
-        id: String,
-        @RequestBody
-        @Parameter(description = "Datos actualizados del profesional", required = true)
-        profesionalRequest: ProfesionalRequest
+        @PathVariable id: String,
+        @RequestBody request: ProfesionalRequest
     ): ResponseEntity<ProfesionalResponse> {
-        return ResponseEntity.ok(profesionalService.update(id, profesionalRequest))
+        val profesionalResponse = profesionalService.updateProfesional(id, request)
+        return if (profesionalResponse != null) {
+            ResponseEntity.ok(profesionalResponse)
+        } else {
+            ResponseEntity(HttpStatus.NOT_FOUND)
+        }
     }
 
-    @Operation(summary = "Eliminar un profesional")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "204", description = "Profesional eliminado exitosamente"),
-        ApiResponse(responseCode = "404", description = "Profesional no encontrado")
-    ])
+    @Operation(summary = "Elimina un profesional por ID")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "204", description = "Profesional eliminado",
+                content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
+                content = [Content()])
+        ]
+    )
     @DeleteMapping("/{id}")
-    fun deleteProfesional(
-        @PathVariable
-        @Parameter(description = "ID del profesional a eliminar", example = "123e4567-e89b-12d3-a456-426614174000")
-        id: String
-    ): ResponseEntity<Void> {
-        profesionalService.delete(id)
+    fun deleteProfesional(@PathVariable id: String): ResponseEntity<Void> {
+        profesionalService.deleteProfesional(id)
         return ResponseEntity.noContent().build()
     }
 
-    @Operation(summary = "Listar todos los profesionales (paginado)")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Lista de profesionales obtenida exitosamente",
-            content = [Content(schema = Schema(implementation = ProfesionalListResponse::class))])
-    ])
-    @GetMapping
-    fun getAllProfesionales(
-        @RequestParam(defaultValue = "0")
-        @Parameter(description = "Número de página (0-based)", example = "0")
-        page: Int,
-        @RequestParam(defaultValue = "10")
-        @Parameter(description = "Tamaño de página", example = "10")
-        size: Int,
-        @RequestParam(defaultValue = "nombre,asc")
-        @Parameter(description = "Criterio de ordenación (campo,dirección)", example = "nombre,asc")
-        sort: String
-    ): ResponseEntity<ProfesionalListResponse> {
-        val sortDirection = if (sort.contains("desc")) Sort.Direction.DESC else Sort.Direction.ASC
-        val sortProperty = sort.split(",")[0]
-        val pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortProperty))
-        return ResponseEntity.ok(profesionalService.findAll(pageable))
-    }
+    @Operation(summary = "Filtrar profesionales con múltiples criterios")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Profesionales filtrados",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping("/filtrar")
+    fun filtrarProfesionales(
+        @RequestParam(required = false) nombre: String?,
+        @RequestParam(required = false) fechaNacimientoDesde: String?,
+        @RequestParam(required = false) fechaNacimientoHasta: String?,
+        @RequestParam(required = false) fechaInicioDesde: String?,
+        @RequestParam(required = false) fechaInicioHasta: String?,
+        @RequestParam(required = false) lugarNacimiento: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "nombre") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProfesionalResponse>> {
 
-    @Operation(summary = "Buscar profesionales por nombre (paginado)")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Lista de profesionales obtenida exitosamente",
-            content = [Content(schema = Schema(implementation = ProfesionalListResponse::class))])
-    ])
-    @GetMapping("/search")
-    fun searchProfesionalesByNombre(
-        @RequestParam
-        @Parameter(description = "Texto a buscar en el nombre", required = true)
-        nombre: String,
-        @RequestParam(defaultValue = "0")
-        @Parameter(description = "Número de página (0-based)", example = "0")
-        page: Int,
-        @RequestParam(defaultValue = "10")
-        @Parameter(description = "Tamaño de página", example = "10")
-        size: Int
-    ): ResponseEntity<ProfesionalListResponse> {
-        val pageable = PageRequest.of(page, size)
-        return ResponseEntity.ok(profesionalService.searchByNombre(nombre, pageable))
-    }
+        val response = profesionalService.filtrarProfesionales(
+            nombre = nombre,
+            fechaNacimientoDesde = fechaNacimientoDesde,
+            fechaNacimientoHasta = fechaNacimientoHasta,
+            fechaInicioDesde = fechaInicioDesde,
+            fechaInicioHasta = fechaInicioHasta,
+            lugarNacimiento = lugarNacimiento,
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            sortDirection = sortDirection
+        )
 
-    @Operation(summary = "Filtrar profesionales por rango de fechas de nacimiento (paginado)")
-    @ApiResponses(value = [
-        ApiResponse(responseCode = "200", description = "Lista de profesionales obtenida exitosamente",
-            content = [Content(schema = Schema(implementation = ProfesionalListResponse::class))])
-    ])
-    @GetMapping("/filter/fecha-nacimiento")
-    fun filterByFechaNacimiento(
-        @RequestParam
-        @Parameter(description = "Fecha de inicio (formato: yyyy-MM-dd)", example = "1980-01-01")
-        fechaInicio: Date,
-        @RequestParam
-        @Parameter(description = "Fecha de fin (formato: yyyy-MM-dd)", example = "2000-12-31")
-        fechaFin: Date,
-        @RequestParam(defaultValue = "0")
-        @Parameter(description = "Número de página (0-based)", example = "0")
-        page: Int,
-        @RequestParam(defaultValue = "10")
-        @Parameter(description = "Tamaño de página", example = "10")
-        size: Int
-    ): ResponseEntity<ProfesionalListResponse> {
-        val pageable = PageRequest.of(page, size)
-        return ResponseEntity.ok(profesionalService.findByFechaNacimientoBetween(fechaInicio, fechaFin, pageable))
+        return ResponseEntity.ok(response)
     }
 }

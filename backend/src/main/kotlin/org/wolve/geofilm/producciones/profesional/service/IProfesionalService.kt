@@ -1,28 +1,42 @@
 package org.wolve.geofilm.producciones.profesional.service
 
-import org.springframework.data.domain.Pageable
-import org.wolve.geofilm.producciones.profesional.dto.ProfesionalListResponse
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.model.Profesional
-import java.util.*
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 interface IProfesionalService {
-    // Operaciones CRUD básicas
-    fun findById(id: String): ProfesionalResponse
-    fun create(profesionalRequest: ProfesionalRequest): ProfesionalResponse
-    fun update(id: String, profesionalRequest: ProfesionalRequest): ProfesionalResponse
-    fun delete(id: String)
+    fun getAllProfesionales(
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ProfesionalResponse>
 
-    // Métodos de listado con paginación
-    fun findAll(pageable: Pageable): ProfesionalListResponse
-    fun searchByNombre(nombre: String, pageable: Pageable): ProfesionalListResponse
-    fun findByFechaNacimientoBetween(
-        fechaInicio: Date,
-        fechaFin: Date,
-        pageable: Pageable
-    ): ProfesionalListResponse
+    fun searchByNombre(
+        nombre: String,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ProfesionalResponse>
 
-    fun findEntityById(id: String): Profesional
-    fun existsById(id: String): Boolean
+    fun filtrarProfesionales(
+        nombre: String?,
+        fechaNacimientoDesde: String?,
+        fechaNacimientoHasta: String?,
+        fechaInicioDesde: String?,
+        fechaInicioHasta: String?,
+        lugarNacimiento: String?,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<ProfesionalResponse>
+
+    fun getProfesionalById(id: String): ProfesionalResponse?
+    fun createProfesional(request: ProfesionalRequest): ProfesionalResponse
+    fun updateProfesional(id: String, request: ProfesionalRequest): ProfesionalResponse?
+    fun deleteProfesional(id: String)
+    fun findEntityById(id: String): Profesional?
 }
