@@ -1,4 +1,5 @@
 ﻿import { createRouter, createWebHistory } from 'vue-router'
+import axios from '@/axios' // Importa tu configuración de axios
 
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import HomePage from '@/pages/Home.vue'
@@ -11,7 +12,7 @@ import Produccion from '@/pages/general/Produccion.vue'
 import General from '@/pages/general/General.vue'
 import Producciones from '@/pages/general/ProduccionesPage.vue'
 import Profesionales from '@/pages/general/ProfesionalPage.vue'
-
+import Sagas from '@/pages/general/SagasPage.vue'
 
 const routes = [
     {
@@ -21,40 +22,52 @@ const routes = [
             {
                 path: '',
                 name: 'Home',
-                component: HomePage
+                component: HomePage,
+                meta: { public: true }
             }
         ]
     },
     {
         path: '/auth/login',
         name: 'Login',
-        component: Login
+        component: Login,
+        meta: { public: true, onlyGuest: true }
     },
     {
         path: '/auth/register',
         name: 'Register',
-        component: Register
+        component: Register,
+        meta: { public: true, onlyGuest: true }
     },
     {
         path: '/auth/forgot-password',
         name: 'ForgotPassword',
-        component: ForgotPassword
+        component: ForgotPassword,
+        meta: { public: true }
     },
-
     {
         path: '/general',
         name: 'General',
-        component: General
+        component: General,
+        meta: { public: true }
     },
     {
         path: '/producciones',
         name: 'Producciones',
-        component: Producciones
+        component: Producciones,
+        meta: { public: true }
+    },
+    {
+        path: '/sagas',
+        name: 'Sagas',
+        component: Sagas,
+        meta: { public: true }
     },
     {
         path: '/myprofile',
-        name: 'My Profile',
-        component: MyProfile
+        name: 'MyProfile',
+        component: MyProfile,
+        meta: { requiresAuth: true }
     },
     {
         path: '/produccion',
@@ -80,6 +93,28 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+router.beforeEach(async (to, from, next) => {
+    const token = localStorage.getItem('jwt') // Cambiado a 'jwt' para coincidir con tu login
+    const isAuthenticated = !!token
+
+    // Configura el token en axios si existe
+    if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    }
+
+    // Rutas solo para invitados (login, register)
+    if (to.meta.onlyGuest && isAuthenticated) {
+        return next('/myprofile') // Redirige a perfil si ya está autenticado
+    }
+
+    // Rutas que requieren autenticación
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        return next('/auth/login') // Redirige a login si no está autenticado
+    }
+
+    next()
 })
 
 export default router
