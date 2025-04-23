@@ -2,16 +2,18 @@ package org.wolve.geofilm.producciones.saga.service
 
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionListResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.saga.dto.*
 import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
 import org.wolve.geofilm.producciones.saga.mapper.SagaMapper
 import org.wolve.geofilm.producciones.saga.repository.SagaRepository
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 import java.util.*
 
 @Service
@@ -112,8 +114,8 @@ class SagaServiceImpl(
     }
 
     @Cacheable(value = ["sagaProducciones"], key = "#sagaId")
-    override fun obtenerProduccionesDeSaga(sagaId: String, pageable: Pageable): ProduccionListResponse {
+    override fun obtenerProduccionesDeSaga(sagaId: String, pageable: Pageable): PaginationUtils.PaginatedResponse<ProduccionResponse> {
         val produccionesPage = repository.findProduccionesBySagaId(sagaId, pageable)
-        return prodMapper.toProduccionPageResponse(produccionesPage)
+        return prodMapper.toPaginatedResponse(produccionesPage)
     }
 }

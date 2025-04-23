@@ -7,17 +7,19 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionListResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.saga.dto.SagaListResponse
 import org.wolve.geofilm.producciones.saga.dto.SagaRequest
 import org.wolve.geofilm.producciones.saga.dto.SagaResponse
 import org.wolve.geofilm.producciones.saga.service.ISagaService
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 import java.util.*
 
 @RestController
@@ -211,7 +213,7 @@ class SagaController(
         @RequestParam(defaultValue = "10")
         @Parameter(description = "Tamaño de la página", example = "10")
         size: Int
-    ): ResponseEntity<ProduccionListResponse> {
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProduccionResponse>> {
         val pageable = PageRequest.of(page, size)
         return ResponseEntity.ok(sagaService.obtenerProduccionesDeSaga(sagaId, pageable))
     }

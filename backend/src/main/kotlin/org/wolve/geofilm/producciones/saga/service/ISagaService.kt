@@ -1,11 +1,12 @@
 package org.wolve.geofilm.producciones.saga.service
 
 import org.springframework.data.domain.Pageable
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionListResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.saga.dto.SagaRequest
 import org.wolve.geofilm.producciones.saga.dto.SagaListResponse
 import org.wolve.geofilm.producciones.saga.dto.SagaResponse
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 import java.util.*
 
 interface ISagaService {
@@ -19,5 +20,5 @@ interface ISagaService {
     fun getSagasByRangoFechas(fechaInicio: Date, fechaFin: Date, pageable: Pageable): SagaListResponse
     fun existsByNombre(nombre: String): Boolean
     fun agregarProduccionASaga(sagaId: String, produccionRequest: ProduccionRequest): SagaResponse
-    fun obtenerProduccionesDeSaga(sagaId: String, pageable: Pageable): ProduccionListResponse
+    fun obtenerProduccionesDeSaga(sagaId: String, pageable: Pageable): PaginationUtils.PaginatedResponse<ProduccionResponse>
 }

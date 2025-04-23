@@ -55,6 +55,7 @@ class SagaMapper {
         imagen = produccion.imagen,
         informacion = produccion.informacion,
         categorias = produccion.categorias,
-        clasificacionEdad = produccion.clasificacionEdad
+        clasificacionEdad = produccion.clasificacionEdad.valorNumerico,
+        puntuacion = produccion.puntuacion
     )
 }
