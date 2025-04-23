@@ -79,7 +79,7 @@
 
       <div class="explore-more-container" style="text-align: center; margin-top: 2rem;">
         <a
-            href="/general/General"
+            href="/general"
             class="btn btn-primary explore-btn" style="font-weight: bold; font-size: 1.5rem; border: 2px solid #462152; color: #462152; background-color: transparent;"
             :to="`/general`">
           <i class="fas fa-map-marked-alt"></i> Explorar más

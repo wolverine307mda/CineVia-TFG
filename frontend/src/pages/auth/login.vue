@@ -118,21 +118,40 @@ export default {
     }
   },
   methods: {
-    handleLogin() {
+    async handleLogin() {
       this.loading = true;
-
-      // Simulate API call
-      setTimeout(() => {
-        this.loading = false;
-        // In a real app, you would handle the login response here
-        console.log('Login attempt with:', {
-          email: this.email,
-          password: this.password,
-          rememberMe: this.rememberMe
+      try {
+        const response = await fetch('http://localhost:8080/api/v1/auth/signin', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: this.email,
+            password: this.password
+          })
         });
-      }, 1500);
-    }
-  }
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Credenciales inválidas');
+        }
+
+        const data = await response.json();
+        const token = data.token; // Asegúrate que esto coincide con la estructura de tu JwtAuthenticationResponse
+
+        // Guardar el token en localStorage
+        localStorage.setItem('jwt', token);
+
+        // Redirigir al dashboard
+        this.$router.push('/myprofile');
+      } catch (error) {
+        console.error('Error en inicio de sesión:', error);
+        alert(error.message || 'Inicio de sesión fallido. Verifica tus credenciales.');
+      } finally {
+        this.loading = false;
+      }
+    }  }
 }
 </script>
 

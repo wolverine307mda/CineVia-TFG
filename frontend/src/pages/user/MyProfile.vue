@@ -120,42 +120,24 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'ProfilePage',
   data() {
     return {
+      filtersVisible: false,
       darkMode: false,
-      defaultAvatar: 'https://ui-avatars.com/api/?name=' + encodeURIComponent('Usuario') + '&background=7e5bef&color=fff',
-      user: {
-        id: '550e8400-e29b-41d4-a716-446655440000',
-        username: 'cinemexplorer',
-        nombre: 'María',
-        apellido: 'García',
-        email: 'maria.garcia@example.com',
-        telefono: '+34 612 345 678',
-        rol: 'USUARIO',
-        fechaRegistro: '2023-05-15T10:30:00',
-        fechaNacimiento: '1990-08-25T00:00:00',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-        updatedAt: '2023-11-20T15:45:00'
-      },
+      defaultAvatar: 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff',
+      user: {},
       userStats: {
-        favorites: 24,
-        reviews: 8,
-        comments: 15,
-        pdfsGenerated: 3
+        favorites: 0,
+        reviews: 0,
+        comments: 0,
+        pdfsGenerated: 0
       },
-      recentFavorites: [
-        { id: 1, tipo: 'PRODUCCION', titulo: 'El Señor de los Anillos', fecha: '2023-11-15T14:30:00' },
-        { id: 2, tipo: 'PARTICIPANTE', titulo: 'Viggo Mortensen', fecha: '2023-11-10T09:15:00' },
-        { id: 3, tipo: 'PRODUCCION', titulo: 'Juego de Tronos', fecha: '2023-11-05T18:45:00' }
-      ],
-      recentReviews: [
-        { id: 1, puntuacion: 5, comentario: 'Increíble ubicación, exactamente como en la película. Las vistas son espectaculares.',
-          ubicacionNombre: 'Hobbiton, Nueva Zelanda', fecha: '2023-11-12T16:20:00' },
-        { id: 2, puntuacion: 4, comentario: 'El lugar es mágico aunque un poco masificado de turistas.',
-          ubicacionNombre: 'Dubrovnik (Desembarco del Rey)', fecha: '2023-10-28T11:40:00' }
-      ]
+      recentFavorites: [],
+      recentReviews: []
     }
   },
   computed: {
@@ -168,6 +150,7 @@ export default {
       })
     },
     formattedRegDate() {
+      if (!this.user.fechaRegistro) return 'No especificada'
       return new Date(this.user.fechaRegistro).toLocaleDateString('es-ES', {
         year: 'numeric',
         month: 'long',
@@ -177,8 +160,7 @@ export default {
   },
   created() {
     this.loadDarkModePreference()
-    // Aquí iría la llamada al backend para cargar los datos reales del usuario
-    // this.loadUserData()
+    this.loadUserData()
   },
   methods: {
     loadDarkModePreference() {
@@ -210,20 +192,38 @@ export default {
       return text.length > length ? text.substring(0, length) + '...' : text
     },
     editProfile() {
-      console.log('Editar perfil')
-      // this.$router.push('/profile/edit')
+      this.$router.push('/profile/edit')
     },
     changePassword() {
-      console.log('Cambiar contraseña')
-      // this.$router.push('/profile/change-password')
+      this.$router.push('/profile/change-password')
     },
     adminPanel() {
-      console.log('Acceder al panel de administración')
-      // this.$router.push('/admin')
+      this.$router.push('/admin')
     },
     openAvatarUpload() {
-      console.log('Cambiar avatar')
-      // Implementar lógica para subir nueva imagen
+      console.log('Subir nuevo avatar')
+    },
+    async loadUserData() {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await axios.get('/api/user/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
+        this.user = response.data.usuario
+        this.userStats = response.data.estadisticas || {}
+        this.recentFavorites = response.data.ultimosFavoritos || []
+        this.recentReviews = response.data.ultimasResenas || []
+
+        // Avatar por defecto si no tiene
+        if (!this.user.avatar) {
+          this.user.avatar = this.defaultAvatar
+        }
+      } catch (error) {
+        console.error('Error al cargar los datos del usuario:', error)
+      }
     }
   }
 }
