@@ -2,24 +2,26 @@ package org.wolve.geofilm.producciones.produccion.mapper
 
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Component
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionListResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
+import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
 import org.wolve.geofilm.producciones.produccion.models.Produccion
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 @Component
 class ProduccionMapper {
-    fun Produccion.toResponse(): ProduccionResponse = ProduccionResponse(
-        id = this.id,
-        titulo = this.titulo,
-        tipo = this.tipo,
-        estreno = this.estreno,
-        duracion = this.duracion,
-        sinopsis = this.sinopsis,
-        imagen = this.imagen,
-        informacion = this.informacion,
-        categorias = this.categorias,
-        clasificacionEdad = this.clasificacionEdad,
+    fun toResponse(produccion: Produccion): ProduccionResponse = ProduccionResponse(
+        id = produccion.id,
+        titulo = produccion.titulo,
+        tipo = produccion.tipo,
+        estreno = produccion.estreno,
+        duracion = produccion.duracion,
+        sinopsis = produccion.sinopsis,
+        imagen = produccion.imagen,
+        informacion = produccion.informacion,
+        puntuacion = produccion.puntuacion,
+        categorias = produccion.categorias,
+        clasificacionEdad = produccion.clasificacionEdad.valorNumerico
     )
 
     fun toProduccionResponse(entity: Produccion): ProduccionResponse = ProduccionResponse(
@@ -31,8 +33,9 @@ class ProduccionMapper {
         sinopsis = entity.sinopsis,
         imagen = entity.imagen,
         informacion = entity.informacion,
+        puntuacion = entity.puntuacion,
         categorias = entity.categorias,
-        clasificacionEdad = entity.clasificacionEdad
+        clasificacionEdad = entity.clasificacionEdad.valorNumerico
     )
 
     fun toProduccionEntity(request: ProduccionRequest): Produccion = Produccion(
@@ -43,17 +46,13 @@ class ProduccionMapper {
         sinopsis = request.sinopsis,
         imagen = request.imagen,
         informacion = request.informacion,
-        categorias = request.categorias.toMutableSet(), // Aseguramos mutableSet
-        clasificacionEdad = request.clasificacionEdad
-    ).apply {
-        // Aquí puedes inicializar relaciones si es necesario
-    }
+        puntuacion = request.puntuacion,
+        categorias = request.categorias.toMutableSet(),
+        clasificacionEdad = ClasificacionEdad.fromValorNumerico(request.clasificacionEdad)
+            ?: throw IllegalArgumentException("Clasificación de edad no válida")
+    )
 
-    fun toProduccionPageResponse(page: Page<Produccion>): ProduccionListResponse =
-        ProduccionListResponse(
-            producciones = page.content.map { it.toResponse() },
-            total = page.totalElements,
-            page = page.number,
-            size = page.size
-        )
+    fun toPaginatedResponse(page: Page<Produccion>): PaginationUtils.PaginatedResponse<ProduccionResponse> {
+        return PaginationUtils.toPaginatedResponse(page.map { toResponse(it) })
+    }
 }

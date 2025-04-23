@@ -13,6 +13,7 @@ data class ProduccionResponse(
     val sinopsis: String,
     val imagen: String?,
     val informacion: String?,
+    val puntuacion: Double,
     val categorias: Set<Categoria>,
     val clasificacionEdad: Int,
 )

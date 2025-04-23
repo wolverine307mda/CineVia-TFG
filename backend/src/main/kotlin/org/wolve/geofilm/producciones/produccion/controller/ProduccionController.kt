@@ -1,6 +1,7 @@
 package org.wolve.geofilm.producciones.produccion.controller
 
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
@@ -11,7 +12,12 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
+import org.wolve.geofilm.producciones.produccion.models.Categoria
+import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
+import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
+import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
+import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 @RestController
 @RequestMapping("/api/producciones")
@@ -20,25 +26,47 @@ class ProduccionController(
     private val produccionService: IProduccionService
 ) {
 
-    @Operation(summary = "Obtiene todas las producciones")
+    @Operation(summary = "Obtiene todas las producciones (sin paginación)")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Listado de producciones",
-                content = [Content(mediaType = "application/json", schema = Schema(implementation = ProduccionResponse::class))])
+            ApiResponse(responseCode = "200", description = "Listado completo de producciones",
+                content = [Content(mediaType = "application/json",
+                    array = ArraySchema(schema = Schema(implementation = ProduccionResponse::class)))])
+        ]
+    )
+    @GetMapping("/all")
+    fun getAllProduccionesWithoutPagination(): ResponseEntity<List<ProduccionResponse>> {
+        val producciones = produccionService.getAllProducciones()
+        return ResponseEntity.ok(producciones)
+    }
+
+    @Operation(summary = "Obtiene todas las producciones (paginadas)")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado paginado de producciones",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
         ]
     )
     @GetMapping
-    fun getAllProducciones(): ResponseEntity<List<ProduccionResponse>> {
-        val producciones = produccionService.getAllProducciones()
-        return ResponseEntity.ok(producciones)
+    fun getAllProducciones(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "titulo") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProduccionResponse>> {
+        val response = produccionService.getAllProducciones(page, size, sortBy, sortDirection)
+        return ResponseEntity.ok(response)
     }
 
     @Operation(summary = "Obtiene una producción por ID")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Producción encontrada",
-                content = [Content(mediaType = "application/json", schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()])
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProduccionResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Producción no encontrada",
+                content = [Content()])
         ]
     )
     @GetMapping("/{id}")
@@ -51,30 +79,14 @@ class ProduccionController(
         }
     }
 
-    @Operation(summary = "Obtiene producciones por Título")
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "200", description = "Listado de producciones encontrado",
-                content = [Content(mediaType = "application/json", schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()])
-        ]
-    )
-    @GetMapping("/titulo/{titulo}")
-    fun getProduccionesByTitulo(@PathVariable titulo: String): ResponseEntity<List<ProduccionResponse>> {
-        val producciones = produccionService.getProduccionesByTitulo(titulo)
-        return if (producciones.isNotEmpty()) {
-            ResponseEntity.ok(producciones)
-        } else {
-            ResponseEntity(HttpStatus.NOT_FOUND)
-        }
-    }
-
     @Operation(summary = "Crea una nueva producción")
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "201", description = "Producción creada",
-                content = [Content(mediaType = "application/json", schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "400", description = "Datos inválidos", content = [Content()])
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProduccionResponse::class))]),
+            ApiResponse(responseCode = "400", description = "Datos inválidos",
+                content = [Content()])
         ]
     )
     @PostMapping
@@ -87,8 +99,10 @@ class ProduccionController(
     @ApiResponses(
         value = [
             ApiResponse(responseCode = "200", description = "Producción actualizada",
-                content = [Content(mediaType = "application/json", schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()])
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = ProduccionResponse::class))]),
+            ApiResponse(responseCode = "404", description = "Producción no encontrada",
+                content = [Content()])
         ]
     )
     @PutMapping("/{id}")
@@ -107,13 +121,130 @@ class ProduccionController(
     @Operation(summary = "Elimina una producción por ID")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "204", description = "Producción eliminada", content = [Content()]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()])
+            ApiResponse(responseCode = "204", description = "Producción eliminada",
+                content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Producción no encontrada",
+                content = [Content()])
         ]
     )
     @DeleteMapping("/{id}")
     fun deleteProduccion(@PathVariable id: String): ResponseEntity<Void> {
         produccionService.deleteProduccion(id)
         return ResponseEntity.noContent().build()
+    }
+
+    @Operation(summary = "Filtrar producciones con múltiples criterios")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Producciones filtradas",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping("/filtrar")
+    fun filtrarProducciones(
+        @RequestParam(required = false) titulo: String?,
+        @RequestParam(required = false) tipo: String?,
+        @RequestParam(required = false) estrenoDesde: Int?,
+        @RequestParam(required = false) estrenoHasta: Int?,
+        @RequestParam(required = false) categorias: Set<Categoria>?,
+        @RequestParam(required = false) clasificacionEdad: ClasificacionEdad?,
+        @RequestParam(required = false) duracionMin: Int?,
+        @RequestParam(required = false) duracionMax: Int?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "titulo") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginatedResponse<ProduccionResponse>> {
+        val tipoProduccion = tipo?.let {
+            try {
+                TipoProduccion.valueOf(it)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
+
+        val response = produccionService.filtrarProducciones(
+            titulo = titulo,
+            tipo = tipoProduccion,
+            estrenoDesde = estrenoDesde,
+            estrenoHasta = estrenoHasta,
+            categorias = categorias,
+            clasificacionEdad = clasificacionEdad,
+            duracionMin = duracionMin,
+            duracionMax = duracionMax,
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            sortDirection = sortDirection
+        )
+
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Filtrar producciones por categorías")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Producciones filtradas por categorías",
+                content = [Content(mediaType = "application/json",
+                    schema = Schema(implementation = PaginatedResponse::class))])
+        ]
+    )
+    @GetMapping("/filtrar/categorias")
+    fun filtrarPorCategorias(
+        @RequestParam categorias: Set<Categoria>,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "titulo") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProduccionResponse>> {
+        val response = produccionService.filtrarPorCategorias(
+            categorias = categorias,
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            sortDirection = sortDirection
+        )
+        return ResponseEntity.ok(response)
+    }
+
+    @Operation(summary = "Obtener todas las clasificaciones de edad disponibles")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado de clasificaciones",
+                content = [Content(mediaType = "application/json",
+                    array = ArraySchema(schema = Schema(implementation = ClasificacionEdad::class))
+                )])
+        ]
+    )
+    @GetMapping("/clasificaciones-edad")
+    fun getClasificacionesEdad(): ResponseEntity<List<ClasificacionEdad>> {
+        return ResponseEntity.ok(produccionService.getClasificacionesEdad())
+    }
+
+    @Operation(summary = "Obtener todas las categorías disponibles")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado de categorías",
+                content = [Content(mediaType = "application/json",
+                    array = ArraySchema(schema = Schema(implementation = Categoria::class)))])
+        ]
+    )
+    @GetMapping("/categorias")
+    fun getCategoriasDisponibles(): ResponseEntity<List<Categoria>> {
+        return ResponseEntity.ok(produccionService.getCategoriasDisponibles())
+    }
+
+    @Operation(summary = "Obtener todos los tipos de producción disponibles")
+    @ApiResponses(
+        value = [
+            ApiResponse(responseCode = "200", description = "Listado de tipos de producción",
+                content = [Content(mediaType = "application/json",
+                    array = ArraySchema(schema = Schema(implementation = TipoProduccion::class)))])
+        ]
+    )
+    @GetMapping("/tipos")
+    fun getTiposProduccion(): ResponseEntity<List<TipoProduccion>> {
+        return ResponseEntity.ok(produccionService.getTiposProduccion())
     }
 }

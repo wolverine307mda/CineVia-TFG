@@ -12,6 +12,7 @@ data class ProduccionRequest(
     val sinopsis: String,
     val imagen: String? = null,
     val informacion: String? = null,
+    val puntuacion: Double = 0.0,
     val categorias: Set<Categoria>,
     val clasificacionEdad: Int,
 )

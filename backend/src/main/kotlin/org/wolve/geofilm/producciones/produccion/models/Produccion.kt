@@ -14,7 +14,7 @@ data class Produccion(
     @Column(nullable = false, unique = true, columnDefinition = "varchar(255)")
     val id: String = GuidGenerator().generarId(),
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "varchar(255)")
     var titulo: String = "",
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +40,9 @@ data class Produccion(
     @Column(nullable = true, columnDefinition = "TEXT")
     var informacion: String? = null,
 
+    @Column(nullable = true)
+    var puntuacion: Double = 0.0,
+
     @ElementCollection(targetClass = Categoria::class, fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     @CollectionTable(
@@ -50,7 +53,7 @@ data class Produccion(
     val categorias: MutableSet<Categoria> = mutableSetOf(),
 
     @Column(nullable = false)
-    var clasificacionEdad: Int = 0,
+    var clasificacionEdad: ClasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS,
 
     @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
     val ubicaciones: MutableList<Ubicacion> = mutableListOf(),
@@ -68,6 +71,7 @@ data class Produccion(
         sinopsis = "",
         imagen = null,
         informacion = null,
-        clasificacionEdad = 0
+        puntuacion = 0.0,
+        clasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS
     )
 }
