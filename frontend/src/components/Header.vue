@@ -84,14 +84,47 @@
 
           <!-- Acciones de usuario -->
           <div class="user-actions">
-            <a
-                ref="loginBtn"
-                href="/auth/login"
-                class="login-btn"
-                @mouseenter="animateLogin"
-            >
-              <i class="fas fa-user me-2" /> Iniciar sesión
-            </a>
+            <template v-if="!isAuthenticated">
+              <a
+                  ref="loginBtn"
+                  href="/auth/login"
+                  class="login-btn"
+                  @mouseenter="animateLogin"
+              >
+                <i class="fas fa-user me-2" /> Iniciar sesión
+              </a>
+            </template>
+            <template v-else>
+              <div class="dropdown">
+                <button
+                    class="user-dropdown-btn"
+                    type="button"
+                    id="userDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+                  <i class="fas fa-user-circle me-2" /> Mi perfil
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  <li>
+                    <a class="dropdown-item" href="/myprofile">
+                      <i class="fas fa-user me-2" /> Perfil
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="/settings">
+                      <i class="fas fa-cog me-2" /> Configuración
+                    </a>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <button class="dropdown-item" @click="handleLogout">
+                      <i class="fas fa-sign-out-alt me-2" /> Cerrar sesión
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -117,15 +150,36 @@ export default {
         { text: 'Producciones', icon: 'fas fa-film', link: '/producciones' },
         { text: 'Profesionales', icon: 'fas fa-user-tie', link: '/profesionales' },
         { text: 'Sagas', icon: 'fas fa-stream', link: '/sagas' }
-      ]
+      ],
+      isAuthenticated: false
     }
   },
+  mounted() {
+    this.checkAuthStatus();
+    window.addEventListener('storage', this.handleStorageChange);
+  },
+  beforeUnmount() {
+    window.removeEventListener('storage', this.handleStorageChange);
+  },
   methods: {
+    checkAuthStatus() {
+      this.isAuthenticated = !!localStorage.getItem('jwt');
+    },
+    handleStorageChange(event) {
+      if (event.key === 'jwt') {
+        this.checkAuthStatus();
+      }
+    },
+    handleLogout() {
+      localStorage.removeItem('jwt');
+      this.isAuthenticated = false;
+      window.location.href = '/auth/login';
+    },
     toggleDarkMode() {
       this.$emit('toggle-dark-mode');
       this.animateDarkModeButton();
     },
-    animateLogo () {
+    animateLogo() {
       if (this.$refs.logoIcon) {
         const logo = this.$refs.logoIcon
         logo.style.transform = 'rotate(15deg)'
@@ -134,7 +188,7 @@ export default {
         }, 300)
       }
     },
-    animateNavItem (event) {
+    animateNavItem(event) {
       if (event?.currentTarget) {
         event.currentTarget.style.transform = 'translateY(-3px)'
         setTimeout(() => {
@@ -144,18 +198,7 @@ export default {
         }, 200)
       }
     },
-    animateFav () {
-      if (this.$refs.favIcon) {
-        const fav = this.$refs.favIcon
-        fav.style.transform = 'scale(1.2)'
-        setTimeout(() => {
-          if (this.$refs.favIcon) {
-            fav.style.transform = 'scale(1)'
-          }
-        }, 300)
-      }
-    },
-    animateLogin () {
+    animateLogin() {
       if (this.$refs.loginBtn) {
         const btn = this.$refs.loginBtn
         btn.style.boxShadow = '0 0 15px rgba(167, 139, 250, 0.6)'
@@ -378,6 +421,53 @@ header {
   }
 
   .login-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+.user-dropdown-btn {
+  background: #a78bfa;
+  color: #0f0c29;
+  padding: 0.5rem 1.2rem;
+  border-radius: 30px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.user-dropdown-btn:hover {
+  background: #c4b5fd;
+  transform: translateY(-2px);
+}
+
+.dropdown-menu {
+  background-color: #1e1b4b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-item {
+  color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #a78bfa;
+  color: #0f0c29;
+}
+
+.dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 992px) {
+  .user-dropdown-btn {
+    width: 100%;
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .dropdown-menu {
     width: 100%;
     text-align: center;
   }

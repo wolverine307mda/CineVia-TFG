@@ -1,41 +1,41 @@
 ﻿<template>
-  <div class="movie-card" :class="{ 'dark-mode': darkMode }">
-    <div class="card-image">
+  <div class="card-base" :class="{ 'dark-mode': darkMode }">
+    <div class="card-image" style="padding-bottom: 150%">
       <img :src="movie.poster" :alt="movie.title" loading="lazy">
-      <button
-          class="favorite-btn"
-          @click.stop="toggleFavorite"
-          :aria-label="movie.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'"
-      >
+      <button class="favorite-btn" @click.stop="toggleFavorite"
+              :aria-label="movie.isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'">
         <i :class="movie.isFavorite ? 'fas fa-heart' : 'far fa-heart'"></i>
       </button>
+      <div class="info-badge">
+        +{{ movie.clasificacionEdad }}
+      </div>
       <div class="rating-badge">
-        <i class="fas fa-star"></i> {{ movie.rating.toFixed(1) }}
+        <i class="fas fa-star"></i> {{ movie.puntuacion.toFixed(1) }}
       </div>
     </div>
 
     <div class="card-body">
-      <div class="card-header">
-        <h3 class="movie-title">{{ movie.title }}</h3>
-        <span class="movie-year">{{ movie.year }}</span>
+      <div class="card-header-row">
+        <h3 class="card-title">{{ movie.title }}</h3>
+        <span class="card-subtitle">{{ movie.year }}</span>
       </div>
 
-      <div class="movie-meta">
-        <span class="movie-duration">
-          <i class="fas fa-clock"></i> {{ Math.floor(movie.duration / 60) }}h {{ movie.duration % 60 }}m
+      <div class="card-meta">
+        <span>
+          <i class="fas fa-clock"></i> {{ formatDuration(movie.duration) }}
         </span>
-        <span class="movie-director">
-          <i class="fas fa-user"></i> {{ movie.director }}
-        </span>
-      </div>
-
-      <div class="genre-tags">
-        <span v-for="(genre, index) in movie.genres" :key="index" class="genre-tag">
-          {{ genre }}
+        <span>
+          <i class="fas fa-film"></i> {{ formatType(movie.type) }}
         </span>
       </div>
 
-      <p class="movie-plot">{{ truncateText(movie.plot, 120) }}</p>
+      <div class="tags-container">
+        <span v-for="(genre, index) in movie.genres" :key="index" class="tag">
+          {{ formatGenre(genre) }}
+        </span>
+      </div>
+
+      <p class="card-description">{{ truncateText(movie.plot, 120) }}</p>
 
       <button class="details-btn" @click.stop="viewDetails">
         Ver detalles <i class="fas fa-chevron-right"></i>
@@ -45,219 +45,103 @@
 </template>
 
 <script>
+import '@/assets/styles/cards.css'
+
 export default {
   name: 'MovieCard',
   props: {
-    movie: Object,
-    darkMode: Boolean
+    movie: {
+      type: Object,
+      required: true,
+      default: () => ({
+        id: '',
+        title: '',
+        type: '',
+        year: 0,
+        duration: 0,
+        plot: '',
+        poster: '',
+        puntuacion: 0,
+        clasificacionEdad: 0,
+        genres: [],
+        isFavorite: false
+      })
+    },
+    darkMode: {
+      type: Boolean,
+      default: false
+    }
   },
   methods: {
     toggleFavorite() {
-      this.$emit('toggle-favorite', this.movie.id)
+      this.$emit('toggle-favorite', this.movie.id);
     },
     viewDetails() {
-      this.$router.push(`/movie/${this.movie.id}`)
+      this.$router.push(`/movie/${this.movie.id}`);
     },
     truncateText(text, length) {
-      if (!text) return ''
-      return text.length > length ? text.substring(0, length) + '...' : text
+      if (!text) return '';
+      return text.length > length ? text.substring(0, length) + '...' : text;
+    },
+    formatDuration(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours}h ${mins}m`;
+    },
+    formatGenre(genre) {
+      const genreMap = {
+        'ACCION': 'Acción',
+        'AVENTURA': 'Aventura',
+        'CRIMEN': 'Crimen',
+        'DRAMA': 'Drama',
+        'FANTASIA': 'Fantasía',
+        'CIENCIA_FICCION': 'Ciencia Ficción',
+        'ROMANCE': 'Romance',
+        'MUSICAL': 'Musical',
+        'COMEDIA': 'Comedia',
+        'WESTERN': 'Western'
+      };
+      return genreMap[genre] || genre;
+    },
+    formatType(type) {
+      return type === 'PELICULA' ? 'Película' : type;
     }
   }
 }
 </script>
 
 <style scoped>
-.movie-card {
-  background-color: rgba(230, 228, 231, 0.75);
-  color: #222;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.dark-mode {
-  background-color: rgba(28, 28, 30, 0.95);
-  color: #f0f0f0;
-}
-
-.movie-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.card-image {
-  position: relative;
-  height: 0;
-  padding-bottom: 150%;
-  overflow: hidden;
-}
-
-.card-image img {
+.rating-badge {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.movie-card:hover .card-image img {
-  transform: scale(1.05);
-}
-
-.favorite-btn {
-  position: absolute;
-  top: 10px;
+  bottom: 10px;
   right: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
-  border: none;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #FFD700;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  gap: 0.3rem;
   z-index: 2;
 }
 
-.favorite-btn:hover {
-  background-color: var(--color-primary, #6c5ce7);
+.rating-badge i {
+  color: #FFD700;
 }
 
-.favorite-btn i.fas {
-  color: #ff4757;
-}
-
-.rating-badge {
+.info-badge {
   position: absolute;
   bottom: 10px;
   left: 10px;
   background-color: rgba(0, 0, 0, 0.8);
-  color: #ffd700;
+  color: white;
   padding: 0.3rem 0.8rem;
   border-radius: 20px;
   font-size: 0.9rem;
   font-weight: bold;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
 }
 
-.card-body {
-  padding: 1.2rem;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.8rem;
-}
-
-.movie-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.movie-year {
-  background-color: var(--color-primary, #6c5ce7);
-  color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.movie-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
-  font-size: 0.85rem;
-  color: inherit;
-  opacity: 0.8;
-}
-
-.movie-meta i {
-  margin-right: 0.3rem;
-  color: var(--color-primary, #6c5ce7);
-}
-
-.genre-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.genre-tag {
-  background-color: rgba(108, 92, 231, 0.2);
-  color: var(--color-primary, #6c5ce7);
-  padding: 0.2rem 0.6rem;
-  border-radius: 50px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.dark-mode .genre-tag {
-  background-color: rgba(108, 92, 231, 0.3);
-  color: #d6d0ff;
-}
-
-.movie-plot {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  margin-bottom: 1.2rem;
-  flex: 1;
-}
-
-.details-btn {
-  align-self: flex-start;
-  background: none;
-  border: none;
-  color: var(--color-primary, #6c5ce7);
-  font-weight: 600;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  cursor: pointer;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.details-btn:hover {
-  background-color: rgba(108, 92, 231, 0.1);
-}
-
-.dark-mode .details-btn:hover {
-  background-color: rgba(108, 92, 231, 0.2);
-}
-
-.details-btn i {
-  font-size: 0.8rem;
-}
-
-@media (max-width: 768px) {
-  .card-header {
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-  .movie-year {
-    margin-left: 0;
-    align-self: flex-start;
-  }
-}
 </style>
