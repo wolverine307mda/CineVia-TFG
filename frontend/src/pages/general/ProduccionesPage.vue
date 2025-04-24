@@ -58,214 +58,209 @@
 
       <!-- Paginación -->
       <div class="pagination-controls" v-if="totalPages > 1">
-        <button
-            class="pagination-btn"
-            :disabled="currentPage === 1"
-            @click="prevPage"
-        >
-          <i class="fas fa-chevron-left"></i>
-        </button>
-
-        <span class="page-indicator">
-          Página {{ currentPage }} de {{ totalPages }}
-        </span>
-
-        <button
-            class="pagination-btn"
-            :disabled="currentPage === totalPages"
-            @click="nextPage"
-        >
-          <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Filtros -->
-  <div class="modal-overlay" v-if="showFiltersModal" @click.self="showFiltersModal = false">
-    <div class="filters-modal" :class="{ 'dark-mode': darkMode }">
-      <div class="modal-header">
-        <h3><i class="fas fa-filter"></i> Filtros Avanzados</h3>
-        <button class="close-btn" @click="showFiltersModal = false">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Filtro por tipo -->
-        <div class="filter-section">
-          <div class="section-header" @click="toggleSection('type')">
-            <i class="fas fa-film"></i>
-            <span>Tipo</span>
-            <i class="section-icon fas" :class="expandedSection === 'type' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
-          <div class="section-content" v-show="expandedSection === 'type'">
-            <div class="type-options">
-              <button
-                  v-for="type in typeOptions"
-                  :key="type.value"
-                  :class="{ 'active': filters.tipo === type.value }"
-                  @click="filters.tipo = filters.tipo === type.value ? null : type.value"
-              >
-                {{ type.label }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filtro por género -->
-        <div class="filter-section">
-          <div class="section-header" @click="toggleSection('genre')">
-            <i class="fas fa-tags"></i>
-            <span>Géneros</span>
-            <i class="section-icon fas" :class="expandedSection === 'genre' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
-          <div class="section-content" v-show="expandedSection === 'genre'">
-            <div class="genre-tags">
-              <button
-                  v-for="genre in genres"
-                  :key="genre.value"
-                  :class="{ 'active': filters.categorias?.includes(genre.value) }"
-                  @click="toggleGenre(genre.value)"
-              >
-                {{ genre.name }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filtro por año -->
-        <div class="filter-section">
-          <div class="section-header" @click="toggleSection('year')">
-            <i class="fas fa-calendar-alt"></i>
-            <span>Año de lanzamiento</span>
-            <i class="section-icon fas" :class="expandedSection === 'year' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
-          <div class="section-content" v-show="expandedSection === 'year'">
-            <div class="year-range">
-              <div class="year-inputs">
-                <div class="input-group">
-                  <label>Desde:</label>
-                  <input
-                      type="number"
-                      v-model="filters.estrenoDesde"
-                      placeholder="Año mínimo"
-                      min="1900"
-                      :max="new Date().getFullYear()"
-                  >
-                </div>
-                <div class="input-group">
-                  <label>Hasta:</label>
-                  <input
-                      type="number"
-                      v-model="filters.estrenoHasta"
-                      placeholder="Año máximo"
-                      min="1900"
-                      :max="new Date().getFullYear()"
-                  >
-                </div>
-              </div>
-              <div class="quick-years">
-                <button @click="setYearRange(new Date().getFullYear() - 3, new Date().getFullYear())">Últimos 3 años</button>
-                <button @click="setYearRange(2010, 2019)">2010s</button>
-                <button @click="setYearRange(2000, 2009)">2000s</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filtro por clasificación de edad -->
-        <div class="filter-section">
-          <div class="section-header" @click="toggleSection('rating')">
-            <i class="fas fa-star"></i>
-            <span>Clasificación de Edad</span>
-            <i class="section-icon fas" :class="expandedSection === 'rating' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
-          <div class="section-content" v-show="expandedSection === 'rating'">
-            <div class="rating-filter">
-              <v-select
-                  v-model="filters.clasificacionEdad"
-                  :options="clasificacionOptions"
-                  label="label"
-                  :reduce="option => option.value"
-                  placeholder="Selecciona clasificación"
-                  :clearable="true"
-              ></v-select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Filtro por duración -->
-        <div class="filter-section">
-          <div class="section-header" @click="toggleSection('duration')">
-            <i class="fas fa-clock"></i>
-            <span>Duración (minutos)</span>
-            <i class="section-icon fas" :class="expandedSection === 'duration' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
-          </div>
-          <div class="section-content" v-show="expandedSection === 'duration'">
-            <div class="duration-inputs">
-              <div class="input-group">
-                <label>Mínimo:</label>
-                <input
-                    type="number"
-                    v-model="filters.duracionMin"
-                    placeholder="Mínimo"
-                    min="0"
-                >
-              </div>
-              <div class="input-group">
-                <label>Máximo:</label>
-                <input
-                    type="number"
-                    v-model="filters.duracionMax"
-                    placeholder="Máximo"
-                    min="0"
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <div class="results-count">
-          {{ totalItems }} producciones encontradas
-        </div>
-        <div class="modal-actions">
-          <button class="reset-btn" @click="resetFilters">
-            <i class="fas fa-undo"></i> Limpiar Todo
+        <div class="pagination-inner">
+          <button
+              class="pagination-btn"
+              :disabled="currentPage === 1"
+              @click="prevPage"
+          >
+            <i class="fas fa-chevron-left"></i>
           </button>
-          <button class="apply-btn" @click="applyFilters">
-            <i class="fas fa-check"></i> Aplicar Filtros
+
+          <span class="page-indicator">
+      Página {{ currentPage }} de {{ totalPages }}
+    </span>
+
+          <button
+              class="pagination-btn"
+              :disabled="currentPage === totalPages"
+              @click="nextPage"
+          >
+            <i class="fas fa-chevron-right"></i>
           </button>
         </div>
       </div>
     </div>
+
+    <!-- Modal de Filtros -->
+    <div class="modal-overlay" v-if="showFiltersModal" @click.self="showFiltersModal = false">
+      <div class="filters-modal">
+        <div class="modal-header">
+          <h3><i class="fas fa-filter"></i> Filtros Avanzados</h3>
+          <button class="close-btn" @click="showFiltersModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Filtro por tipo -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('type')">
+              <i class="fas fa-film"></i>
+              <span>Tipo de Producción</span>
+              <i class="section-icon fas" :class="expandedSection === 'type' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'type'">
+              <div class="type-options">
+                <button
+                    v-for="type in tiposProduccion"
+                    :key="type"
+                    :class="{ 'active': filters.tipo === type }"
+                    @click="filters.tipo = filters.tipo === type ? null : type"
+                >
+                  {{ formatTipoProduccion(type) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro por categoría -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('category')">
+              <i class="fas fa-tags"></i>
+              <span>Categorías</span>
+              <i class="section-icon fas" :class="expandedSection === 'category' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'category'">
+              <div class="category-tags">
+                <button
+                    v-for="category in categoriasDisponibles"
+                    :key="category"
+                    :class="{ 'active': filters.categorias && filters.categorias.includes(category) }"
+                    @click="toggleCategory(category)"
+                >
+                  {{ formatCategoria(category) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro por año -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('year')">
+              <i class="fas fa-calendar-alt"></i>
+              <span>Año de Estreno</span>
+              <i class="section-icon fas" :class="expandedSection === 'year' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'year'">
+              <div class="year-range-slider">
+                <div class="slider-container">
+                  <input
+                      type="range"
+                      v-model.number="filters.estrenoDesde"
+                      :min="minYear"
+                      :max="maxYear"
+                      @input="updateYearRange"
+                      class="slider"
+                  >
+                  <input
+                      type="range"
+                      v-model.number="filters.estrenoHasta"
+                      :min="minYear"
+                      :max="maxYear"
+                      @input="updateYearRange"
+                      class="slider"
+                  >
+                </div>
+                <div class="slider-values">
+                  <span>{{ filters.estrenoDesde || minYear }}</span>
+                  <span>{{ filters.estrenoHasta || maxYear }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro por clasificación de edad -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('rating')">
+              <i class="fas fa-star"></i>
+              <span>Clasificación de Edad</span>
+              <i class="section-icon fas" :class="expandedSection === 'rating' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'rating'">
+              <div class="rating-options">
+                <button
+                    v-for="rating in clasificacionesEdad"
+                    :key="rating"
+                    :class="{ 'active': filters.clasificacionEdad === rating }"
+                    @click="filters.clasificacionEdad = filters.clasificacionEdad === rating ? null : rating"
+                >
+                  {{ formatClasificacionEdad(rating) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filtro por duración -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('duration')">
+              <i class="fas fa-clock"></i>
+              <span>Duración (minutos)</span>
+              <i class="section-icon fas" :class="expandedSection === 'duration' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'duration'">
+              <div class="duration-range">
+                <div class="input-group">
+                  <label>Mínimo:</label>
+                  <input
+                      type="number"
+                      v-model.number="filters.duracionMin"
+                      placeholder="Mínimo"
+                      min="0"
+                  >
+                </div>
+                <div class="input-group">
+                  <label>Máximo:</label>
+                  <input
+                      type="number"
+                      v-model.number="filters.duracionMax"
+                      placeholder="Máximo"
+                      min="0"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="results-count">
+            {{ totalItems }} producciones encontradas
+          </div>
+          <div class="modal-actions">
+            <button class="reset-btn" @click="resetFilters">
+              <i class="fas fa-undo"></i> Limpiar Todo
+            </button>
+            <button class="apply-btn" @click="applyFilters">
+              <i class="fas fa-check"></i> Aplicar Filtros
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
 
   <Footer :dark-mode="darkMode" />
 </template>
 
 <script>
-import vSelect from 'vue-select'
-import 'vue-select/dist/vue-select.css'
-import MovieCard from '@/components/cards/MovieCard.vue'
+import MovieCard from '@/components/cards/MovieCard.vue';
 import Header from "@/components/Header.vue";
 import Footer from "@/components/Footer.vue";
 import axios from 'axios';
-import qs from 'qs';
 
 export default {
   name: 'MoviesCatalog',
   components: {
     Footer,
     Header,
-    vSelect,
     MovieCard
   },
   data() {
     return {
-      sortField: 'titulo',
+      minYear: 1950,
+      maxYear: new Date().getFullYear(),
       darkMode: false,
       showFiltersModal: false,
       expandedSection: null,
@@ -278,92 +273,92 @@ export default {
       filters: {
         titulo: null,
         tipo: null,
-        estrenoDesde: null,
-        estrenoHasta: null,
+        estrenoDesde: 1950, // Valor inicial para el mínimo
+        estrenoHasta: new Date().getFullYear(),
         categorias: null,
         clasificacionEdad: null,
         duracionMin: null,
         duracionMax: null,
       },
-      typeOptions: [
-        {label: 'Película', value: 'PELICULA'},
-        {label: 'Serie', value: 'SERIE'}
-      ],
-      genres: [
-        {name: 'Acción', value: 'Acción'},
-        {name: 'Aventura', value: 'Aventura'},
-        {name: 'Animación', value: 'Animación'},
-        {name: 'Comedia', value: 'Comedia'},
-        {name: 'Crimen', value: 'Crimen'},
-        {name: 'Documental', value: 'Documental'},
-        {name: 'Drama', value: 'Drama'},
-        {name: 'Fantasía', value: 'Fantasía'},
-        {name: 'Horror', value: 'Horror'},
-        {name: 'Misterio', value: 'Misterio'},
-        {name: 'Romance', value: 'Romance'},
-        {name: 'Ciencia Ficción', value: 'Ciencia Ficción'},
-        {name: 'Thriller', value: 'Thriller'}
-      ],
-      clasificacionOptions: [
-        {label: 'Todo público', value: 'TP'},
-        {label: '+7 años', value: '7'},
-        {label: '+12 años', value: '12'},
-        {label: '+16 años', value: '16'},
-        {label: '+18 años', value: '18'}
-      ]
-    }
+      tiposProduccion: [],
+      categoriasDisponibles: [],
+      clasificacionesEdad: []
+    };
   },
   methods: {
+    updateMinYear() {
+      if (this.filters.estrenoHasta && this.filters.estrenoDesde > this.filters.estrenoHasta) {
+        this.filters.estrenoDesde = this.filters.estrenoHasta;
+      }
+    },
+    updateMaxYear() {
+      if (this.filters.estrenoDesde && this.filters.estrenoHasta < this.filters.estrenoDesde) {
+        this.filters.estrenoHasta = this.filters.estrenoDesde;
+      }
+    },
     async fetchProducciones() {
       this.isLoading = true;
       try {
+        // Construir parámetros de consulta
         const params = {
-          page: this.currentPage - 1,
+          page: this.currentPage - 1, // Spring usa 0-based
           size: this.itemsPerPage,
-          sortDirection: 'asc',
-          ...this.filters
+          sortBy: 'titulo',
+          sortDirection: 'asc'
         };
 
-        console.log('Parámetros enviados:', params);
+        // Añadir filtros no nulos
+        Object.keys(this.filters).forEach(key => {
+          if (this.filters[key] !== null && this.filters[key] !== '') {
+            params[key] = this.filters[key];
+          }
+        });
+
+        // Manejar array de categorías
+        if (this.filters.categorias && this.filters.categorias.length > 0) {
+          // Para Spring, enviamos múltiples parámetros con el mismo nombre
+          params.categorias = this.filters.categorias;
+        }
 
         const response = await axios.get('/api/producciones/filtrar', {
           params,
-          paramsSerializer: params => qs.stringify(params, {arrayFormat: 'repeat'})
+          paramsSerializer: params => {
+            const parts = [];
+            for (const key in params) {
+              if (params.hasOwnProperty(key)) {
+                const value = params[key];
+                if (Array.isArray(value)) {
+                  value.forEach(v => parts.push(`${key}=${encodeURIComponent(v)}`));
+                } else {
+                  parts.push(`${key}=${encodeURIComponent(value)}`);
+                }
+              }
+            }
+            return parts.join('&');
+          }
         });
 
-        console.log('Respuesta completa:', response);
+        this.producciones = response.data?.data?.map(item => ({
+          id: item.id,
+          title: item.titulo,
+          type: item.tipo,
+          estreno: item.estreno,
+          duration: item.duracion,
+          plot: item.sinopsis,
+          imagen: item.imagen || 'default-poster.jpg',
+          clasificacionEdad: item.clasificacionEdad,
+          categorias: item.categorias || [],
+          puntuacion: item.puntuacion || 0,
+          isFavorite: false,
+          year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
+          poster: item.imagen || 'default-poster.jpg'
+        })) || [];
 
-        if (!response.data || !response.data.data) {
-          throw new Error('La respuesta no tiene la estructura esperada');
-        }
-
-        this.producciones = Array.isArray(response.data.data)
-            ? response.data.data.map(item => {
-              console.log('Procesando item:', item);
-              return {
-                id: item.id || '',
-                title: item.titulo || 'Sin título',
-                type: item.tipo || 'PELICULA',
-                estreno: item.estreno || null,
-                duration: item.duracion || 0,
-                plot: item.sinopsis || 'Sin sinopsis disponible',
-                imagen: item.imagen || 'default-poster.jpg',
-                clasificacionEdad: item.clasificacionEdad || 0,
-                categorias: item.categorias || [],
-                puntuacion: item.puntuacion || 0,
-                isFavorite: false,
-                year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
-                poster: item.imagen || 'default-poster.jpg'
-              };
-            })
-            : [];
-
-        this.totalItems = response.data.totalItems || 0;
-        this.totalPages = response.data.totalPages || 1;
+        this.totalItems = response.data?.totalItems || 0;
+        this.totalPages = response.data?.totalPages || 1;
 
       } catch (error) {
-        console.error('Error en fetchProducciones:', error);
-        console.error('Detalles del error:', error.response?.data || error.message);
+        console.error('Error fetching producciones:', error);
         this.producciones = [];
         this.totalItems = 0;
         this.totalPages = 1;
@@ -371,6 +366,26 @@ export default {
         this.isLoading = false;
       }
     },
+
+    async fetchFilterOptions() {
+      try {
+        // Obtener tipos de producción
+        const tiposResponse = await axios.get('/api/producciones/tipos');
+        this.tiposProduccion = tiposResponse.data || [];
+
+        // Obtener categorías disponibles
+        const categoriasResponse = await axios.get('/api/producciones/categorias');
+        this.categoriasDisponibles = categoriasResponse.data || [];
+
+        // Obtener clasificaciones de edad
+        const clasificacionesResponse = await axios.get('/api/producciones/clasificaciones-edad');
+        this.clasificacionesEdad = clasificacionesResponse.data || [];
+
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+      }
+    },
+
     toggleDarkMode() {
       this.darkMode = !this.darkMode;
       localStorage.setItem('darkMode', this.darkMode);
@@ -380,22 +395,28 @@ export default {
       this.expandedSection = this.expandedSection === section ? null : section;
     },
 
-    toggleGenre(genre) {
+    toggleCategory(category) {
       if (!this.filters.categorias) {
         this.filters.categorias = [];
       }
 
-      const index = this.filters.categorias.indexOf(genre);
+      const index = this.filters.categorias.indexOf(category);
       if (index === -1) {
-        this.filters.categorias.push(genre);
+        this.filters.categorias.push(category);
       } else {
         this.filters.categorias.splice(index, 1);
       }
+
+      // Si no hay categorías seleccionadas, establecer a null
+      if (this.filters.categorias.length === 0) {
+        this.filters.categorias = null;
+      }
     },
 
-    setYearRange(start, end) {
-      this.filters.estrenoDesde = start;
-      this.filters.estrenoHasta = end;
+    applyFilters() {
+      this.showFiltersModal = false;
+      this.currentPage = 1;
+      this.fetchProducciones();
     },
 
     resetFilters() {
@@ -413,12 +434,6 @@ export default {
       this.fetchProducciones();
     },
 
-    applyFilters() {
-      this.showFiltersModal = false;
-      this.currentPage = 1;
-      this.fetchProducciones();
-    },
-
     clearSearch() {
       this.filters.titulo = '';
       this.fetchProducciones();
@@ -428,7 +443,7 @@ export default {
       if (this.currentPage > 1) {
         this.currentPage--;
         this.fetchProducciones();
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
 
@@ -436,7 +451,7 @@ export default {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
         this.fetchProducciones();
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
 
@@ -445,6 +460,32 @@ export default {
       if (produccion) {
         produccion.isFavorite = !produccion.isFavorite;
       }
+    },
+
+    formatTipoProduccion(tipo) {
+      const tiposMap = {
+        'PELICULA': 'Película',
+        'SERIE': 'Serie',
+        'DOCUMENTAL': 'Documental',
+        'CORTOMETRAJE': 'Cortometraje'
+      };
+      return tiposMap[tipo] || tipo;
+    },
+
+    formatCategoria(categoria) {
+      // Asume que las categorías vienen en formato "ACCION", "COMEDIA", etc.
+      return categoria.charAt(0).toUpperCase() + categoria.slice(1).toLowerCase();
+    },
+
+    formatClasificacionEdad(clasificacion) {
+      const map = {
+        'TP': 'Todo público',
+        '7': '+7 años',
+        '12': '+12 años',
+        '16': '+16 años',
+        '18': '+18 años'
+      };
+      return map[clasificacion] || clasificacion;
     }
   },
   created() {
@@ -452,9 +493,364 @@ export default {
     if (savedMode) {
       this.darkMode = savedMode === 'true';
     }
+    this.fetchFilterOptions();
     this.fetchProducciones();
-  }
-}
+  },
+};
 </script>
+
+<style scoped>
+/* Estilos para el slider de rango mejorado */
+.year-range-slider {
+  padding: 15px 10px;
+}
+
+.dark-mode .filters-modal {
+  background-color: rgba(30, 30, 30, 0.95);
+}
+
+.slider-container {
+  position: relative;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.slider-track {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.dark-mode .slider-track {
+  background: #4a5568;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  outline: none;
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4299e1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4299e1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.min-slider {
+  z-index: 3;
+}
+
+.max-slider {
+  z-index: 4;
+}
+
+.slider-values {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.slider-values span {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.dark-mode .slider-values span {
+  color: white;
+}
+
+.dark-text {
+  color: white !important;
+}
+
+/* Estilos básicos para los filtros */
+.filters-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dark-mode .filters-modal {
+  background: #2d3748;
+  color: white;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.filter-section {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.dark-mode .filter-section {
+  border-bottom-color: #4a5568;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 0;
+}
+
+.section-header i:first-child {
+  margin-right: 10px;
+}
+
+.section-icon {
+  margin-left: auto;
+}
+
+.section-content {
+  padding: 10px 0;
+}
+
+.type-options, .category-tags, .rating-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.type-options button, .category-tags button, .rating-options button {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.dark-mode .type-options button,
+.dark-mode .category-tags button,
+.dark-mode .rating-options button {
+  background: #4a5568;
+  border-color: #4a5568;
+  color: white;
+}
+
+.type-options button.active,
+.category-tags button.active,
+.rating-options button.active {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+}
+
+.input-group {
+  margin-bottom: 10px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.dark-mode .input-group input {
+  background: #4a5568;
+  border-color: #4a5568;
+  color: white;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.reset-btn, .apply-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reset-btn {
+  background: #e53e3e;
+  color: white;
+  border: none;
+}
+
+.apply-btn {
+  background: #4299e1;
+  color: white;
+  border: none;
+}
+
+/* Estilos para la lista de películas */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.loading-indicator, .no-results {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.no-results i {
+  font-size: 3rem;
+  color: #718096;
+  margin-bottom: 20px;
+}
+
+.no-results h3 {
+  margin-bottom: 10px;
+}
+
+/* Estilos para la paginación */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.dark-mode .pagination-btn {
+  background: #4a5568;
+  border-color: #4a5568;
+  color: white;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-indicator {
+  font-size: 0.9rem;
+}
+
+/* Estilos para la barra de búsqueda */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.search-box {
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box i {
+  position: absolute;
+  left: 10px;
+  color: #718096;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 10px 10px 35px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.dark-mode .search-box input {
+  background: #4a5568;
+  border-color: #4a5568;
+  color: white;
+}
+
+.clear-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #718096;
+}
+
+.search-btn, .filter-btn {
+  padding: 10px 15px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.search-btn {
+  background: #4299e1;
+  color: white;
+}
+
+.filter-btn {
+  background: #ed8936;
+  color: white;
+}
+
+/* Transiciones */
+.fade-staggered-move {
+  transition: transform 0.3s ease;
+}
+</style>
 
 <style scoped src="@/assets/styles/general.css"></style>

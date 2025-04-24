@@ -1,4 +1,4 @@
-﻿    /* Variables de color para ambos modos */
+﻿/* Variables de color para ambos modos */
 :root {
     --primary-color: #6c5ce7;
     --primary-dark: #5649c0;
@@ -19,6 +19,9 @@
     --active-light: rgba(108, 92, 231, 0.1);
     --transition: all 0.3s ease;
     --modal-bg: rgba(0, 0, 0, 0.5);
+    --slider-track: #ddd;
+    --slider-thumb: #4299e1;
+    --slider-text: #333;
 }
 
 .dark-mode {
@@ -31,6 +34,9 @@
     --shadow: var(--shadow-dark);
     --hover-bg: #2a2a2a;
     --active-light: rgba(167, 139, 250, 0.15);
+    --slider-track: #4a5568;
+    --slider-thumb: #a78bfa;
+    --slider-text: #fff;
 }
 
 /* Estilos base para todos los contenedores */
@@ -205,21 +211,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     backdrop-filter: blur(5px);
 }
 
-.filters-modal, .modal-content {
-    background-color: var(--bg-color);
+.filters-modal {
+    background-color: rgba(255, 255, 255, 0.8);
     border-radius: 12px;
     box-shadow: var(--shadow);
     width: 90%;
-    max-width: 800px;
+    max-width: 600px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transition: var(--transition);
+    border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -227,17 +234,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-color);
     background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modal-header h3 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: var(--text-color);
 }
 
 .close-btn {
@@ -247,8 +255,8 @@
     font-size: 1.25rem;
     cursor: pointer;
     transition: var(--transition);
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -268,7 +276,7 @@
 
 /* Filtros comunes */
 .filter-section, .filter-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
     border-radius: 8px;
     border: 1px solid var(--border-color);
     overflow: hidden;
@@ -277,6 +285,7 @@
 
 .filter-section:hover, .filter-group:hover {
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 1px var(--primary-color);
 }
 
 .section-header, .filter-label {
@@ -293,10 +302,10 @@
 }
 
 .section-header:hover, .filter-label:hover {
-    background: var(--hover-bg);
+    background-color: var(--hover-bg);
 }
 
-.section-header i:first-child, .filter-label i {
+.section-header i:first-child {
     color: var(--primary-color);
     width: 1.25rem;
     text-align: center;
@@ -305,6 +314,8 @@
 .section-icon {
     margin-left: auto;
     transition: transform 0.3s ease;
+    color: var(--text-color);
+    opacity: 0.7;
 }
 
 .section-content {
@@ -313,13 +324,13 @@
 }
 
 /* Componentes de filtro */
-.genre-tags, .type-options, .quick-years {
+.category-tags, .type-options, .rating-options, .quick-years {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
 }
 
-.genre-tags button, .type-options button, .quick-years button {
+.category-tags button, .type-options button, .rating-options button, .quick-years button {
     padding: 0.5rem 0.75rem;
     border-radius: 6px;
     border: 1px solid var(--border-color);
@@ -330,11 +341,11 @@
     transition: var(--transition);
 }
 
-.genre-tags button:hover, .type-options button:hover, .quick-years button:hover {
+.category-tags button:hover, .type-options button:hover, .rating-options button:hover, .quick-years button:hover {
     border-color: var(--primary-color);
 }
 
-.genre-tags button.active, .type-options button.active {
+.category-tags button.active, .type-options button.active {
     background: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
@@ -525,9 +536,17 @@
 .pagination-controls {
     display: flex;
     justify-content: center;
+    margin-top: 2rem;
+}
+
+.pagination-inner {
+    background-color: var(--bg-color);
+    display: flex;
     align-items: center;
     gap: 1.5rem;
-    margin-top: 2rem;
+    padding: 1rem 2rem;
+    border-radius: 16px;
+    transition: var(--transition);
 }
 
 .pagination-btn {
@@ -570,6 +589,7 @@
     margin-right: 0.5rem;
     animation: spin 1s linear infinite;
 }
+
 
 @keyframes spin {
     from {
@@ -651,11 +671,11 @@
         font-size: 1.8rem;
     }
 
-    .quick-years {
+    .rating-options, .quick-years {
         flex-direction: column;
     }
 
-    .quick-years button {
+    .rating-options button, .quick-years button {
         width: 100%;
     }
 

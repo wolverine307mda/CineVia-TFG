@@ -18,63 +18,57 @@
           </router-link>
         </div>
       </div>
-        <div class="hero-slider">
-          <!-- Slider Items -->
-          <div class="slider-track" :style="trackStyles">
-            <div
-                v-for="(slide, index) in slides"
-                :key="index"
-                class="slide"
-                :class="{ 'active': currentSlide === index }"
-            >
-              <img :src="slide.image" :alt="slide.title" class="slide-image">
-              <div class="slide-overlay"></div>
-              <div class="slide-content">
-                <h2 class="slide-title">{{ slide.title }}</h2>
-                <p class="slide-subtitle">{{ slide.subtitle }}</p>
-              </div>
+      <div class="hero-slider">
+        <!-- Slider Items -->
+        <div class="slider-track" :style="trackStyles">
+          <div
+              v-for="(slide, index) in slides"
+              :key="index"
+              class="slide"
+              :class="{ 'active': currentSlide === index }"
+          >
+            <img :src="slide.image" :alt="slide.title" class="slide-image">
+            <div class="slide-overlay"></div>
+            <div class="slide-content">
+              <h2 class="slide-title">{{ slide.title }}</h2>
+              <p class="slide-subtitle">{{ slide.subtitle }}</p>
             </div>
           </div>
-
-          <!-- Slider Controls -->
-          <button class="slider-nav prev" @click="prevSlide">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="slider-nav next" @click="nextSlide">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-
-          <!-- Slider Indicators -->
-          <div class="slider-indicators">
-            <button
-                v-for="(slide, index) in slides"
-                :key="index"
-                @click="goToSlide(index)"
-                :class="{ 'active': currentSlide === index }"
-            ></button>
-          </div>
         </div>
+
+        <!-- Slider Controls -->
+        <button class="slider-nav prev" @click="prevSlide">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <button class="slider-nav next" @click="nextSlide">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <!-- Slider Indicators -->
+        <div class="slider-indicators">
+          <button
+              v-for="(slide, index) in slides"
+              :key="index"
+              @click="goToSlide(index)"
+              :class="{ 'active': currentSlide === index }"
+          ></button>
+        </div>
+      </div>
     </section>
 
     <!-- Featured Movies -->
     <section class="featured-section">
       <h2 class="section-title">Películas Destacadas</h2>
-      <div class="movie-grid">
-        <div v-for="(movie, index) in featuredMovies" :key="index" class="movie-card">
-          <div class="movie-poster">
-            <img :src="movie.image" :alt="movie.title" class="movie-image">
-            <div class="movie-badge">{{ movie.year }}</div>
-          </div>
-          <div class="movie-info">
-            <h3 class="movie-title">{{ movie.title }}</h3>
-            <p class="movie-location">
-              <i class="fas fa-map-marker-alt"></i> {{ movie.location }}
-            </p>
-            <router-link :to="`/movie/${movie.id}`" class="btn btn-sm btn-details">
-              Ver detalles <i class="fas fa-arrow-right"></i>
-            </router-link>
-          </div>
-        </div>
+      <div class="movies-grid" v-if="!isLoading">
+        <movie-card
+            v-for="movie in topRatedMovies"
+            :key="movie.id"
+            :movie="movie"
+            :dark-mode="darkMode"
+        />
+      </div>
+      <div v-else class="loading-movies">
+        <i class="fas fa-spinner fa-spin"></i> Cargando películas...
       </div>
 
       <div class="explore-more-container" style="text-align: center; margin-top: 2rem;">
@@ -85,7 +79,6 @@
           <i class="fas fa-map-marked-alt"></i> Explorar más
         </a>
       </div>
-
     </section>
 
     <!-- Features -->
@@ -152,8 +145,15 @@
 </template>
 
 <script>
+import MovieCard from '@/components/cards/MovieCard.vue';
+import axios from 'axios';
+import qs from 'qs';
+
 export default {
   name: 'HomePage',
+  components: {
+    MovieCard
+  },
   props: {
     darkMode: {
       type: Boolean,
@@ -182,42 +182,12 @@ export default {
         }
       ],
       slideInterval: null,
-
-      // Datos originales de películas destacadas
-      featuredMovies: [
-        {
-          id: 1,
-          title: 'El Padrino',
-          year: 1972,
-          location: 'Nueva York, Sicilia',
-          image: 'https://image.tmdb.org/t/p/w500/r4gnMXoY1efvaolNDjn3nj4046S.jpg'
-        },
-        {
-          id: 2,
-          title: 'Titanic',
-          year: 1997,
-          location: 'México, Canadá',
-          image: 'https://image.tmdb.org/t/p/w500/9xjZS2rlVxm8SFx8kPC3aIGCOYQ.jpg'
-        },
-        {
-          id: 3,
-          title: 'El Señor de los Anillos',
-          year: 2001,
-          location: 'Nueva Zelanda',
-          image: 'https://hips.hearstapps.com/hmg-prod/images/el-senor-de-los-anillos-la-comunidad-del-anillo-pelicula-2001-1639853382.jpg'
-        },
-        {
-          id: 4,
-          title: 'La La Land',
-          year: 2016,
-          location: 'Los Ángeles, California',
-          image: 'https://image.tmdb.org/t/p/w500/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg'
-        }
-      ]
+      topRatedMovies: [],
+      isLoading: true,
+      error: null
     }
   },
   computed: {
-    // Estilos para el track del slider
     trackStyles() {
       return {
         transform: `translateX(-${this.currentSlide * 100}%)`,
@@ -228,35 +198,136 @@ export default {
   methods: {
     // Métodos para el slider
     nextSlide() {
-      this.currentSlide = (this.currentSlide + 1) % this.slides.length
-      this.resetAutoPlay()
+      this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+      this.resetAutoPlay();
     },
     prevSlide() {
-      this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length
-      this.resetAutoPlay()
+      this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+      this.resetAutoPlay();
     },
     goToSlide(index) {
-      this.currentSlide = index
-      this.resetAutoPlay()
+      this.currentSlide = index;
+      this.resetAutoPlay();
     },
     startAutoPlay() {
-      this.slideInterval = setInterval(this.nextSlide, 5000)
+      this.slideInterval = setInterval(this.nextSlide, 5000);
     },
     stopAutoPlay() {
-      clearInterval(this.slideInterval)
+      clearInterval(this.slideInterval);
     },
     resetAutoPlay() {
-      this.stopAutoPlay()
-      this.startAutoPlay()
+      this.stopAutoPlay();
+      this.startAutoPlay();
     },
 
-    // Tus métodos originales pueden ir aquí
+    async fetchTopRatedMovies() {
+      this.isLoading = true;
+      this.error = null;
+
+      try {
+        // Configuración base de la petición
+        const config = {
+          params: {
+            page: 0,
+            size: 4,
+            sortField: 'puntuacion',
+            sortDirection: 'DESC', // Usar 'DESC' en mayúsculas según tu API
+            tipo: 'PELICULA'
+          },
+          paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' }),
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': 'Bearer ' + localStorage.getItem('token') // Si necesitas autenticación
+          }
+        };
+
+        console.log('Configuración de la petición:', config);
+
+        const response = await axios.get('/api/producciones/filtrar', config);
+
+        console.log('Respuesta completa:', response);
+
+        // Manejo flexible de la respuesta
+        let moviesData = [];
+        if (response.data && Array.isArray(response.data.content)) {
+          // Si sigue estructura de paginación Spring
+          moviesData = response.data.content;
+        } else if (response.data && Array.isArray(response.data.data)) {
+          // Si es otra estructura
+          moviesData = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          // Si la respuesta es directamente el array
+          moviesData = response.data;
+        }
+
+        this.topRatedMovies = moviesData.map(item => ({
+          id: item.id?.toString() || Math.random().toString(36).substr(2, 9),
+          title: item.titulo || 'Sin título',
+          type: item.tipo || 'PELICULA',
+          estreno: item.estreno || null,
+          duration: item.duracion || 120,
+          plot: item.sinopsis || 'Descripción no disponible',
+          imagen: item.imagen || this.getDefaultPoster(),
+          clasificacionEdad: item.clasificacionEdad || 'TP',
+          categorias: Array.isArray(item.categorias) ? item.categorias : [],
+          puntuacion: item.puntuacion ? parseFloat(item.puntuacion) : 0,
+          isFavorite: false,
+          year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
+          poster: item.imagen || this.getDefaultPoster()
+        }));
+
+      } catch (error) {
+        console.error('Error al obtener películas:', error);
+        this.error = 'No se pudieron cargar las películas destacadas';
+
+        // Datos de ejemplo para desarrollo
+        this.topRatedMovies = this.getSampleMovies();
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    getDefaultPoster() {
+      return 'https://via.placeholder.com/500x750?text=GeoFilm';
+    },
+
+    getSampleMovies() {
+      return [
+        {
+          id: '1',
+          title: 'Ejemplo Película 1',
+          type: 'PELICULA',
+          estreno: '2023-01-15',
+          duration: 120,
+          plot: 'Esta es una película de ejemplo para desarrollo',
+          imagen: this.getDefaultPoster(),
+          categorias: ['Acción', 'Aventura'],
+          puntuacion: 8.5,
+          year: 2023,
+          poster: this.getDefaultPoster()
+        },
+        {
+          id: '2',
+          title: 'Ejemplo Película 2',
+          type: 'PELICULA',
+          estreno: '2022-05-20',
+          duration: 95,
+          plot: 'Otra película de ejemplo para desarrollo',
+          imagen: this.getDefaultPoster(),
+          categorias: ['Comedia'],
+          puntuacion: 7.2,
+          year: 2022,
+          poster: this.getDefaultPoster()
+        }
+      ];
+    }
   },
   mounted() {
-    this.startAutoPlay()
+    this.startAutoPlay();
+    this.fetchTopRatedMovies();
   },
   beforeUnmount() {
-    this.stopAutoPlay()
+    this.stopAutoPlay();
   }
 }
 </script>
@@ -654,13 +725,6 @@ export default {
       black 90%,
       transparent 100%
   );
-  -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      black 10%,
-      black 90%,
-      transparent 100%
-  );
 }
 
 .slider-track {
@@ -836,4 +900,26 @@ img,
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading-movies {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .movies-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
 </style>

@@ -56,23 +56,6 @@
             </li>
           </ul>
 
-          <!-- Barra de búsqueda animada -->
-          <div
-              ref="searchBox"
-              class="search-box me-3"
-              :class="{ focused: searchFocused }"
-          >
-            <input
-                type="text"
-                placeholder="Buscar películas..."
-                @focus="searchFocused = true"
-                @blur="searchFocused = false"
-            >
-            <button class="search-btn">
-              <i class="fas fa-search" />
-            </button>
-          </div>
-
           <!-- Botón de modo oscuro -->
           <button
               class="dark-mode-toggle me-3"
