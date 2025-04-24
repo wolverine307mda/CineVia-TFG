@@ -15,6 +15,6 @@ WORKDIR /app
 # Copiamos el jar renombrado como app.jar
 COPY --from=build /app/build/libs/app.jar app.jar
 
-EXPOSE 8081
+EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

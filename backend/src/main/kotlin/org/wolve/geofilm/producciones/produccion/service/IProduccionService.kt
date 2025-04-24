@@ -24,14 +24,6 @@ interface IProduccionService {
         sortDirection: String
     ): PaginationUtils.PaginatedResponse<ProduccionResponse>
 
-    fun filtrarPorCategorias(
-        categorias: Set<Categoria>,
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginationUtils.PaginatedResponse<ProduccionResponse>
-
     fun filtrarProducciones(
         titulo: String?,
         tipo: TipoProduccion?,

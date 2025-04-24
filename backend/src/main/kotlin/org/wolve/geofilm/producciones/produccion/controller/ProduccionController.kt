@@ -182,31 +182,6 @@ class ProduccionController(
         return ResponseEntity.ok(response)
     }
 
-    @Operation(summary = "Filtrar producciones por categorías")
-    @ApiResponses(
-        value = [
-            ApiResponse(responseCode = "200", description = "Producciones filtradas por categorías",
-                content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = PaginatedResponse::class))])
-        ]
-    )
-    @GetMapping("/filtrar/categorias")
-    fun filtrarPorCategorias(
-        @RequestParam categorias: Set<Categoria>,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "10") size: Int,
-        @RequestParam(defaultValue = "titulo") sortBy: List<String>,
-        @RequestParam(defaultValue = "asc") sortDirection: String
-    ): ResponseEntity<PaginationUtils.PaginatedResponse<ProduccionResponse>> {
-        val response = produccionService.filtrarPorCategorias(
-            categorias = categorias,
-            page = page,
-            size = size,
-            sortBy = sortBy,
-            sortDirection = sortDirection
-        )
-        return ResponseEntity.ok(response)
-    }
 
     @Operation(summary = "Obtener todas las clasificaciones de edad disponibles")
     @ApiResponses(

@@ -101,27 +101,6 @@ class ProduccionServiceImpl(
         )
     }
 
-    @Cacheable(value = ["produccionesPorCategorias"], key = "{#categorias.hashCode(), #page, #size}")
-    override fun filtrarPorCategorias(
-        categorias: Set<Categoria>,
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginationUtils.PaginatedResponse<ProduccionResponse> {
-        val pageable = PaginationUtils.createPageable(
-            page = page,
-            size = size,
-            sortBy = sortBy,
-            sortDirection = sortDirection,
-            allowedSortFields = ALLOWED_SORT_FIELDS
-        )
-
-        val pageResult = produccionRepository.findByCategoriasIn(categorias, pageable)
-        return PaginationUtils.toPaginatedResponse(
-            pageResult.map { produccionMapper.toProduccionResponse(it) }
-        )
-    }
 
     override fun filtrarProducciones(
         titulo: String?,
@@ -153,11 +132,15 @@ class ProduccionServiceImpl(
 
         // Ordenación
         val sorted = when {
-            sortBy.contains("titulo") && sortDirection.equals("asc", ignoreCase = true) ->
+            sortBy.any { it.equals("titulo", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
                 filtered.sortedBy { it.titulo }
-            sortBy.contains("titulo") ->
+            sortBy.any { it.equals("titulo", ignoreCase = true) } ->
                 filtered.sortedByDescending { it.titulo }
-            else -> filtered
+            sortBy.any { it.equals("estreno", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.estreno }
+            sortBy.any { it.equals("estreno", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.estreno }
+            else -> filtered.sortedByDescending { it.estreno }
         }
 
         // Paginación manual
