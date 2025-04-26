@@ -560,15 +560,6 @@ export default {
   cursor: pointer;
   pointer-events: auto;
 }
-
-.min-slider {
-  z-index: 3;
-}
-
-.max-slider {
-  z-index: 4;
-}
-
 .slider-values {
   display: flex;
   justify-content: space-between;
@@ -581,26 +572,6 @@ export default {
 }
 
 .dark-mode .slider-values span {
-  color: white;
-}
-
-.dark-text {
-  color: white !important;
-}
-
-/* Estilos básicos para los filtros */
-.filters-modal {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-.dark-mode .filters-modal {
-  background: #2d3748;
   color: white;
 }
 
@@ -752,105 +723,7 @@ export default {
   margin-bottom: 10px;
 }
 
-/* Estilos para la paginación */
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  padding: 20px 0;
-}
 
-.pagination-btn {
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-  background: white;
-  cursor: pointer;
-}
-
-.dark-mode .pagination-btn {
-  background: #4a5568;
-  border-color: #4a5568;
-  color: white;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.page-indicator {
-  font-size: 0.9rem;
-}
-
-/* Estilos para la barra de búsqueda */
-.search-bar {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  align-items: center;
-}
-
-.search-box {
-  flex-grow: 1;
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-box i {
-  position: absolute;
-  left: 10px;
-  color: #718096;
-}
-
-.search-box input {
-  width: 100%;
-  padding: 10px 10px 10px 35px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.dark-mode .search-box input {
-  background: #4a5568;
-  border-color: #4a5568;
-  color: white;
-}
-
-.clear-btn {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #718096;
-}
-
-.search-btn, .filter-btn {
-  padding: 10px 15px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.search-btn {
-  background: #4299e1;
-  color: white;
-}
-
-.filter-btn {
-  background: #ed8936;
-  color: white;
-}
-
-/* Transiciones */
-.fade-staggered-move {
-  transition: transform 0.3s ease;
-}
 </style>
 
 <style scoped src="@/assets/styles/general.css"></style>

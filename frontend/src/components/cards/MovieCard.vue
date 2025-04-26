@@ -9,8 +9,8 @@
       <div class="info-badge">
         +{{ movie.clasificacionEdad }}
       </div>
-      <div class="rating-badge">
-        <i class="fas fa-star"></i> {{ movie.puntuacion.toFixed(1) }}
+      <div class="rating-badge" :class="{ 'no-rating': !hasRating }">
+        <i class="fas fa-star"></i> {{ ratingDisplay }}
       </div>
     </div>
 
@@ -61,7 +61,7 @@ export default {
         duration: 0,
         plot: '',
         poster: '',
-        puntuacion: 0,
+        puntuacion: 0, // Rating local (segunda opción)
         clasificacionEdad: 0,
         genres: [],
         isFavorite: false
@@ -72,21 +72,87 @@ export default {
       default: false
     }
   },
+  data() {
+    return {
+      apiRating: null,
+      usingLocalRating: false,
+      isLoadingRating: false,
+      ratingError: false
+    }
+  },
+  computed: {
+    hasRating() {
+      return this.apiRating !== null || this.movie.puntuacion > 0
+    },
+    ratingDisplay() {
+      // PRIORIDAD 1: Rating de la API externa
+      if (this.apiRating !== null) {
+        this.usingLocalRating = false
+        return this.apiRating.toFixed(1)
+      }
+
+      // PRIORIDAD 2: Rating local
+      if (this.movie.puntuacion > 0) {
+        this.usingLocalRating = true
+        return this.movie.puntuacion.toFixed(1)
+      }
+
+      // No hay rating disponible
+      this.usingLocalRating = false
+      return 'N/A'
+    }
+  },
+  async created() {
+    await this.fetchExternalRating()
+  },
   methods: {
+    async fetchExternalRating() {
+      this.isLoadingRating = true
+      this.ratingError = false
+
+      try {
+        const response = await fetch(
+            `https://www.omdbapi.com/?t=${encodeURIComponent(this.movie.title)}&y=${this.movie.year}&apikey=c129cb21`
+        )
+
+        if (!response.ok) throw new Error('Error al conectar con OMDb API')
+
+        const data = await response.json()
+
+        if (data.Response === 'True') {
+          // Buscamos primero rating de Rotten Tomatoes
+          const rtRating = data.Ratings?.find(r => r.Source === 'Rotten Tomatoes')
+
+          if (rtRating) {
+            // Convertimos "87%" a 8.7
+            this.apiRating = parseFloat(rtRating.Value)
+          }
+          // Fallback a IMDB si no hay Rotten Tomatoes
+          else if (data.imdbRating && data.imdbRating !== 'N/A') {
+            this.apiRating = parseFloat(data.imdbRating) // Ya está en escala 0-10
+          }
+        }
+      } catch (error) {
+        console.error('Error obteniendo rating externo:', error)
+        this.ratingError = true
+      } finally {
+        this.isLoadingRating = false
+      }
+    },
     toggleFavorite() {
-      this.$emit('toggle-favorite', this.movie.id);
+      this.$emit('toggle-favorite', this.movie.id)
     },
     viewDetails() {
-      this.$router.push(`/movie/${this.movie.id}`);
+      this.$router.push(`/movie/${this.movie.id}`)
     },
     truncateText(text, length) {
-      if (!text) return '';
-      return text.length > length ? text.substring(0, length) + '...' : text;
+      if (!text) return ''
+      return text.length > length ? text.substring(0, length) + '...' : text
     },
     formatDuration(minutes) {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      return `${hours}h ${mins}m`;
+      const hours = Math.floor(minutes / 60)
+      const mins = minutes % 60
+      return `${hours}h ${mins}m`
     },
     formatGenre(genre) {
       const genreMap = {
@@ -100,17 +166,18 @@ export default {
         'MUSICAL': 'Musical',
         'COMEDIA': 'Comedia',
         'WESTERN': 'Western'
-      };
-      return genreMap[genre] || genre;
+      }
+      return genreMap[genre] || genre
     },
     formatType(type) {
-      return type === 'PELICULA' ? 'Película' : type;
+      return type === 'PELICULA' ? 'Película' : type
     }
   }
 }
 </script>
 
 <style scoped>
+
 .rating-badge {
   position: absolute;
   bottom: 10px;
@@ -125,6 +192,17 @@ export default {
   align-items: center;
   gap: 0.3rem;
   z-index: 2;
+}
+
+.rating-badge.no-rating {
+  opacity: 0.7;
+}
+
+.rating-badge.local-rating::after {
+  content: '†';
+  font-size: 0.7rem;
+  margin-left: 2px;
+  opacity: 0.7;
 }
 
 .rating-badge i {
@@ -144,4 +222,24 @@ export default {
   z-index: 2;
 }
 
+/* Efecto de carga */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.loading-rating {
+  animation: pulse 1.5s infinite;
+  width: 60px;
+  height: 20px;
+  background-color: rgba(255, 215, 0, 0.2);
+  border-radius: 20px;
+}
 </style>
