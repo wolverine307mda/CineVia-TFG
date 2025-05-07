@@ -23,25 +23,25 @@
         <!-- Tabla de producciones -->
         <div class="table-container">
           <table class="producciones-table">
-            <thead style="background-color: #f8fafc; position: sticky; top: 0; z-index: 100;">
+            <thead>
             <tr style="background-color: inherit;">
-              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
+              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
                   @click="sortBy('titulo')">
                 Título
               </th>
-              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
+              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
                   @click="sortBy('tipo')">
                 Tipo
               </th>
-              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
+              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
                   @click="sortBy('estreno')">
                 Estreno
               </th>
-              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
+              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;"
                   @click="sortBy('clasificacionEdad')">
                 Clasificación
               </th>
-              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; color: #1e293b; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
+              <th style="background-color: inherit !important; padding: 1rem; font-weight: 600; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100;">
                 Acciones
               </th>
             </tr>
@@ -51,7 +51,7 @@
               <td>{{ produccion.titulo }}</td>
               <td>{{ formatTipoProduccion(produccion.tipo) }}</td>
               <td>{{ formatDate(produccion.estreno) }}</td>
-              <td>{{ produccion.clasificacionEdad.valorNumerico }}+</td>
+              <td>{{ produccion.clasificacionEdad }}+</td>
               <td class="actions">
                 <button @click="openModal(produccion)" class="btn-edit">
                   <i class="fas fa-edit"></i>
@@ -182,10 +182,6 @@ export default {
       }
       this.fetchProducciones();
     },
-    sortIcon(field) {
-      if (this.sortField !== field) return 'fas fa-sort';
-      return this.sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
-    },
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
@@ -263,6 +259,27 @@ export default {
 </script>
 
 <style scoped>
+
+.table-container thead{
+  background-color: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.table-container th{
+  color: #1e293b;
+}
+
+.dark-mode .table-container th{
+  color: white;
+}
+
+.dark-mode .table-container thead{
+  background-color: #121212;
+  color: white;
+}
+
 .producciones-container {
   margin-left: 50px;
   margin-top: 26px;

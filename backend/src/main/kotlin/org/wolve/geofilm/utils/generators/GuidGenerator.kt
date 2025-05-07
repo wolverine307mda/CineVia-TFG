@@ -1,4 +1,4 @@
-package org.wolve.geofilm.utils
+package org.wolve.geofilm.utils.generators
 
 import kotlin.random.Random
 

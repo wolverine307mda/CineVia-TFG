@@ -1,6 +1,5 @@
 ﻿<template>
   <Header :dark-mode="darkMode" @toggle-dark-mode="toggleDarkMode"/>
-
   <div class="movies-container" :class="{ 'dark-mode': darkMode }">
     <!-- Encabezado con título y modo oscuro -->
     <div class="header-section">
@@ -239,8 +238,6 @@
       </div>
     </div>
   </div>
-
-
   <Footer :dark-mode="darkMode" />
 </template>
 
@@ -273,7 +270,7 @@ export default {
       filters: {
         titulo: null,
         tipo: null,
-        estrenoDesde: 1950, // Valor inicial para el mínimo
+        estrenoDesde: 1950,
         estrenoHasta: new Date().getFullYear(),
         categorias: null,
         clasificacionEdad: null,

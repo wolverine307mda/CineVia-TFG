@@ -7,28 +7,29 @@ import java.time.LocalDateTime
 import java.util.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.wolve.geofilm.utils.generators.GuidGenerator
 
 @Entity
 @Table(name = "usuarios")
 data class Usuario(
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    val id: UUID = UUID.randomUUID(),
+    @Column(nullable = false, unique = true, columnDefinition = "varchar(255)")
+    val id: String = GuidGenerator().generarId(),
 
     @Column(nullable = false, unique = true)
     private val username: String = "",
 
     @Column(nullable = false)
-    val nombre: String = "",
+    var nombre: String = "",
 
     @Column(nullable = true)
-    val apellido: String = "",
+    var apellido: String = "",
 
     @Column(nullable = false, unique = true)
     val email: String = "",
 
     @Column(nullable = true)
-    val telefono: String = "",
+    var telefono: String = "",
 
     @Column(nullable = false)
     private val password: String = "",
@@ -38,13 +39,13 @@ data class Usuario(
     val rol: RolUsuario = RolUsuario.USUARIO,
 
     @Column(nullable = true)
-    val fechaNacimiento: LocalDateTime? = null,
+    var fechaNacimiento: LocalDateTime? = null,
 
     @Column(nullable = true)
-    val avatar: String? = null,
+    var avatar: String? = null,
 
     @Column(nullable = true)
-    val idDelete: UUID? = null,
+    var idDelete: UUID? = null,
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

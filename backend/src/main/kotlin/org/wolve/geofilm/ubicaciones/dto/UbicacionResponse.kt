@@ -1,4 +1,12 @@
 package org.wolve.geofilm.ubicaciones.dto
 
-class UbicacionResponse {
-}
+import java.time.LocalDateTime
+
+data class UbicacionResponse(
+    val id: String,
+    val nombre: String,
+    val latitud: Double,
+    val longitud: Double,
+    val createdAt: LocalDateTime?,
+    val updatedAt: LocalDateTime?
+)

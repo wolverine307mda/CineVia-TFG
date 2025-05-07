@@ -2,7 +2,7 @@ package org.wolve.geofilm.producciones.profesional.model
 
 import jakarta.persistence.*
 import org.wolve.geofilm.producciones.participacion.models.Participacion
-import org.wolve.geofilm.utils.GuidGenerator
+import org.wolve.geofilm.utils.generators.GuidGenerator
 import java.util.*
 
 @Entity

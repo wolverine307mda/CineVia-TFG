@@ -4,7 +4,7 @@ import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.wolve.geofilm.users.models.Usuario
-import org.wolve.geofilm.utils.GuidGenerator
+import org.wolve.geofilm.utils.generators.GuidGenerator
 import java.time.LocalDateTime
 import jakarta.persistence.*
 

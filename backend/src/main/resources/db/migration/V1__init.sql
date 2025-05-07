@@ -34,11 +34,14 @@ create table producciones
 (
     id                 varchar(255)  not null
         primary key,
-    clasificacion_edad integer       not null,
+    clasificacion_edad smallint      not null
+        constraint producciones_clasificacion_edad_check
+            check ((clasificacion_edad >= 0) AND (clasificacion_edad <= 4)),
     duracion           integer       not null,
     estreno            date          not null,
     imagen             varchar(255),
     informacion        text,
+    puntuacion         double precision,
     sinopsis           varchar(1000) not null,
     tipo               varchar(255)  not null
         constraint producciones_tipo_check
@@ -84,7 +87,7 @@ create table produccion_categorias
     categoria     varchar(255) not null
         constraint produccion_categorias_categoria_check
             check ((categoria)::text = ANY
-        ((ARRAY ['FICCION'::character varying, 'AVENTURA'::character varying, 'TERROR'::character varying, 'COMEDIA'::character varying, 'DRAMA'::character varying, 'DOCUMENTAL'::character varying, 'ANIMACION'::character varying, 'ROMANCE'::character varying, 'OTROS'::character varying])::text[])),
+        ((ARRAY ['FICCION'::character varying, 'AVENTURA'::character varying, 'TERROR'::character varying, 'COMEDIA'::character varying, 'DRAMA'::character varying, 'DOCUMENTAL'::character varying, 'ANIMACION'::character varying, 'ROMANCE'::character varying, 'OTROS'::character varying, 'CRIMEN'::character varying, 'ACCION'::character varying, 'CIENCIA_FICCION'::character varying, 'FANTASIA'::character varying, 'MUSICAL'::character varying, 'WESTERN'::character varying, 'SUSPENSE'::character varying])::text[])),
     primary key (produccion_id, categoria)
 );
 
@@ -110,7 +113,7 @@ alter table ubicaciones
 
 create table usuarios
 (
-    id               uuid         not null
+    id               varchar(255) not null
         primary key,
     apellido         varchar(255),
     avatar           varchar(255),
@@ -136,27 +139,6 @@ create table usuarios
 alter table usuarios
     owner to wolverine307;
 
-create table favoritos
-(
-    id            uuid         not null
-        primary key,
-    actor_id      uuid,
-    created_at    timestamp(6),
-    produccion_id uuid,
-    tipo          varchar(255) not null
-        constraint favoritos_tipo_check
-            check ((tipo)::text = ANY
-        ((ARRAY ['PRODUCCION'::character varying, 'UBICACION'::character varying, 'ACTOR'::character varying])::text[])),
-    ubicacion_id  uuid,
-    updated_at    timestamp(6),
-    usuario_id    uuid         not null
-        constraint fkq9wif2hcqfxj8t49wo613wm0h
-            references usuarios
-);
-
-alter table favoritos
-    owner to wolverine307;
-
 create table reviews
 (
     id            varchar(255) not null
@@ -168,7 +150,7 @@ create table reviews
     produccion_id varchar(255) not null
         constraint fk9v4o3grbujl46dpq4cs8mg4w5
             references producciones,
-    usuario_id    uuid         not null
+    usuario_id    varchar(255) not null
         constraint fkjd9p9wtjtsu9abh29mo0soknp
             references usuarios
 );
@@ -197,4 +179,3 @@ alter table flyway_schema_history
 
 create index flyway_schema_history_s_idx
     on flyway_schema_history (success);
-

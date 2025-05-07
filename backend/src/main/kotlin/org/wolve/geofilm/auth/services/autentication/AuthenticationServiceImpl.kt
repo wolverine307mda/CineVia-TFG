@@ -31,7 +31,7 @@ class AuthenticationServiceImpl(
         )
         userRepository.save(user)
         val jwt = jwtService.generateToken(user)
-        return JwtAuthenticationResponse(jwt)
+        return JwtAuthenticationResponse(jwt, user.rol.toString())
     }
 
     override fun signin(request: SigninRequest): JwtAuthenticationResponse {
@@ -41,6 +41,7 @@ class AuthenticationServiceImpl(
         val user = userRepository.findByEmail(request.email)
             .orElseThrow { IllegalArgumentException("Correo o contraseña incorrectos") }
         val jwt = jwtService.generateToken(user)
-        return JwtAuthenticationResponse(jwt)
+        return JwtAuthenticationResponse(jwt, user.rol.toString())
     }
+
 }

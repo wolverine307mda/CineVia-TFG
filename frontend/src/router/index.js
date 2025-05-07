@@ -17,6 +17,7 @@ import AdminLayout from "@/layouts/AdminLayout.vue";
 import Dashboard from "@/pages/admin/Dashboard.vue";
 import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue";
 import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue";
+import NotFound from "@/pages/NotFound.vue";
 
 const routes = [
     {
@@ -114,8 +115,11 @@ const routes = [
     },
     {
         path: '/:pathMatch(.*)*',
-        redirect: '/'
+        name: 'NotFound',
+        component: NotFound,
+        meta: { public: true }
     }
+
 ]
 
 const router = createRouter({
@@ -132,9 +136,8 @@ router.beforeEach(async (to, from, next) => {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
 
-    // Rutas solo para invitados (login, register)
     if (to.meta.onlyGuest && isAuthenticated) {
-        return next('/myprofile') // Redirige a perfil si ya está autenticado
+        return next('/myprofile')
     }
 
     // Rutas que requieren autenticación

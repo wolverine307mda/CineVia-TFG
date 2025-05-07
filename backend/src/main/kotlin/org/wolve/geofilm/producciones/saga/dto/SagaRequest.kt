@@ -1,12 +1,12 @@
 package org.wolve.geofilm.producciones.saga.dto
 
-import java.util.Date
+import java.util.*
 
 data class SagaRequest(
     val nombre: String,
-    val descripcion: String?,
-    val isAcabada: Boolean,
+    val descripcion: String? = null,
+    val isAcabada: Boolean = false,
     val fechaInicio: Date,
-    val fechaFin: Date?,
-    val imagen: String?  // Nuevo campo
+    val fechaFin: Date? = null,
+    val imagen: String? = null
 )

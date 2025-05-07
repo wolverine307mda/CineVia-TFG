@@ -1,121 +1,190 @@
 package org.wolve.geofilm.producciones.saga.service
 
+import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
-import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
-import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
-import org.wolve.geofilm.producciones.saga.dto.*
+import org.wolve.geofilm.producciones.saga.dto.SagaFilterParams
+import org.wolve.geofilm.producciones.saga.dto.SagaRequest
+import org.wolve.geofilm.producciones.saga.dto.SagaResponse
 import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
+import org.wolve.geofilm.producciones.saga.exceptions.SagaValidationException
 import org.wolve.geofilm.producciones.saga.mapper.SagaMapper
 import org.wolve.geofilm.producciones.saga.repository.SagaRepository
+import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
 import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 import java.util.*
 
 @Service
-@Transactional
 class SagaServiceImpl(
-    private val repository: SagaRepository,
-    private val mapper: SagaMapper,
-    private val prodMapper: ProduccionMapper
-
+    private val sagaRepository: SagaRepository,
+    private val sagaMapper: SagaMapper
 ) : ISagaService {
 
-    @CacheEvict(value = ["sagas"], allEntries = true)
+    companion object {
+        private val ALLOWED_SORT_FIELDS = setOf(
+            "id", "nombre", "fechaInicio", "fechaFin", "isAcabada"
+        )
+        private const val DEFAULT_PAGE_SIZE = 10
+        private const val MAX_PAGE_SIZE = 100
+        private const val DEFAULT_SORT_FIELD = "nombre"
+    }
+
+    // region CRUD básico
+    @Cacheable(value = ["sagas"], key = "#id")
+    override fun getSagaById(id: String): SagaResponse? {
+        return sagaRepository.findById(id)
+            .map { sagaMapper.toSagaResponse(it) }
+            .orElse(null)
+    }
+
+    @Cacheable(value = ["sagas"], key = "'all'")
+    override fun getAllSagas(): List<SagaResponse> {
+        return sagaRepository.findAll()
+            .map { sagaMapper.toSagaResponse(it) }
+    }
+
+    @CacheEvict(value = ["sagas", "filteredSagas"], allEntries = true)
+    @Transactional
     override fun createSaga(request: SagaRequest): SagaResponse {
-        if (repository.existsByNombre(request.nombre)) {
-            throw IllegalArgumentException("Ya existe una saga con ese nombre")
-        }
-        val saga = mapper.toEntity(request)
-        return mapper.toResponse(repository.save(saga))
+        validateSagaRequest(request)
+
+        val saga = sagaMapper.toSagaEntity(request)
+        val saved = sagaRepository.save(saga)
+        return sagaMapper.toSagaResponse(saved)
     }
 
-    @Cacheable(value = ["saga"], key = "#id")
-    override fun getSagaById(id: String): SagaResponse {
-        val saga = repository.findById(id).orElseThrow {
-            SagaNotFoundException("Saga no encontrada con id: $id")
-        }
-        return mapper.toResponse(saga)
+    @CacheEvict(value = ["sagas", "filteredSagas"], allEntries = true)
+    @Transactional
+    override fun updateSaga(id: String, request: SagaRequest): SagaResponse? {
+        validateSagaRequest(request, id)
+
+        return sagaRepository.findById(id)
+            .map { existing ->
+                val updated = existing.copy(
+                    nombre = request.nombre,
+                    descripcion = request.descripcion,
+                    isAcabada = request.isAcabada,
+                    fechaInicio = request.fechaInicio,
+                    fechaFin = request.fechaFin,
+                    imagen = request.imagen
+                )
+                sagaMapper.toSagaResponse(sagaRepository.save(updated))
+            }
+            .orElse(null)
     }
 
-    @CacheEvict(value = ["saga", "sagas"], key = "#id", allEntries = true)
-    override fun updateSaga(id: String, request: SagaRequest): SagaResponse {
-        val existingSaga = repository.findById(id).orElseThrow {
-            SagaNotFoundException("Saga no encontrada con id: $id")
-        }
+    @CacheEvict(value = ["sagas", "filteredSagas"], allEntries = true)
+    @Transactional
+    override fun deleteSaga(id: String) {
+        sagaRepository.deleteById(id)
+    }
+    // endregion
 
-        if (repository.existsByNombre(request.nombre) && existingSaga.nombre != request.nombre) {
-            throw IllegalArgumentException("Ya existe una saga con ese nombre")
-        }
-
-        val updatedSaga = existingSaga.copy(
-            nombre = request.nombre,
-            descripcion = request.descripcion,
-            isAcabada = request.isAcabada,
-            fechaInicio = request.fechaInicio,
-            fechaFin = request.fechaFin,
-            imagen = request.imagen
+    // region Operaciones paginadas
+    override fun getAllSagasPaginated(
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginationUtils.PaginatedResponse<SagaResponse> {
+        val pageable = PaginationUtils.createPageable(
+            page = page,
+            size = size,
+            sortBy = sortBy,
+            sortDirection = sortDirection,
+            allowedSortFields = ALLOWED_SORT_FIELDS
         )
 
-        return mapper.toResponse(repository.save(updatedSaga))
+        val pageResult = sagaRepository.findAll(pageable)
+        return PaginationUtils.toPaginatedResponse(
+            pageResult.map { sagaMapper.toSagaResponse(it) }
+        )
     }
+    // endregion
 
-    @CacheEvict(value = ["saga", "sagas"], key = "#id", allEntries = true)
-    override fun deleteSaga(id: String) {
-        if (!repository.existsById(id)) {
-            throw SagaNotFoundException("Saga no encontrada con id: $id")
+    // region Filtrado
+    override fun filterSagas(
+        params: SagaFilterParams,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginatedResponse<SagaResponse> {
+        val allSagas = sagaRepository.findAll()
+
+        // Filtrado
+        val filtered = allSagas.filter { saga ->
+            (params.nombre.isNullOrBlank() || saga.nombre.contains(params.nombre, ignoreCase = true)) &&
+                    (params.isAcabada == null || saga.isAcabada == params.isAcabada) &&
+                    (params.fechaInicioDesde == null || saga.fechaInicio >= params.fechaInicioDesde) &&
+                    (params.fechaInicioHasta == null || saga.fechaInicio <= params.fechaInicioHasta) &&
+                    (params.tieneImagen == null || (params.tieneImagen && saga.imagen != null) || (!params.tieneImagen && saga.imagen == null))
         }
-        repository.deleteById(id)
+
+        // Ordenación
+        val sorted = when {
+            sortBy.any { it.equals("nombre", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.nombre }
+            sortBy.any { it.equals("nombre", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.nombre }
+            sortBy.any { it.equals("fechaInicio", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.fechaInicio }
+            sortBy.any { it.equals("fechaInicio", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.fechaInicio }
+            sortBy.any { it.equals("isAcabada", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.isAcabada }
+            sortBy.any { it.equals("isAcabada", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.isAcabada }
+            else -> filtered.sortedByDescending { it.fechaInicio }
+        }
+
+        // Paginación manual
+        val totalItems = sorted.size.toLong()
+        val totalPages = if (size > 0) (totalItems + size - 1) / size else 0
+        val paginatedItems = sorted
+            .drop(page * size)
+            .take(size)
+            .map { sagaMapper.toSagaResponse(it) }
+
+        return PaginatedResponse(
+            data = paginatedItems,
+            totalItems = totalItems,
+            totalPages = totalPages.toInt(),
+            currentPage = page,
+            pageSize = size
+        )
     }
 
-    @Cacheable(value = ["sagas"])
-    override fun getAllSagas(pageable: Pageable): SagaListResponse {
-        return mapper.toPageResponse(repository.findAll(pageable))
-    }
-
-    @Cacheable(value = ["sagas"], key = "#nombre")
-    override fun searchSagasByNombre(nombre: String, pageable: Pageable): SagaListResponse {
-        val page = repository.findByNombreContainingIgnoreCase(nombre, pageable)
-        return mapper.toPageResponse(page)
-    }
-
-    @Cacheable(value = ["sagas"], key = "#isAcabada")
-    override fun getSagasByEstado(isAcabada: Boolean, pageable: Pageable): SagaListResponse {
-        return mapper.toPageResponse(repository.findByEstado(isAcabada, pageable))
-    }
-
-    @Cacheable(value = ["sagas"], key = "{#fechaInicio, #fechaFin}")
-    override fun getSagasByRangoFechas(
-        fechaInicio: Date,
-        fechaFin: Date,
-        pageable: Pageable
-    ): SagaListResponse {
-        return mapper.toPageResponse(repository.findByRangoFechas(fechaInicio, fechaFin, pageable))
+    // region Métodos de apoyo
+    override fun existsById(id: String): Boolean {
+        return sagaRepository.existsById(id)
     }
 
     override fun existsByNombre(nombre: String): Boolean {
-        return repository.existsByNombre(nombre)
+        return sagaRepository.existsByNombre(nombre)
     }
 
-    @CacheEvict(value = ["saga", "sagas"], key = "#sagaId", allEntries = true)
-    override fun agregarProduccionASaga(sagaId: String, produccionRequest: ProduccionRequest): SagaResponse {
-        val saga = repository.findById(sagaId).orElseThrow {
-            SagaNotFoundException("Saga no encontrada con id: $sagaId")
+    private fun validateSagaRequest(request: SagaRequest, id: String? = null) {
+        if (request.nombre.isBlank()) {
+            throw SagaValidationException("El nombre de la saga no puede estar vacío")
         }
 
-        val produccion = prodMapper.toProduccionEntity(produccionRequest)
-        saga.producciones.add(produccion)
+        if (request.fechaFin != null && request.fechaFin < request.fechaInicio) {
+            throw SagaValidationException("La fecha de fin no puede ser anterior a la fecha de inicio")
+        }
 
-        return mapper.toResponse(repository.save(saga))
-    }
+        if (id == null) {
+            if (sagaRepository.existsByNombre(request.nombre)) {
+                throw SagaValidationException("Ya existe una saga con el nombre ${request.nombre}")
+            }
+        } else {
+            val existingSaga = sagaRepository.findById(id)
+                .orElseThrow { SagaNotFoundException(id) }
 
-    @Cacheable(value = ["sagaProducciones"], key = "#sagaId")
-    override fun obtenerProduccionesDeSaga(sagaId: String, pageable: Pageable): PaginationUtils.PaginatedResponse<ProduccionResponse> {
-        val produccionesPage = repository.findProduccionesBySagaId(sagaId, pageable)
-        return prodMapper.toPaginatedResponse(produccionesPage)
+            if (existingSaga.nombre != request.nombre && sagaRepository.existsByNombre(request.nombre)) {
+                throw SagaValidationException("Ya existe otra saga con el nombre ${request.nombre}")
+            }
+        }
     }
 }

@@ -1,7 +1,7 @@
 package org.wolve.geofilm.producciones.saga.dto
 
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
-import java.util.Date
+import java.util.*
 
 data class SagaResponse(
     val id: String,
@@ -10,6 +10,6 @@ data class SagaResponse(
     val isAcabada: Boolean,
     val fechaInicio: Date,
     val fechaFin: Date?,
-    val imagen: String?,  // Nuevo campo
-    val producciones: List<ProduccionResponse>
+    val imagen: String?,
+    val producciones: List<ProduccionResponse> = emptyList()
 )

@@ -1,3 +1,6 @@
 package org.wolve.geofilm.auth.dto
 
-data class JwtAuthenticationResponse(val token: String)
+data class JwtAuthenticationResponse(
+    val token: String,
+    val role: String
+)

@@ -1,4 +1,4 @@
-package org.wolve.geofilm.config.cors
+/*package org.wolve.geofilm.config.cors
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,3 +25,4 @@ class CorsConfig {
         return CorsFilter(source)
     }
 }
+*/

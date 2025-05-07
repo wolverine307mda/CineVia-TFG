@@ -3,8 +3,9 @@ package org.wolve.geofilm.producciones.produccion.models
 import org.wolve.geofilm.producciones.participacion.models.Participacion
 import org.wolve.geofilm.producciones.saga.model.Saga
 import org.wolve.geofilm.ubicaciones.models.Ubicacion
-import org.wolve.geofilm.utils.GuidGenerator
+import org.wolve.geofilm.utils.generators.GuidGenerator
 import jakarta.persistence.*
+import org.wolve.geofilm.rodajes.models.Rodaje
 import java.util.*
 
 @Entity
@@ -56,7 +57,7 @@ data class Produccion(
     var clasificacionEdad: ClasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS,
 
     @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val ubicaciones: MutableList<Ubicacion> = mutableListOf(),
+    val rodajes: MutableList<Rodaje> = mutableListOf(),
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "saga_id")

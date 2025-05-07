@@ -42,15 +42,12 @@
             <tr>
               <th @click="sortBy('nombre')">
                 Nombre
-                <i :class="sortIcon('nombre')"></i>
               </th>
               <th @click="sortBy('latitud')">
                 Latitud
-                <i :class="sortIcon('latitud')"></i>
               </th>
               <th @click="sortBy('longitud')">
                 Longitud
-                <i :class="sortIcon('longitud')"></i>
               </th>
               <th>Acciones</th>
             </tr>
