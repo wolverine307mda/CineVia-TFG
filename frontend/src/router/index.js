@@ -13,6 +13,10 @@ import General from '@/pages/general/General.vue'
 import Producciones from '@/pages/general/ProduccionesPage.vue'
 import Profesionales from '@/pages/general/ProfesionalPage.vue'
 import Sagas from '@/pages/general/SagasPage.vue'
+import AdminLayout from "@/layouts/AdminLayout.vue";
+import Dashboard from "@/pages/admin/Dashboard.vue";
+import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue";
+import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue";
 
 const routes = [
     {
@@ -75,6 +79,30 @@ const routes = [
         component: Produccion
     },
     {
+        path: '/admin',
+        component: AdminLayout,
+        children: [
+            {
+                path: '',
+                name: 'Dashboard',
+                components: { default: Dashboard },
+                meta: { title: 'Dashboard de Administración' }
+            },
+            {
+                path: 'ubicaciones',
+                name: 'Ubicaciones',
+                components: { default: UbicacionesAdminPage },
+                meta: { title: 'Administración de Lugares' }
+            },
+            {
+                path: 'producciones',
+                name: 'Producciones',
+                components: { default: ProduccionesAdminPage },
+                meta: { title: 'Administración de Producciones' }
+            }
+        ]
+    },
+    {
         path: '/profesionales',
         name: 'Profesionales',
         component: Profesionales
@@ -96,7 +124,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-    const token = localStorage.getItem('jwt') // Cambiado a 'jwt' para coincidir con tu login
+    const token = localStorage.getItem('token')
     const isAuthenticated = !!token
 
     // Configura el token en axios si existe

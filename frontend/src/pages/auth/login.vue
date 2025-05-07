@@ -102,56 +102,56 @@
 </template>
 
 <script>
-import AuthLayout from '@/layouts/AuthLayout.vue'
+import { useAuthStore } from '@/stores/auth';
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import {jwtDecode} from 'jwt-decode';
+import AuthLayout from "@/layouts/AuthLayout.vue";
 
 export default {
-  components: {
-    AuthLayout
-  },
-  data() {
-    return {
-      email: '',
-      password: '',
-      showPassword: false,
-      rememberMe: false,
-      loading: false
-    }
-  },
-  methods: {
-    async handleLogin() {
-      this.loading = true;
+  components: {AuthLayout},
+  setup() {
+    const authStore = useAuthStore();
+    const router = useRouter();
+
+    const email = ref('');
+    const password = ref('');
+    const showPassword = ref(false);
+    const rememberMe = ref(false);
+    const loading = ref(false);
+
+    const handleLogin = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/v1/auth/signin', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email: this.email,
-            password: this.password
-          })
-        });
+        loading.value = true;
+        await authStore.login(email.value, password.value);
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Credenciales inválidas');
+        // Verifica que el token esté en localStorage
+        console.log('Token almacenado:', localStorage.getItem('token'));
+
+        // Redirige según el rol
+        if (authStore.isAuthenticated) {
+          if (authStore.isAdmin) {
+            await router.push('/admin/dashboard');
+          } else {
+            await router.push('/myprofile');
+          }
         }
-
-        const data = await response.json();
-        const token = data.token; // Asegúrate que esto coincide con la estructura de tu JwtAuthenticationResponse
-
-        // Guardar el token en localStorage
-        localStorage.setItem('jwt', token);
-
-        // Redirigir al dashboard
-        this.$router.push('/myprofile');
       } catch (error) {
-        console.error('Error en inicio de sesión:', error);
-        alert(error.message || 'Inicio de sesión fallido. Verifica tus credenciales.');
+        alert(error.message || 'Error en el inicio de sesión');
       } finally {
-        this.loading = false;
+        loading.value = false;
       }
-    }  }
+    };
+
+    return {
+      email,
+      password,
+      showPassword,
+      rememberMe,
+      loading,
+      handleLogin
+    };
+  }
 }
 </script>
 
