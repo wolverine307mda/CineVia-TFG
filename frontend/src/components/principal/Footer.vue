@@ -30,49 +30,29 @@
           </h5>
           <ul class="list-unstyled">
             <li class="mb-2">
-              <a
-                  href="/movies"
-                  class="text-light text-decoration-none footer-link"
-              >Películas</a>
+              <a href="/producciones" class="text-light text-decoration-none footer-link">Películas</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/series"
-                  class="text-light text-decoration-none footer-link"
-              >Series</a>
+              <a href="/sagas" class="text-light text-decoration-none footer-link">Sagas</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/calendar"
-                  class="text-light text-decoration-none footer-link"
-              >Profesionales</a>
+              <a href="/profesionales" class="text-light text-decoration-none footer-link">Profesionales</a>
             </li>
           </ul>
         </div>
 
         <!-- Información corporativa -->
         <div class="col-lg-2 col-md-6">
-          <h5 class="text-uppercase text-purple mb-4">
-            Empresa
-          </h5>
+          <h5 class="text-uppercase text-purple mb-4"> Empresa </h5>
           <ul class="list-unstyled">
             <li class="mb-2">
-              <a
-                  href="/about"
-                  class="text-light text-decoration-none footer-link"
-              >Quién soy</a>
+              <a href="/about" class="text-light text-decoration-none footer-link">Quién soy</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/careers"
-                  class="text-light text-decoration-none footer-link"
-              >Colaboradores</a>
+              <a href="/careers" class="text-light text-decoration-none footer-link" >Colaboradores</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/partners"
-                  class="text-light text-decoration-none footer-link"
-              >Socios</a>
+              <a href="/partners" class="text-light text-decoration-none footer-link">Socios</a>
             </li>
           </ul>
         </div>
@@ -84,14 +64,10 @@
           </h5>
           <ul class="list-unstyled">
             <li class="mb-2">
-              <a
-                  href="/terms"
-                  class="text-light text-decoration-none footer-link"
-              >Términos</a>
+              <a href="/terms" class="text-light text-decoration-none footer-link">Términos</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/privacy"
+              <a href="/privacy"
                   class="text-light text-decoration-none footer-link"
               >Privacidad</a>
             </li>
