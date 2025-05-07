@@ -245,9 +245,9 @@
 </template>
 
 <script>
-import MovieCard from '@/components/cards/MovieCard.vue';
-import Header from "@/components/Header.vue";
-import Footer from "@/components/Footer.vue";
+import MovieCard from '../../components/cards/MovieCard.vue';
+import Header from "../../components/principal/Header.vue";
+import Footer from "../../components/principal/Footer.vue";
 import axios from 'axios';
 
 export default {
@@ -286,16 +286,6 @@ export default {
     };
   },
   methods: {
-    updateMinYear() {
-      if (this.filters.estrenoHasta && this.filters.estrenoDesde > this.filters.estrenoHasta) {
-        this.filters.estrenoDesde = this.filters.estrenoHasta;
-      }
-    },
-    updateMaxYear() {
-      if (this.filters.estrenoDesde && this.filters.estrenoHasta < this.filters.estrenoDesde) {
-        this.filters.estrenoHasta = this.filters.estrenoDesde;
-      }
-    },
     async fetchProducciones() {
       this.isLoading = true;
       try {
@@ -516,21 +506,7 @@ export default {
   align-items: center;
 }
 
-.slider-track {
-  position: absolute;
-  width: 100%;
-  height: 4px;
-  background: #ddd;
-  border-radius: 2px;
-  z-index: 1;
-}
-
-.dark-mode .slider-track {
-  background: #4a5568;
-}
-
 .slider {
-  -webkit-appearance: none;
   width: 100%;
   height: 4px;
   background: transparent;
@@ -726,4 +702,4 @@ export default {
 
 </style>
 
-<style scoped src="@/assets/styles/general.css"></style>
+<style scoped src="../../assets/styles/general.css"></style>

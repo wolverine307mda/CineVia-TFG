@@ -13,8 +13,8 @@
 
 <script>
 import { ref, onMounted, watch } from 'vue';
-import Header from '@/components/Header.vue';
-import Footer from '@/components/Footer.vue';
+import Header from '@/components/principal/Header.vue';
+import Footer from '@/components/principal/Footer.vue';
 
 export default {
   name: 'DefaultLayout',

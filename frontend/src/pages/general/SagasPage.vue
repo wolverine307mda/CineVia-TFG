@@ -192,8 +192,8 @@
 
 <script>
 import SagaCard from '@/components/cards/SagaCard.vue';
-import Header from "@/components/Header.vue";
-import Footer from "@/components/Footer.vue";
+import Header from "@/components/principal/Header.vue";
+import Footer from "@/components/principal/Footer.vue";
 import axios from 'axios';
 
 export default {

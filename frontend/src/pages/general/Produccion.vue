@@ -184,8 +184,8 @@
 <script>
 import { Loader } from '@googlemaps/js-api-loader';
 import DefaultLayout from "@/layouts/DefaultLayout.vue";
-import Header from "@/components/Header.vue";
-import Footer from "@/components/Footer.vue";
+import Header from "@/components/principal/Header.vue";
+import Footer from "@/components/principal/Footer.vue";
 
 export default {
   name: 'MoviePage',
