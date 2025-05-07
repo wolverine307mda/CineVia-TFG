@@ -3,7 +3,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark main-nav">
       <div class="container">
         <!-- Logo y marca con animación -->
-        <a class="navbar-brand d-flex align-items-center" href="/" @mouseenter="animateLogo">
+        <a class="navbar-brand d-flex align-items-center" href="/public" @mouseenter="animateLogo">
           <svg ref="logoIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="36" height="36" class="logo-icon">
             <path
                 fill="#a78bfa"

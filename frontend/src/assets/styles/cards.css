@@ -14,7 +14,6 @@
     overflow: hidden;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     transition: var(--transition);
-    height: 100%;
     display: flex;
     flex-direction: column;
     background-color: var(--card-bg-light);
@@ -35,7 +34,9 @@
 .card-image {
     position: relative;
     height: 0;
-    padding-bottom: 140%; /* Ajustable según necesidad */
+    flex: 0 0 60%;
+    aspect-ratio: 2/3;
+    padding-bottom: 140%;
     overflow: hidden;
 }
 

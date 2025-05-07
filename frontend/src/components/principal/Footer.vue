@@ -7,7 +7,7 @@
           <div class="d-flex align-items-center mb-3">
             <!-- Logo SVG -->
             <img
-                src="../assets/logo.svg"
+                src="../../assets/logo.svg"
                 alt="Logo MovieTrip"
                 width="60"
                 height="60"
