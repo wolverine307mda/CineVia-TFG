@@ -1,32 +1,37 @@
 ﻿// src/axios.js
-import axios from 'axios'
+import axios from 'axios';
+import router from "@/router/index.js";
+import {useAuthStore} from "@/stores/auth.js";
 
-const instance = axios.create({
-    baseURL: 'http://localhost:8080/api/v1', // Ajusta según tu backend
+const api = axios.create({
+    baseURL: 'http://localhost:8080/api/v1',
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
     }
-})
+});
 
-instance.interceptors.request.use(config => {
-    const token = localStorage.getItem('jwt') // Cambiado a 'jwt'
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem('token'); // Usar el mismo nombre de clave
+    if (token && !config.url.includes('/auth/')) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
-    return config
-})
+    return config;
+});
 
-instance.interceptors.response.use(
-    response => response,
-    error => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('jwt')
-            window.location.href = '/auth/login'
+// Reemplaza tu interceptor actual con este:
+api.interceptors.response.use(response => response, error => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+        const authStore = useAuthStore();
+        authStore.logout();
+
+        // Evitar redirección infinita si ya está en login
+        if (!router.currentRoute.value.meta.public) {
+            router.push('/auth/login');
         }
-        return Promise.reject(error)
     }
-)
+    return Promise.reject(error);
+});
 
-export default instance
+export default api;

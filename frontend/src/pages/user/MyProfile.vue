@@ -15,35 +15,13 @@
               <i class="fas fa-camera"></i>
             </button>
           </div>
-          <h2 class="profile-title">{{ user.nombre }} {{ user.apellido }}</h2>
+          <h2 class="profile-title">{{ user.nombre }}</h2>
           <p class="profile-subtitle">
-            <span class="badge" :class="user.rol === 'ADMINISTRADOR' ? 'bg-admin' : 'bg-user'">
+            <span class="badge" :class="user.rol === 'ADMINISTRADOR' ? 'bg-admin.css' : 'bg-user'">
               {{ user.rol === 'ADMINISTRADOR' ? 'Administrador' : 'Usuario' }}
             </span>
           </p>
           <p class="member-since">Miembro desde {{ formattedRegDate }}</p>
-        </div>
-
-        <!-- Sección de estadísticas -->
-        <div class="stats-section mb-4">
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value">{{ userStats.favorites }}</div>
-              <div class="stat-label">Favoritos</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ userStats.reviews }}</div>
-              <div class="stat-label">Reseñas</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ userStats.comments }}</div>
-              <div class="stat-label">Comentarios</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">{{ userStats.pdfsGenerated }}</div>
-              <div class="stat-label">PDFs generados</div>
-            </div>
-          </div>
         </div>
 
         <!-- Información del usuario -->
@@ -69,37 +47,6 @@
               </div>
             </div>
           </div>
-
-          <div class="info-section mb-4">
-            <h4 class="section-title"><i class="fas fa-film me-2"></i>Actividad en GeoFilm</h4>
-            <div class="activity-grid">
-              <div class="activity-item" v-if="recentFavorites.length > 0">
-                <label>Últimos favoritos</label>
-                <div class="favorites-list">
-                  <div v-for="fav in recentFavorites" :key="fav.id" class="favorite-item">
-                    <i :class="fav.tipo === 'PRODUCCION' ? 'fas fa-film' : 'fas fa-user'"></i>
-                    {{ fav.titulo }}
-                    <small class="text-muted">{{ formatDate(fav.fecha) }}</small>
-                  </div>
-                </div>
-              </div>
-              <div class="activity-item" v-if="recentReviews.length > 0">
-                <label>Últimas reseñas</label>
-                <div class="reviews-list">
-                  <div v-for="review in recentReviews" :key="review.id" class="review-item">
-                    <div class="review-rating">
-                      <i v-for="n in 5" :key="n"
-                         :class="n <= review.puntuacion ? 'fas fa-star' : 'far fa-star'"></i>
-                    </div>
-                    <div class="review-content">
-                      "{{ truncateText(review.comentario, 50) }}"
-                      <span class="review-location">@{{ review.ubicacionNombre }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Acciones -->
@@ -110,7 +57,7 @@
           <button class="btn btn-outline-secondary w-100 mb-3" @click="changePassword">
             <i class="fas fa-lock me-2"></i>Cambiar contraseña
           </button>
-          <button v-if="user.rol === 'ADMINISTRADOR'" class="btn btn-admin w-100" @click="adminPanel">
+          <button v-if="isAdmin" class="btn btn-admin w-100" @click="adminPanel">
             <i class="fas fa-shield-alt me-2"></i>Panel de Administración
           </button>
         </div>
@@ -120,127 +67,107 @@
 </template>
 
 <script>
-import axios from 'axios'
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default {
   name: 'ProfilePage',
-  data() {
-    return {
-      filtersVisible: false,
-      darkMode: false,
-      defaultAvatar: 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff',
-      user: {},
-      userStats: {
-        favorites: 0,
-        reviews: 0,
-        comments: 0,
-        pdfsGenerated: 0
-      },
-      recentFavorites: [],
-      recentReviews: []
-    }
-  },
-  computed: {
-    formattedBirthDate() {
-      if (!this.user.fechaNacimiento) return 'No especificada'
-      return new Date(this.user.fechaNacimiento).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    },
-    formattedRegDate() {
-      if (!this.user.fechaRegistro) return 'No especificada'
-      return new Date(this.user.fechaRegistro).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    }
-  },
-  created() {
-    this.loadDarkModePreference()
-    this.loadUserData()
-  },
-  methods: {
-    loadDarkModePreference() {
-      const savedMode = localStorage.getItem('darkMode')
-      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-      this.darkMode = savedMode !== null ? savedMode === 'true' : systemPrefersDark
-      this.applyDarkMode()
-    },
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode
-      localStorage.setItem('darkMode', this.darkMode)
-      this.applyDarkMode()
-    },
-    applyDarkMode() {
-      if (this.darkMode) {
-        document.documentElement.classList.add('dark')
+  setup() {
+    const authStore = useAuthStore();
+    const router = useRouter();
+    const darkMode = ref(false);
+    const defaultAvatar = 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff';
+
+    // Cargar datos del usuario desde el store
+    const user = computed(() => authStore.user || {});
+    const isAdmin = computed(() => authStore.isAdmin);
+
+    // Formateadores de fecha
+    const formatDate = (dateString) => {
+      if (!dateString) return 'No especificada';
+      const date = new Date(dateString);
+      return format(date, "d 'de' MMMM 'de' yyyy", { locale: es });
+    };
+
+    const formattedBirthDate = computed(() => formatDate(user.value.fechaNacimiento));
+    const formattedRegDate = computed(() => formatDate(user.value.createdAt));
+
+    // Métodos
+    const loadDarkModePreference = () => {
+      const savedMode = localStorage.getItem('darkMode');
+      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      darkMode.value = savedMode !== null ? savedMode === 'true' : systemPrefersDark;
+      applyDarkMode();
+    };
+
+    const toggleDarkMode = () => {
+      darkMode.value = !darkMode.value;
+      localStorage.setItem('darkMode', darkMode.value);
+      applyDarkMode();
+    };
+
+    const applyDarkMode = () => {
+      if (darkMode.value) {
+        document.documentElement.classList.add('dark');
       } else {
-        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.remove('dark');
       }
-    },
-    formatDate(dateString) {
-      return new Date(dateString).toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      })
-    },
-    truncateText(text, length) {
-      return text.length > length ? text.substring(0, length) + '...' : text
-    },
-    editProfile() {
-      this.$router.push('/profile/edit')
-    },
-    changePassword() {
-      this.$router.push('/profile/change-password')
-    },
-    adminPanel() {
-      this.$router.push('/admin')
-    },
-    openAvatarUpload() {
-      console.log('Subir nuevo avatar')
-    },
-    async loadUserData() {
+    };
+
+    const editProfile = () => router.push('/profile/edit');
+    const changePassword = () => router.push('/profile/change-password');
+    const adminPanel = () => router.push('/admin.css');
+    const openAvatarUpload = () => console.log('Subir nuevo avatar');
+
+    // Cargar datos iniciales
+    onMounted(async () => {
       try {
-        const token = localStorage.getItem('token')
-        const response = await axios.get('/api/user/me', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        if (!authStore.isAuthenticated) {
+          await authStore.checkAuth();
+        }
 
-        this.user = response.data.usuario
-        this.userStats = response.data.estadisticas || {}
-        this.recentFavorites = response.data.ultimosFavoritos || []
-        this.recentReviews = response.data.ultimasResenas || []
+        if (!authStore.user) {
+          await authStore.fetchCurrentUser();
+        }
 
-        // Avatar por defecto si no tiene
-        if (!this.user.avatar) {
-          this.user.avatar = this.defaultAvatar
+        // Redirigir si no está autenticado
+        if (!authStore.isAuthenticated) {
+          router.push('/auth/login');
         }
       } catch (error) {
-        console.error('Error al cargar los datos del usuario:', error)
+        console.error('Error loading user:', error);
+        router.push('/auth/login');
       }
-    }
+    });
+
+    return {
+      darkMode,
+      defaultAvatar,
+      user,
+      isAdmin,
+      formattedBirthDate,
+      formattedRegDate,
+      toggleDarkMode,
+      editProfile,
+      changePassword,
+      adminPanel,
+      openAvatarUpload
+    };
   }
-}
+};
 </script>
 
 <style scoped>
-
 .profile-layout,
 .profile-container,
 .profile-card,
 .profile-title,
 .profile-subtitle,
 .member-since,
-.stat-item,
-.info-item p,
-.favorite-item,
-.review-item {
+.info-item p {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -367,44 +294,6 @@ export default {
   color: white;
 }
 
-.stats-section {
-  margin: 2rem 0;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-}
-
-.stat-item {
-  background-color: rgba(126, 91, 239, 0.05);
-  border-radius: 10px;
-  padding: 1rem;
-  text-align: center;
-  border: 1px solid rgba(126, 91, 239, 0.1);
-  transition: all 0.3s ease;
-}
-
-.stat-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.1);
-}
-
-.stat-value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #7e5bef;
-  margin-bottom: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: #6c757d;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
 .section-title {
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
@@ -421,18 +310,6 @@ export default {
   gap: 1.5rem;
 }
 
-.activity-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 992px) {
-  .activity-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
 .info-item {
   margin-bottom: 1rem;
 }
@@ -444,9 +321,6 @@ export default {
   display: block;
   font-weight: 500;
 }
-.activity-item label {
-  color: #abb1b6;
-}
 
 .info-item p {
   margin: 0;
@@ -456,64 +330,6 @@ export default {
   padding: 0.75rem;
   border-radius: 8px;
   border-left: 3px solid #7e5bef;
-}
-
-.favorites-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.dark-mode .favorites-list i{
-  color: #c4bbbb;
-}
-
-.favorite-item {
-  background-color: rgba(126, 91, 239, 0.05);
-  padding: 0.75rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.95rem;
-  border-left: 3px solid #7e5bef;
-}
-
-.dark-mode .favorite-item{
-  color: white;
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.review-item {
-  background-color: rgba(126, 91, 239, 0.05);
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-.review-rating {
-  color: #ffc107;
-  margin-bottom: 0.5rem;
-}
-
-.review-content {
-  font-style: italic;
-  margin-bottom: 0.25rem;
-}
-
-.dark-mode .review-content {
-  color: white;
-}
-
-.review-location {
-  display: block;
-  font-size: 0.85rem;
-  color: #6c757d;
-  font-style: normal;
 }
 
 .btn-primary {
@@ -559,12 +375,6 @@ export default {
   background-color: #dc2626;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2);
-}
-
-.text-muted {
-  color: #adb5bd !important;
-  margin-left: auto;
-  font-size: 0.8rem;
 }
 
 /* Estilos para modo oscuro */
@@ -613,23 +423,6 @@ export default {
   color: #adb5bd;
 }
 
-.dark-mode .stat-item {
-  background-color: rgba(49, 27, 75, 0.3);
-  border-color: rgba(167, 139, 250, 0.2);
-}
-
-.dark-mode .stat-item:hover {
-  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.2);
-}
-
-.dark-mode .stat-value {
-  color: #a78bfa;
-}
-
-.dark-mode .stat-label {
-  color: #adb5bd;
-}
-
 .dark-mode .section-title {
   color: #a78bfa;
   border-bottom-color: rgba(167, 139, 250, 0.3);
@@ -643,23 +436,6 @@ export default {
   color: #e9ecef;
   background-color: rgba(33, 37, 41, 0.5);
   border-left-color: #a78bfa;
-}
-
-.dark-mode .favorite-item {
-  background-color: rgba(49, 27, 75, 0.3);
-  border-left-color: #a78bfa;
-}
-
-.dark-mode .favorite-item i {
-  color: #a78bfa;
-}
-
-.dark-mode .review-item {
-  background-color: rgba(49, 27, 75, 0.3);
-}
-
-.dark-mode .review-location {
-  color: #adb5bd;
 }
 
 .dark-mode .btn-primary {
@@ -681,17 +457,9 @@ export default {
   color: #212529;
 }
 
-.dark-mode .text-muted {
-  color: #6c757d !important;
-}
-
 @media (max-width: 768px) {
   .profile-card {
     padding: 1.5rem;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .info-grid {
@@ -702,10 +470,6 @@ export default {
 @media (max-width: 576px) {
   .profile-container {
     padding: 1rem;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>
