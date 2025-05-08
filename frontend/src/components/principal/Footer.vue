@@ -67,15 +67,10 @@
               <a href="/terms" class="text-light text-decoration-none footer-link">Términos</a>
             </li>
             <li class="mb-2">
-              <a href="/privacy"
-                  class="text-light text-decoration-none footer-link"
-              >Privacidad</a>
+              <a href="/privacy"class="text-light text-decoration-none footer-link">Privacidad</a>
             </li>
             <li class="mb-2">
-              <a
-                  href="/cookies"
-                  class="text-light text-decoration-none footer-link"
-              >Cookies</a>
+              <a href="/admin" class="text-light text-decoration-none footer-link">Cookies</a>
             </li>
           </ul>
         </div>

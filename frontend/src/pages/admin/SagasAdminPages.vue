@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="producciones-container">
+  <div class="sagas-container">
     <div class="main-content">
       <div class="table-section">
         <!-- Barra de búsqueda con botón -->
@@ -7,59 +7,59 @@
           <div class="search-bar">
             <div class="search-input-container">
               <i class="fas fa-search search-icon"></i>
-              <input  v-model="searchQuery"  @keyup.enter="fetchProducciones" placeholder="Buscar por título..." class="search-input">
-              <button @click="fetchProducciones" class="search-button" >
+              <input v-model="searchQuery" @keyup.enter="fetchSagas" placeholder="Buscar por nombre..." class="search-input">
+              <button @click="fetchSagas" class="search-button">
                 Buscar
               </button>
             </div>
             <button @click="openModal(null)" class="new-button">
               <i class="fas fa-plus"></i>
-              <span>Nueva Producción</span>
+              <span>Nueva Saga</span>
             </button>
           </div>
         </div>
 
-        <!-- Tabla de producciones con tamaños fijos -->
+        <!-- Tabla de sagas con tamaños fijos -->
         <div class="table-container">
-          <table class="producciones-table">
+          <table class="sagas-table">
             <thead>
             <tr>
-              <th style="width: 55%;" @click="sortBy('titulo')">
-                Título
+              <th style="width: 40%;" @click="sortBy('nombre')">
+                Nombre
               </th>
-              <th style="width: 15%; text-align: center;" @click="sortBy('estreno')">
-                Estreno
+              <th style="width: 30%; text-align: center;" @click="sortBy('fechaInicio')">
+                Fecha Inicio
               </th>
-              <th style="width: 5%; text-align: center;" @click="sortBy('tipo')">
-                Tipo
+              <th style="width: 10%; text-align: center;" @click="sortBy('isAcabada')">
+                Estado
               </th>
-              <th style="width: 10%; text-align: center;" @click="sortBy('clasificacionEdad')">
-                Clasificación
+              <th style="width: 10%; text-align: center;">
+                Producciones
               </th>
-              <th style="width: 15%; text-align: center;">Acciones</th>
+              <th style="width: 10%; text-align: center;">Acciones</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="produccion in producciones" :key="produccion.id">
-              <td style="width: 55%;">{{ produccion.titulo }}</td>
-              <td style="width: 15%; text-align: center;">{{ formatDate(produccion.estreno) }}</td>
-              <td style="width: 5%; text-align: center;">{{ formatTipoProduccion(produccion.tipo) }}</td>
-              <td style="width: 10%; text-align: center;">{{ formatClasificacionEdad(produccion.clasificacionEdad) }}</td>
-              <td style="width: 15%; text-align: center;" class="actions">
-                <button @click="openModal(produccion)" class="btn-edit" title="Editar">
+            <tr v-for="saga in sagas" :key="saga.id">
+              <td style="width: 40%;">{{ saga.nombre }}</td>
+              <td style="width: 30%; text-align: center;">{{ formatDate(saga.fechaInicio) }}</td>
+              <td style="width: 10%; text-align: center;">{{ formatStatus(saga.isAcabada) }}</td>
+              <td style="width: 10%; text-align: center;">{{ saga.producciones.length }}</td>
+              <td style="width: 10%; text-align: center;" class="actions">
+                <button @click="openModal(saga)" class="btn-edit" title="Editar">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button @click="confirmDelete(produccion)" class="btn-delete" title="Eliminar">
+                <button @click="confirmDelete(saga)" class="btn-delete" title="Eliminar">
                   <i class="fas fa-trash"></i>
                 </button>
-                <button @click="viewDetails(produccion)" class="btn-view" title="Detalles">
+                <button @click="viewDetails(saga)" class="btn-view" title="Detalles">
                   <i class="fas fa-info-circle"></i>
                 </button>
               </td>
             </tr>
-            <tr v-if="producciones.length === 0 && !loading">
+            <tr v-if="sagas.length === 0 && !loading">
               <td colspan="5" class="no-results">
-                No se encontraron producciones
+                No se encontraron sagas
               </td>
             </tr>
             <tr v-if="loading">
@@ -95,9 +95,9 @@
     </div>
 
     <!-- Modal para crear/editar -->
-    <ProduccionModal
+    <SagaModal
         v-if="showModal"
-        :produccion="selectedProduccion"
+        :saga="selectedSaga"
         :show="showModal"
         @close="closeModal"
         @save="handleSave"
@@ -109,202 +109,165 @@
         :show="showConfirmModal"
         title="Confirmar eliminación"
         :message="confirmMessage"
-        @confirm="deleteProduccion"
+        @confirm="deleteSaga"
         @cancel="showConfirmModal = false"
     />
   </div>
 </template>
 
 <script>
-import ProduccionModal from "@/components/modales/ProduccionModal.vue";
-import ProduccionesService from '@/services/producciones.service';
+import SagaModal from "@/components/modales/SagaModal.vue";
 import ConfirmModal from "@/components/cards/ConfirmModal.vue";
+import SagasService from '@/services/sagas.service';
 
 export default {
-  name: 'AdministracionProducciones',
+  name: 'AdministracionSagas',
   components: {
-    ProduccionModal,
+    SagaModal,
     ConfirmModal
   },
   data() {
     return {
-      producciones: [],
+      sagas: [],
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
       totalPages: 1,
       loading: false,
       searchQuery: '',
-      sortField: 'titulo',
-      sortDirection: 'asc',
+      sortOptions: {
+        field: 'nombre',
+        direction: 'asc'
+      },
       showModal: false,
       showConfirmModal: false,
-      selectedProduccion: null,
-      produccionToDelete: null
+      selectedSaga: null,
+      sagaToDelete: null,
+      confirmMessage: '¿Estás seguro de que deseas eliminar esta saga?'
     };
   },
   methods: {
-    async fetchProducciones() {
+    async fetchSagas() {
       this.loading = true;
       try {
-        const filters = this.searchQuery ? { titulo: this.searchQuery } : {};
+        const filters = {
+          nombre: this.searchQuery || null
+        };
 
-        const result = await ProduccionesService.fetchProducciones(filters, {
-          page: this.currentPage - 1,
-          size: this.itemsPerPage,
-          sortBy: this.sortField,
-          sortDirection: this.sortDirection
-        });
+        const pagination = {
+          currentPage: this.currentPage,
+          itemsPerPage: this.itemsPerPage
+        };
 
-        this.producciones = result.data;
-        this.totalItems = result.totalItems;
-        this.totalPages = result.totalPages;
+        const response = await SagasService.fetchSagas(filters, pagination, this.sortOptions);
+
+        this.sagas = response.data;
+        this.totalItems = response.totalItems;
+        this.totalPages = response.totalPages;
       } catch (error) {
-        console.error("Error fetching producciones:", error);
-        this.$toast.error("Error al cargar las producciones");
-        // Datos de prueba para desarrollo
-        if (process.env.NODE_ENV === 'development') {
-          this.loadMockData();
-        }
+        console.error('Error fetching sagas:', error);
+        this.$toast.error('Error al cargar las sagas');
+        this.sagas = [];
+        this.totalItems = 0;
+        this.totalPages = 1;
       } finally {
         this.loading = false;
       }
     },
 
-    loadMockData() {
-      this.producciones = [
-        {
-          id: 1,
-          titulo: "Ejemplo Película",
-          tipo: "PELICULA",
-          estreno: "2023-01-01",
-          duracion: 120,
-          sinopsis: "Sinopsis de ejemplo",
-          imagen: "",
-          clasificacionEdad: "12",
-          categorias: ["ACCION", "AVENTURA"]
-        }
-      ];
-      this.totalItems = 1;
-      this.totalPages = 1;
-    },
-    formatTipoProduccion(tipo) {
-      return ProduccionesService.formatTipoProduccion(tipo);
-    },
-
-    formatDate(dateString) {
-      return ProduccionesService.formatDate(dateString);
-    },
-
-    formatClasificacionEdad(clasificacion) {
-      return ProduccionesService.formatClasificacionEdad(clasificacion);
-    },
-
     sortBy(field) {
-      if (this.sortField === field) {
-        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      if (this.sortOptions.field === field) {
+        this.sortOptions.direction = this.sortOptions.direction === 'asc' ? 'desc' : 'asc';
       } else {
-        this.sortField = field;
-        this.sortDirection = 'asc';
+        this.sortOptions.field = field;
+        this.sortOptions.direction = 'asc';
       }
       this.currentPage = 1;
-      this.fetchProducciones();
+      this.fetchSagas();
     },
 
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.fetchProducciones();
+        this.fetchSagas();
       }
     },
 
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        this.fetchProducciones();
+        this.fetchSagas();
       }
     },
 
-    openModal(produccion) {
-      this.selectedProduccion = produccion ? { ...produccion } : null;
+    openModal(saga) {
+      this.selectedSaga = saga ? { ...saga } : null;
       this.showModal = true;
     },
 
     closeModal() {
       this.showModal = false;
-      this.selectedProduccion = null;
+      this.selectedSaga = null;
     },
 
-    async handleSave(produccionData) {
+    async handleSave(sagaData) {
       try {
-        if (produccionData.id) {
-          await ProduccionesService.updateProduccion(produccionData.id, produccionData);
-          this.$toast.success('Producción actualizada correctamente');
+        if (sagaData.id) {
+          await SagasService.updateSaga(sagaData.id, sagaData);
+          this.$toast.success('Saga actualizada correctamente');
         } else {
-          await ProduccionesService.createProduccion(produccionData);
-          this.$toast.success('Producción creada correctamente');
+          await SagasService.createSaga(sagaData);
+          this.$toast.success('Saga creada correctamente');
         }
 
-        this.fetchProducciones();
+        this.fetchSagas();
         this.closeModal();
       } catch (error) {
-        console.error('Error al guardar la producción:', error);
-        this.$toast.error('Error al guardar la producción');
+        console.error('Error al guardar la saga:', error);
+        this.$toast.error('Error al guardar la saga');
       }
     },
 
-    viewDetails(produccion) {
-      this.$router.push({ name: 'ProduccionDetalle', params: { id: produccion.id } });
+    viewDetails(saga) {
+      this.$router.push({ name: 'SagaDetalle', params: { id: saga.id } });
     },
 
-    confirmDelete(produccion) {
-      this.produccionToDelete = produccion;
+    confirmDelete(saga) {
+      this.sagaToDelete = saga;
+      this.confirmMessage = `¿Estás seguro de que deseas eliminar la saga "${saga.nombre}"?`;
       this.showConfirmModal = true;
     },
 
-    async deleteProduccion() {
+    async deleteSaga() {
       try {
-        await ProduccionesService.deleteProduccion(this.produccionToDelete.id);
-        this.$toast.success('Producción eliminada correctamente');
-        this.fetchProducciones();
+        await SagasService.deleteSaga(this.sagaToDelete.id);
+        this.$toast.success('Saga eliminada correctamente');
+        this.fetchSagas();
       } catch (error) {
-        console.error('Error al eliminar la producción:', error);
-        this.$toast.error('Error al eliminar la producción');
+        console.error('Error al eliminar la saga:', error);
+        this.$toast.error('Error al eliminar la saga');
       } finally {
         this.showConfirmModal = false;
-        this.produccionToDelete = null;
+        this.sagaToDelete = null;
       }
+    },
+
+    formatDate(dateString) {
+      return SagasService.formatDate(dateString);
+    },
+
+    formatStatus(isFinished) {
+      return SagasService.formatStatus(isFinished);
     }
   },
   created() {
-    this.fetchProducciones();
+    this.fetchSagas();
   }
 };
 </script>
 
 <style scoped>
-
-.table-container thead{
-  background-color: #f8fafc;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.table-container th{
-  color: #1e293b;
-}
-
-.dark-mode .table-container th{
-  color: white;
-}
-
-.dark-mode .table-container thead{
-  background-color: #121212;
-  color: white;
-}
-
-.producciones-container {
+.sagas-container {
   margin-left: 50px;
   margin-top: 26px;
   width: calc(100% - 100px);
@@ -393,19 +356,19 @@ export default {
   overflow-y: auto;
 }
 
-.producciones-table {
+.sagas-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.producciones-table th,
-.producciones-table td {
+.sagas-table th,
+.sagas-table td {
   padding: 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
 
-.producciones-table th {
+.sagas-table th {
   background: var(--card-header-bg-solid);
   font-weight: 600;
   color: var(--text-primary);
@@ -416,15 +379,15 @@ export default {
   border-bottom: 2px solid var(--border-color);
 }
 
-.producciones-table th:hover {
+.sagas-table th:hover {
   background: rgba(126, 91, 239, 0.05);
 }
 
-.producciones-table tr:last-child td {
+.sagas-table tr:last-child td {
   border-bottom: none;
 }
 
-.producciones-table tr:hover td {
+.sagas-table tr:hover td {
   background: rgba(126, 91, 239, 0.03);
 }
 
@@ -562,7 +525,7 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .producciones-table {
+  .sagas-table {
     display: block;
     overflow-x: auto;
   }
@@ -643,7 +606,7 @@ export default {
   background: #6d46e8;
 }
 
-/* Botón "Nueva Producción" */
+/* Botón "Nueva Saga" */
 .new-button {
   padding: 0 1.5rem;
   height: 3rem;

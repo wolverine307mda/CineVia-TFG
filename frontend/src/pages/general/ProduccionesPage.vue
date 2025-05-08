@@ -1,5 +1,6 @@
 ﻿<template>
   <Header :dark-mode="darkMode" @toggle-dark-mode="toggleDarkMode"/>
+
   <div class="movies-container" :class="{ 'dark-mode': darkMode }">
     <!-- Encabezado con título y modo oscuro -->
     <div class="header-section">
@@ -67,8 +68,8 @@
           </button>
 
           <span class="page-indicator">
-      Página {{ currentPage }} de {{ totalPages }}
-    </span>
+            Página {{ currentPage }} de {{ totalPages }}
+          </span>
 
           <button
               class="pagination-btn"
@@ -238,6 +239,7 @@
       </div>
     </div>
   </div>
+
   <Footer :dark-mode="darkMode" />
 </template>
 
@@ -245,7 +247,7 @@
 import MovieCard from '../../components/cards/MovieCard.vue';
 import Header from "../../components/principal/Header.vue";
 import Footer from "../../components/principal/Footer.vue";
-import axios from 'axios';
+import ProduccionesService from '../../services/producciones.service';
 
 export default {
   name: 'MoviesCatalog',
@@ -285,92 +287,46 @@ export default {
   methods: {
     async fetchProducciones() {
       this.isLoading = true;
+
+      // Preparar filtros (eliminar valores null o vacíos)
+      const cleanFilters = Object.fromEntries(
+          Object.entries(this.filters).filter(([_, v]) => v !== null && v !== '')
+      );
+
+      // Si estrenoDesde/estrenoHasta no están definidos, usar los valores por defecto
+      if (cleanFilters.estrenoDesde === undefined) {
+        cleanFilters.estrenoDesde = this.minYear;
+      }
+      if (cleanFilters.estrenoHasta === undefined) {
+        cleanFilters.estrenoHasta = this.maxYear;
+      }
+
+      // Manejar array de categorías
+      if (cleanFilters.categorias && cleanFilters.categorias.length === 0) {
+        delete cleanFilters.categorias;
+      }
+
       try {
-        // Construir parámetros de consulta
-        const params = {
-          page: this.currentPage - 1, // Spring usa 0-based
-          size: this.itemsPerPage,
-          sortBy: 'titulo',
-          sortDirection: 'asc'
-        };
+        const { data, totalItems, totalPages } = await ProduccionesService.fetchProducciones(
+            cleanFilters,
+            { page: this.currentPage - 1, size: this.itemsPerPage }
+        );
 
-        // Añadir filtros no nulos
-        Object.keys(this.filters).forEach(key => {
-          if (this.filters[key] !== null && this.filters[key] !== '') {
-            params[key] = this.filters[key];
-          }
-        });
-
-        // Manejar array de categorías
-        if (this.filters.categorias && this.filters.categorias.length > 0) {
-          // Para Spring, enviamos múltiples parámetros con el mismo nombre
-          params.categorias = this.filters.categorias;
-        }
-
-        const response = await axios.get('/api/producciones/filtrar', {
-          params,
-          paramsSerializer: params => {
-            const parts = [];
-            for (const key in params) {
-              if (params.hasOwnProperty(key)) {
-                const value = params[key];
-                if (Array.isArray(value)) {
-                  value.forEach(v => parts.push(`${key}=${encodeURIComponent(v)}`));
-                } else {
-                  parts.push(`${key}=${encodeURIComponent(value)}`);
-                }
-              }
-            }
-            return parts.join('&');
-          }
-        });
-
-        this.producciones = response.data?.data?.map(item => ({
-          id: item.id,
-          title: item.titulo,
-          type: item.tipo,
-          estreno: item.estreno,
-          duration: item.duracion,
-          plot: item.sinopsis,
-          imagen: item.imagen || 'default-poster.jpg',
-          clasificacionEdad: item.clasificacionEdad,
-          categorias: item.categorias || [],
-          puntuacion: item.puntuacion || 0,
-          isFavorite: false,
-          year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
-          poster: item.imagen || 'default-poster.jpg'
-        })) || [];
-
-        this.totalItems = response.data?.totalItems || 0;
-        this.totalPages = response.data?.totalPages || 1;
-
-      } catch (error) {
-        console.error('Error fetching producciones:', error);
-        this.producciones = [];
-        this.totalItems = 0;
-        this.totalPages = 1;
+        this.producciones = data;
+        this.totalItems = totalItems;
+        this.totalPages = totalPages;
       } finally {
         this.isLoading = false;
       }
     },
 
     async fetchFilterOptions() {
-      try {
-        // Obtener tipos de producción
-        const tiposResponse = await axios.get('/api/producciones/tipos');
-        this.tiposProduccion = tiposResponse.data || [];
+      const { tiposProduccion, categoriasDisponibles, clasificacionesEdad } =
+          await ProduccionesService.fetchFilterOptions();
 
-        // Obtener categorías disponibles
-        const categoriasResponse = await axios.get('/api/producciones/categorias');
-        this.categoriasDisponibles = categoriasResponse.data || [];
-
-        // Obtener clasificaciones de edad
-        const clasificacionesResponse = await axios.get('/api/producciones/clasificaciones-edad');
-        this.clasificacionesEdad = clasificacionesResponse.data || [];
-
-      } catch (error) {
-        console.error('Error fetching filter options:', error);
-      }
+      this.tiposProduccion = tiposProduccion;
+      this.categoriasDisponibles = categoriasDisponibles;
+      this.clasificacionesEdad = clasificacionesEdad;
     },
 
     toggleDarkMode() {
@@ -394,7 +350,6 @@ export default {
         this.filters.categorias.splice(index, 1);
       }
 
-      // Si no hay categorías seleccionadas, establecer a null
       if (this.filters.categorias.length === 0) {
         this.filters.categorias = null;
       }
@@ -430,7 +385,7 @@ export default {
       if (this.currentPage > 1) {
         this.currentPage--;
         this.fetchProducciones();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }
     },
 
@@ -438,7 +393,7 @@ export default {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
         this.fetchProducciones();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
       }
     },
 
@@ -449,30 +404,17 @@ export default {
       }
     },
 
+    // Métodos de formato que ahora usan el servicio
     formatTipoProduccion(tipo) {
-      const tiposMap = {
-        'PELICULA': 'Película',
-        'SERIE': 'Serie',
-        'DOCUMENTAL': 'Documental',
-        'CORTOMETRAJE': 'Cortometraje'
-      };
-      return tiposMap[tipo] || tipo;
+      return ProduccionesService.formatTipoProduccion(tipo);
     },
 
     formatCategoria(categoria) {
-      // Asume que las categorías vienen en formato "ACCION", "COMEDIA", etc.
-      return categoria.charAt(0).toUpperCase() + categoria.slice(1).toLowerCase();
+      return ProduccionesService.formatCategoria(categoria);
     },
 
     formatClasificacionEdad(clasificacion) {
-      const map = {
-        'TP': 'Todo público',
-        '7': '+7 años',
-        '12': '+12 años',
-        '16': '+16 años',
-        '18': '+18 años'
-      };
-      return map[clasificacion] || clasificacion;
+      return ProduccionesService.formatClasificacionEdad(clasificacion);
     }
   },
   created() {
@@ -533,6 +475,7 @@ export default {
   cursor: pointer;
   pointer-events: auto;
 }
+
 .slider-values {
   display: flex;
   justify-content: space-between;

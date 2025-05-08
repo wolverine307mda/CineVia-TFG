@@ -7,59 +7,59 @@
           <div class="search-bar">
             <div class="search-input-container">
               <i class="fas fa-search search-icon"></i>
-              <input  v-model="searchQuery"  @keyup.enter="fetchProducciones" placeholder="Buscar por título..." class="search-input">
-              <button @click="fetchProducciones" class="search-button" >
+              <input v-model="searchQuery" @keyup.enter="fetchProfesionales" placeholder="Buscar por nombre..." class="search-input">
+              <button @click="fetchProfesionales" class="search-button">
                 Buscar
               </button>
             </div>
             <button @click="openModal(null)" class="new-button">
               <i class="fas fa-plus"></i>
-              <span>Nueva Producción</span>
+              <span>Nuevo Profesional</span>
             </button>
           </div>
         </div>
 
-        <!-- Tabla de producciones con tamaños fijos -->
+        <!-- Tabla de profesionales con tamaños fijos -->
         <div class="table-container">
           <table class="producciones-table">
             <thead>
             <tr>
-              <th style="width: 55%;" @click="sortBy('titulo')">
-                Título
+              <th style="width: 40%;" @click="sortBy('nombre')">
+                Nombre
               </th>
-              <th style="width: 15%; text-align: center;" @click="sortBy('estreno')">
-                Estreno
+              <th style="width: 15%; text-align: center;" @click="sortBy('fechaNacimiento')">
+                Nacimiento
               </th>
-              <th style="width: 5%; text-align: center;" @click="sortBy('tipo')">
-                Tipo
+              <th style="width: 15%; text-align: center;" @click="sortBy('fechaInicio')">
+                Inicio
               </th>
-              <th style="width: 10%; text-align: center;" @click="sortBy('clasificacionEdad')">
-                Clasificación
+              <th style="width: 20%; text-align: center;">
+                Lugar Nacimiento
               </th>
-              <th style="width: 15%; text-align: center;">Acciones</th>
+              <th style="width: 10%; text-align: center;">Acciones</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="produccion in producciones" :key="produccion.id">
-              <td style="width: 55%;">{{ produccion.titulo }}</td>
-              <td style="width: 15%; text-align: center;">{{ formatDate(produccion.estreno) }}</td>
-              <td style="width: 5%; text-align: center;">{{ formatTipoProduccion(produccion.tipo) }}</td>
-              <td style="width: 10%; text-align: center;">{{ formatClasificacionEdad(produccion.clasificacionEdad) }}</td>
-              <td style="width: 15%; text-align: center;" class="actions">
-                <button @click="openModal(produccion)" class="btn-edit" title="Editar">
+            <tr v-for="profesional in profesionales" :key="profesional.id">
+              <td style="width: 40%;">{{ profesional.nombre }}</td>
+              <td style="width: 15%; text-align: center;">{{ formatDate(profesional.fechaNacimiento) }}</td>
+              <td style="width: 15%; text-align: center;">{{ formatDate(profesional.fechaInicio) }}</td>
+              <td style="width: 20%; text-align: center;">{{ profesional.lugarNacimiento }}</td>
+              <td style="width: 10%; text-align: center;" class="actions">
+                <button @click="openModal(profesional)" class="btn-edit" title="Editar">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button @click="confirmDelete(produccion)" class="btn-delete" title="Eliminar">
+                <button @click="confirmDelete(profesional)" class="btn-delete" title="Eliminar">
                   <i class="fas fa-trash"></i>
                 </button>
-                <button @click="viewDetails(produccion)" class="btn-view" title="Detalles">
+                <button @click="viewDetails(profesional)" class="btn-view" title="Detalles">
                   <i class="fas fa-info-circle"></i>
                 </button>
               </td>
             </tr>
-            <tr v-if="producciones.length === 0 && !loading">
+            <tr v-if="profesionales.length === 0 && !loading">
               <td colspan="5" class="no-results">
-                No se encontraron producciones
+                No se encontraron profesionales
               </td>
             </tr>
             <tr v-if="loading">
@@ -95,9 +95,9 @@
     </div>
 
     <!-- Modal para crear/editar -->
-    <ProduccionModal
+    <ProfesionalModal
         v-if="showModal"
-        :produccion="selectedProduccion"
+        :profesional="selectedProfesional"
         :show="showModal"
         @close="closeModal"
         @save="handleSave"
@@ -109,95 +109,73 @@
         :show="showConfirmModal"
         title="Confirmar eliminación"
         :message="confirmMessage"
-        @confirm="deleteProduccion"
+        @confirm="deleteProfesional"
         @cancel="showConfirmModal = false"
     />
   </div>
 </template>
 
 <script>
-import ProduccionModal from "@/components/modales/ProduccionModal.vue";
-import ProduccionesService from '@/services/producciones.service';
+import ProfesionalModal from "@/components/modales/ProfesionalModal.vue";
+import ProfessionalsService from '@/services/profesional.service.js';
 import ConfirmModal from "@/components/cards/ConfirmModal.vue";
 
 export default {
-  name: 'AdministracionProducciones',
+  name: 'AdminProfesionales',
   components: {
-    ProduccionModal,
+    ProfesionalModal,
     ConfirmModal
   },
   data() {
     return {
-      producciones: [],
+      profesionales: [],
       currentPage: 1,
       itemsPerPage: 10,
       totalItems: 0,
       totalPages: 1,
       loading: false,
       searchQuery: '',
-      sortField: 'titulo',
+      sortField: 'nombre',
       sortDirection: 'asc',
       showModal: false,
       showConfirmModal: false,
-      selectedProduccion: null,
-      produccionToDelete: null
+      selectedProfesional: null,
+      profesionalToDelete: null
     };
   },
+  computed: {
+    confirmMessage() {
+      return this.profesionalToDelete
+          ? `¿Estás seguro de que deseas eliminar a ${this.profesionalToDelete.nombre}?`
+          : '';
+    }
+  },
   methods: {
-    async fetchProducciones() {
+    async fetchProfesionales() {
       this.loading = true;
       try {
-        const filters = this.searchQuery ? { titulo: this.searchQuery } : {};
+        const filters = this.searchQuery ? { nombre: this.searchQuery } : {};
 
-        const result = await ProduccionesService.fetchProducciones(filters, {
+        const result = await ProfessionalsService.searchProfessionals(filters, {
           page: this.currentPage - 1,
           size: this.itemsPerPage,
           sortBy: this.sortField,
           sortDirection: this.sortDirection
         });
 
-        this.producciones = result.data;
+        this.profesionales = result.data;
         this.totalItems = result.totalItems;
         this.totalPages = result.totalPages;
       } catch (error) {
-        console.error("Error fetching producciones:", error);
-        this.$toast.error("Error al cargar las producciones");
-        // Datos de prueba para desarrollo
-        if (process.env.NODE_ENV === 'development') {
-          this.loadMockData();
-        }
+        console.error("Error fetching profesionales:", error);
+        this.$toast.error("Error al cargar los profesionales");
       } finally {
         this.loading = false;
       }
     },
 
-    loadMockData() {
-      this.producciones = [
-        {
-          id: 1,
-          titulo: "Ejemplo Película",
-          tipo: "PELICULA",
-          estreno: "2023-01-01",
-          duracion: 120,
-          sinopsis: "Sinopsis de ejemplo",
-          imagen: "",
-          clasificacionEdad: "12",
-          categorias: ["ACCION", "AVENTURA"]
-        }
-      ];
-      this.totalItems = 1;
-      this.totalPages = 1;
-    },
-    formatTipoProduccion(tipo) {
-      return ProduccionesService.formatTipoProduccion(tipo);
-    },
-
     formatDate(dateString) {
-      return ProduccionesService.formatDate(dateString);
-    },
-
-    formatClasificacionEdad(clasificacion) {
-      return ProduccionesService.formatClasificacionEdad(clasificacion);
+      return ProfessionalsService.formatDate(dateString);
     },
 
     sortBy(field) {
@@ -208,76 +186,76 @@ export default {
         this.sortDirection = 'asc';
       }
       this.currentPage = 1;
-      this.fetchProducciones();
+      this.fetchProfesionales();
     },
 
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.fetchProducciones();
+        this.fetchProfesionales();
       }
     },
 
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        this.fetchProducciones();
+        this.fetchProfesionales();
       }
     },
 
-    openModal(produccion) {
-      this.selectedProduccion = produccion ? { ...produccion } : null;
+    openModal(profesional) {
+      this.selectedProfesional = profesional ? { ...profesional } : null;
       this.showModal = true;
     },
 
     closeModal() {
       this.showModal = false;
-      this.selectedProduccion = null;
+      this.selectedProfesional = null;
     },
 
-    async handleSave(produccionData) {
+    async handleSave(profesionalData) {
       try {
-        if (produccionData.id) {
-          await ProduccionesService.updateProduccion(produccionData.id, produccionData);
-          this.$toast.success('Producción actualizada correctamente');
+        if (profesionalData.id) {
+          await ProfessionalsService.updateProfessional(profesionalData.id, profesionalData);
+          this.$toast.success('Profesional actualizado correctamente');
         } else {
-          await ProduccionesService.createProduccion(produccionData);
-          this.$toast.success('Producción creada correctamente');
+          await ProfessionalsService.createProfessional(profesionalData);
+          this.$toast.success('Profesional creado correctamente');
         }
 
-        this.fetchProducciones();
+        this.fetchProfesionales();
         this.closeModal();
       } catch (error) {
-        console.error('Error al guardar la producción:', error);
-        this.$toast.error('Error al guardar la producción');
+        const errorMessage = ProfessionalsService.handleError(error, 'Error al guardar el profesional');
+        this.$toast.error(errorMessage);
       }
     },
 
-    viewDetails(produccion) {
-      this.$router.push({ name: 'ProduccionDetalle', params: { id: produccion.id } });
+    viewDetails(profesional) {
+      this.$router.push({ name: 'ProfesionalDetalle', params: { id: profesional.id } });
     },
 
-    confirmDelete(produccion) {
-      this.produccionToDelete = produccion;
+    confirmDelete(profesional) {
+      this.profesionalToDelete = profesional;
       this.showConfirmModal = true;
     },
 
-    async deleteProduccion() {
+    async deleteProfesional() {
       try {
-        await ProduccionesService.deleteProduccion(this.produccionToDelete.id);
-        this.$toast.success('Producción eliminada correctamente');
-        this.fetchProducciones();
+        await ProfessionalsService.deleteProfessional(this.profesionalToDelete.id);
+        this.$toast.success('Profesional eliminado correctamente');
+        this.fetchProfesionales();
       } catch (error) {
-        console.error('Error al eliminar la producción:', error);
-        this.$toast.error('Error al eliminar la producción');
+        const errorMessage = ProfessionalsService.handleError(error, 'Error al eliminar el profesional');
+        this.$toast.error(errorMessage);
       } finally {
         this.showConfirmModal = false;
-        this.produccionToDelete = null;
+        this.profesionalToDelete = null;
       }
     }
   },
   created() {
-    this.fetchProducciones();
+    this.fetchProfesionales();
   }
 };
 </script>

@@ -1,5 +1,5 @@
 ﻿import { defineStore } from 'pinia';
-import { signin, signup, logout, fetchCurrentUser } from '../services/authService.js';
+import { signin, signup, logout, fetchCurrentUser } from '../services/auth.service.js';
 import { jwtDecode } from 'jwt-decode';
 
 export const useAuthStore = defineStore('auth', {

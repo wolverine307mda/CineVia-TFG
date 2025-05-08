@@ -42,12 +42,11 @@ export default {
       type: Array,
       default: () => [
         { path: '/admin', icon: 'fas fa-tachometer-alt', text: 'Dashboard', badge: '' },
-        { path: '/admin/producciones', icon: 'fas fa-film', text: 'Producciones', badge: '5' },
+        { path: '/admin/producciones', icon: 'fas fa-film', text: 'Producciones', badge: '' },
+        { path: '/admin/profesionales', icon: 'fa-solid fa-user-tie', text: 'Profesionales', badge: '' },
         { path: '/admin/sagas', icon: 'fas fa-layer-group', text: 'Sagas', badge: '' },
-        { path: '/admin/ubicaciones', icon: 'fas fa-map-marked-alt', text: 'Lugares', badge: '12' },
+        { path: '/admin/ubicaciones', icon: 'fas fa-map-marked-alt', text: 'Ubicaciones', badge: '' },
         { path: '/admin/usuarios', icon: 'fas fa-users', text: 'Usuarios', badge: '' },
-        { path: '/admin/comentarios', icon: 'fas fa-comments', text: 'Comentarios', badge: '3' },
-        { path: '/admin/configuracion', icon: 'fas fa-cog', text: 'Configuración', badge: '' }
       ]
     }
   }

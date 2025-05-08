@@ -225,8 +225,7 @@
 import ProfessionalCard from '@/components/cards/ProfessionalCard.vue'
 import Header from "@/components/principal/Header.vue";
 import Footer from "@/components/principal/Footer.vue";
-import axios from 'axios';
-import qs from 'qs';
+import ProfessionalsService from '@/services/profesional.service.js';
 
 export default {
   name: 'ProfessionalsCatalog',
@@ -261,50 +260,23 @@ export default {
   methods: {
     async fetchProfesionales() {
       this.isLoading = true;
+
+      const pagination = {
+        page: this.currentPage - 1,
+        size: this.itemsPerPage
+      };
+
+      const sorting = {
+        sortBy: [this.sortBy],
+        sortDirection: this.sortDirection
+      };
+
       try {
-        const params = {
-          page: this.currentPage - 1,
-          size: this.itemsPerPage,
-          sortBy: [this.sortBy],
-          sortDirection: this.sortDirection,
-          nombre: this.filters.nombre,
-          fechaNacimientoDesde: this.filters.fechaNacimientoDesde,
-          fechaNacimientoHasta: this.filters.fechaNacimientoHasta,
-          fechaInicioDesde: this.filters.fechaInicioDesde,
-          fechaInicioHasta: this.filters.fechaInicioHasta,
-          lugarNacimiento: this.filters.lugarNacimiento
-        };
+        const response = await ProfessionalsService.fetchProfessionals(this.filters, pagination, sorting);
 
-        // Eliminar parámetros nulos o vacíos
-        Object.keys(params).forEach(key => {
-          if (params[key] === null || params[key] === '') {
-            delete params[key];
-          }
-        });
-
-        const response = await axios.get('http://localhost:8080/api/profesionales/filtrar', {
-          params,
-          paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat', skipNulls: true })
-        });
-
-        this.profesionales = response.data.data || [];
-        this.totalItems = response.data.totalItems || 0;
-        this.totalPages = response.data.totalPages || 1;
-
-      } catch (error) {
-        console.error('Error al cargar profesionales:', error);
-        this.profesionales = [];
-        this.totalItems = 0;
-        this.totalPages = 1;
-
-        // Mostrar mensaje de error al usuario
-        if (error.response) {
-          console.error('Detalles del error:', error.response.data);
-        } else if (error.request) {
-          console.error('No se recibió respuesta del servidor');
-        } else {
-          console.error('Error al configurar la solicitud:', error.message);
-        }
+        this.profesionales = response.data;
+        this.totalItems = response.totalItems;
+        this.totalPages = response.totalPages;
       } finally {
         this.isLoading = false;
       }
@@ -320,21 +292,15 @@ export default {
     },
 
     setBirthdateRange(years) {
-      const today = new Date();
-      const pastDate = new Date();
-      pastDate.setFullYear(today.getFullYear() - years);
-
-      this.filters.fechaNacimientoDesde = pastDate.toISOString().split('T')[0];
-      this.filters.fechaNacimientoHasta = today.toISOString().split('T')[0];
+      const dateRange = ProfessionalsService.getDateRangeYearsAgo(years);
+      this.filters.fechaNacimientoDesde = dateRange.desde;
+      this.filters.fechaNacimientoHasta = dateRange.hasta;
     },
 
     setStartdateRange(years) {
-      const today = new Date();
-      const pastDate = new Date();
-      pastDate.setFullYear(today.getFullYear() - years);
-
-      this.filters.fechaInicioDesde = pastDate.toISOString().split('T')[0];
-      this.filters.fechaInicioHasta = today.toISOString().split('T')[0];
+      const dateRange = ProfessionalsService.getDateRangeYearsAgo(years);
+      this.filters.fechaInicioDesde = dateRange.desde;
+      this.filters.fechaInicioHasta = dateRange.hasta;
     },
 
     resetFilters() {
@@ -387,16 +353,7 @@ export default {
     },
 
     mapToCardData(prof) {
-      return {
-        id: prof.id,
-        nombre: prof.nombre,
-        foto: prof.foto,
-        fechaNacimiento: prof.fechaNacimiento,
-        fechaInicio: prof.fechaInicio,
-        lugarNacimiento: prof.lugarNacimiento,
-        biografia: prof.biografia,
-        participaciones: prof.participacionesCount
-      };
+      return ProfessionalsService.mapProfessionalToCard(prof);
     }
   },
   created() {

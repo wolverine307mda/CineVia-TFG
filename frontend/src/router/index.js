@@ -18,6 +18,8 @@ import Dashboard from "@/pages/admin/Dashboard.vue";
 import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue";
 import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue";
 import NotFound from "@/pages/NotFound.vue";
+import SagasAdminPages from "@/pages/admin/SagasAdminPages.vue";
+import ProfesionalesAdminPage from "@/pages/admin/ProfesionalesAdminPage.vue";
 
 const routes = [
     {
@@ -85,21 +87,33 @@ const routes = [
         children: [
             {
                 path: '',
-                name: 'Dashboard',
+                name: 'AdminDashboard',
                 components: { default: Dashboard },
                 meta: { title: 'Dashboard de Administración' }
             },
             {
                 path: 'ubicaciones',
-                name: 'Ubicaciones',
+                name: 'AdminUbicaciones',
                 components: { default: UbicacionesAdminPage },
                 meta: { title: 'Administración de Lugares' }
             },
             {
                 path: 'producciones',
-                name: 'Producciones',
+                name: 'AdminProducciones',
                 components: { default: ProduccionesAdminPage },
                 meta: { title: 'Administración de Producciones' }
+            },
+            {
+                path: 'sagas',
+                name: 'AdminSagas',
+                components: { default: SagasAdminPages },
+                meta: { title: 'Administración de Sagas' }
+            },
+            {
+                path: 'profesionales',
+                name: 'AdminProfesionales',
+                components: { default: ProfesionalesAdminPage },
+                meta: { title: 'Administración de Profesionales' }
             }
         ]
     },

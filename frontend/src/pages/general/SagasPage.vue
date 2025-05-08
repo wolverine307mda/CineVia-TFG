@@ -194,7 +194,7 @@
 import SagaCard from '@/components/cards/SagaCard.vue';
 import Header from "@/components/principal/Header.vue";
 import Footer from "@/components/principal/Footer.vue";
-import axios from 'axios';
+import sagasService from '@/services/sagas.service.js';
 
 export default {
   name: 'SagasCatalog',
@@ -227,60 +227,14 @@ export default {
     async fetchSagas() {
       this.isLoading = true;
       try {
-        // Construir parámetros de consulta
-        const params = {
-          page: this.currentPage - 1, // Spring usa 0-based
-          size: this.itemsPerPage,
-          sortBy: 'nombre',
-          sortDirection: 'asc'
-        };
-
-        // Añadir filtros no nulos
-        Object.keys(this.filters).forEach(key => {
-          if (this.filters[key] !== null && this.filters[key] !== '') {
-            params[key] = this.filters[key];
-          }
+        const response = await sagasService.fetchSagas(this.filters, {
+          currentPage: this.currentPage,
+          itemsPerPage: this.itemsPerPage
         });
 
-        // Convertir fechas a formato string si existen
-        if (this.filters.fechaInicioDesde instanceof Date) {
-          params.fechaInicioDesde = this.formatDate(this.filters.fechaInicioDesde);
-        }
-        if (this.filters.fechaInicioHasta instanceof Date) {
-          params.fechaInicioHasta = this.formatDate(this.filters.fechaInicioHasta);
-        }
-
-        const response = await axios.get('/api/sagas/filter', {
-          params,
-          paramsSerializer: params => {
-            const parts = [];
-            for (const key in params) {
-              if (params.hasOwnProperty(key)) {
-                const value = params[key];
-                if (Array.isArray(value)) {
-                  value.forEach(v => parts.push(`${key}=${encodeURIComponent(v)}`));
-                } else {
-                  parts.push(`${key}=${encodeURIComponent(value)}`);
-                }
-              }
-            }
-            return parts.join('&');
-          }
-        });
-
-        this.sagas = response.data?.data?.map(item => ({
-          id: item.id,
-          nombre: item.nombre,
-          descripcion: item.descripcion,
-          isAcabada: item.isAcabada,
-          fechaInicio: item.fechaInicio,
-          fechaFin: item.fechaFin,
-          imagen: item.imagen || 'default-saga.jpg',
-          producciones: item.producciones || []
-        })) || [];
-
-        this.totalItems = response.data?.totalItems || 0;
-        this.totalPages = response.data?.totalPages || 1;
+        this.sagas = response.data;
+        this.totalItems = response.totalItems;
+        this.totalPages = response.totalPages;
 
       } catch (error) {
         console.error('Error fetching sagas:', error);
@@ -290,19 +244,6 @@ export default {
       } finally {
         this.isLoading = false;
       }
-    },
-
-    formatDate(date) {
-      if (!date) return null;
-      const d = new Date(date);
-      let month = '' + (d.getMonth() + 1);
-      let day = '' + d.getDate();
-      const year = d.getFullYear();
-
-      if (month.length < 2) month = '0' + month;
-      if (day.length < 2) day = '0' + day;
-
-      return [year, month, day].join('-');
     },
 
     toggleDarkMode() {
@@ -351,10 +292,6 @@ export default {
         this.fetchSagas();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    },
-
-    formatStatus(isAcabada) {
-      return isAcabada ? 'Finalizada' : 'En curso';
     }
   },
   created() {
