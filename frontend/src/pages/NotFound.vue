@@ -1,8 +1,8 @@
 <template>
-  <div class="not-found-container">
+  <div class="not-found-container" :class="{ 'bg-loaded': bgLoaded }">
     <!-- Burbujas animadas de fondo -->
     <div class="bubbles">
-      <div v-for="i in 15" :key="i" class="bubble" :style="bubbleStyle(i)"></div>
+      <div v-for="(bubble, index) in bubbles" :key="index" class="bubble" :style="bubble.style"></div>
     </div>
 
     <div class="not-found-content">
@@ -17,7 +17,7 @@
       <h2 class="error-title">Página no encontrada</h2>
       <p class="error-message">Lo sentimos, no pudimos encontrar la página que buscas</p>
       <div class="action-buttons">
-        <router-link to="/" class="home-button" style="text-decoration: none">
+        <router-link to="/" class="home-button">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
           </svg>
@@ -36,25 +36,53 @@
 
 <script>
 export default {
+  data() {
+    return {
+      bgLoaded: false,
+      bubbles: [],
+      bubbleCount: 30
+    }
+  },
+  mounted() {
+    // Simular carga de imagen con un pequeño retraso
+    setTimeout(() => {
+      this.bgLoaded = true;
+    }, 100);
+
+    this.createBubbles();
+  },
   methods: {
     goBack() {
       this.$router.go(-1);
     },
-    bubbleStyle(index) {
-      const size = Math.random() * 20 + 10;
-      const posX = Math.random() * 100;
-      const delay = Math.random() * 5;
-      const duration = Math.random() * 10 + 10;
-      const opacity = Math.random() * 0.3 + 0.1;
-
-      return {
-        width: `${size}px`,
-        height: `${size}px`,
-        left: `${posX}%`,
-        animationDelay: `${delay}s`,
-        animationDuration: `${duration}s`,
-        opacity: opacity
-      };
+    goHome() {
+      this.$router.push('/');
+    },
+    createBubbles() {
+      for (let i = 0; i < this.bubbleCount; i++) {
+        this.bubbles.push({
+          style: {
+            width: `${Math.random() * 40 + 5}px`,
+            height: `${Math.random() * 40 + 5}px`,
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 10}s`,
+            animationDuration: `${Math.random() * 20 + 10}s`,
+            opacity: Math.random() * 0.5 + 0.1,
+            filter: `blur(${Math.random() * 3 + 1}px)`,
+            borderRadius: `${Math.random() * 30 + 50}% ${Math.random() * 30 + 50}% ${Math.random() * 30 + 50}% ${Math.random() * 30 + 50}%`,
+            backgroundColor: this.getRandomBubbleColor()
+          }
+        });
+      }
+    },
+    getRandomBubbleColor() {
+      const colors = [
+        'rgba(126, 91, 239, 0.5)',
+        'rgba(167, 139, 250, 0.4)',
+        'rgba(200, 181, 246, 0.3)',
+        'rgba(232, 223, 253, 0.2)'
+      ];
+      return colors[Math.floor(Math.random() * colors.length)];
     }
   }
 }
@@ -69,6 +97,12 @@ export default {
   justify-content: center;
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.not-found-container.bg-loaded {
+  opacity: 1;
 }
 
 .not-found-container::before {
@@ -80,23 +114,70 @@ export default {
   bottom: 0;
   background: linear-gradient(135deg, rgba(42, 16, 58, 0.85) 0%, rgba(18, 18, 24, 0.85) 100%);
   z-index: 0;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
 }
 
+.not-found-container.bg-loaded::before {
+  opacity: 1;
+}
+
+/* Botón flotante */
+.floating-btn {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  color: white;
+}
+
+.floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.home-btn {
+  top: 30px;
+  left: 30px;
+  background-color: #7e5bef;
+}
+
+/* Animación de burbujas */
 .bubbles {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
   overflow: hidden;
+  z-index: 1;
 }
 
 .bubble {
   position: absolute;
   bottom: -100px;
-  background: rgba(255, 255, 255, 0.15);
   border-radius: 50%;
   animation: float-up linear infinite;
-  filter: blur(2px);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.bubble:nth-child(3n) {
+  animation-name: float-up-slow;
+}
+.bubble:nth-child(5n) {
+  animation-name: float-up-fast;
+}
+.bubble:nth-child(7n) {
+  animation-name: float-up-zigzag;
 }
 
 @keyframes float-up {
@@ -106,6 +187,48 @@ export default {
   }
   100% {
     transform: translateY(-120vh) rotate(360deg);
+    bottom: 100%;
+  }
+}
+
+@keyframes float-up-slow {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    bottom: -100px;
+  }
+  100% {
+    transform: translateY(-120vh) rotate(180deg);
+    bottom: 100%;
+  }
+}
+
+@keyframes float-up-fast {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    bottom: -100px;
+  }
+  100% {
+    transform: translateY(-150vh) rotate(540deg);
+    bottom: 100%;
+  }
+}
+
+@keyframes float-up-zigzag {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    bottom: -100px;
+  }
+  25% {
+    transform: translateY(-30vh) translateX(20px) rotate(90deg);
+  }
+  50% {
+    transform: translateY(-60vh) translateX(-20px) rotate(180deg);
+  }
+  75% {
+    transform: translateY(-90vh) translateX(10px) rotate(270deg);
+  }
+  100% {
+    transform: translateY(-120vh) translateX(0) rotate(360deg);
     bottom: 100%;
   }
 }
@@ -237,6 +360,7 @@ export default {
   border: none;
   position: relative;
   overflow: hidden;
+  text-decoration: none;
 }
 
 .home-button::after, .back-button::after {
@@ -256,14 +380,14 @@ export default {
 }
 
 .home-button {
-  background-color: #ffffff;
-  color: #6a1b9a;
+  background-color: #7e5bef;
+  color: white;
 }
 
 .home-button:hover {
-  background-color: #f3e5f5;
+  background-color: #6d46e8;
   transform: translateY(-3px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px rgba(126, 91, 239, 0.3);
 }
 
 .back-button {
@@ -326,5 +450,32 @@ export default {
     justify-content: center;
     padding: 0.9rem 1.5rem;
   }
+
+  .floating-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
+
+  .home-btn {
+    top: 20px;
+    left: 20px;
+  }
 }
+
+@media (max-width: 576px) {
+  .floating-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .not-found-content {
+    padding: 1.5rem;
+  }
+}
+</style>
+
+<style scoped>
+
 </style>

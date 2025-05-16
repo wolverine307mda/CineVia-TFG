@@ -1,5 +1,6 @@
 ﻿import { createRouter, createWebHistory } from 'vue-router'
-import axios from '@/axios' // Importa tu configuración de axios
+import axios from '@/axios'
+import { useAuthStore } from '@/stores/auth'
 
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import HomePage from '@/pages/Home.vue'
@@ -8,18 +9,20 @@ import Register from '@/pages/auth/register.vue'
 import ForgotPassword from '@/pages/auth/forgotPassword.vue'
 import Profile from '@/pages/user/Profile.vue'
 import MyProfile from '@/pages/user/MyProfile.vue'
-import Produccion from '@/pages/general/Produccion.vue'
+import Produccion from '@/pages/general/unicas/Produccion.vue'
+import Saga from '@/pages/general/unicas/Saga.vue'
+import Profesional from '@/pages/general/unicas/Profesional.vue'
 import General from '@/pages/general/General.vue'
-import Producciones from '@/pages/general/ProduccionesPage.vue'
-import Profesionales from '@/pages/general/ProfesionalPage.vue'
-import Sagas from '@/pages/general/SagasPage.vue'
-import AdminLayout from "@/layouts/AdminLayout.vue";
-import Dashboard from "@/pages/admin/Dashboard.vue";
-import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue";
-import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue";
-import NotFound from "@/pages/NotFound.vue";
-import SagasAdminPages from "@/pages/admin/SagasAdminPages.vue";
-import ProfesionalesAdminPage from "@/pages/admin/ProfesionalesAdminPage.vue";
+import Producciones from '@/pages/general/agrupadas/ProduccionesPage.vue'
+import Profesionales from '@/pages/general/agrupadas/ProfesionalesPage.vue'
+import Sagas from '@/pages/general/agrupadas/SagasPage.vue'
+import AdminLayout from "@/layouts/AdminLayout.vue"
+import Dashboard from "@/pages/admin/Dashboard.vue"
+import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue"
+import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue"
+import NotFound from "@/pages/NotFound.vue"
+import SagasAdminPages from "@/pages/admin/SagasAdminPages.vue"
+import ProfesionalesAdminPage from "@/pages/admin/ProfesionalesAdminPage.vue"
 
 const routes = [
     {
@@ -77,42 +80,62 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
-        path: '/produccion',
+        path: '/profile/:id?',
+        name: 'Profile',
+        component: Profile,
+        meta: { public: true }
+    },
+    {
+        path: '/produccion/:id',
         name: 'Production',
-        component: Produccion
+        component: Produccion,
+        meta: { public: true }
+    },
+    {
+        path: '/saga/:id',
+        name: 'Saga',
+        component: Saga,
+        meta: { public: true }
+    },
+    {
+        path: '/profesional/:id',
+        name: 'Profesional',
+        component: Profesional,
+        meta: { public: true }
     },
     {
         path: '/admin',
         component: AdminLayout,
+        meta: { requiresAuth: true, requiresAdmin: true },
         children: [
             {
                 path: '',
-                name: 'AdminDashboard',
-                components: { default: Dashboard },
+                name: 'AdminDashboardDefault',
+                component: Dashboard,
                 meta: { title: 'Dashboard de Administración' }
             },
             {
                 path: 'ubicaciones',
                 name: 'AdminUbicaciones',
-                components: { default: UbicacionesAdminPage },
+                component: UbicacionesAdminPage,
                 meta: { title: 'Administración de Lugares' }
             },
             {
                 path: 'producciones',
                 name: 'AdminProducciones',
-                components: { default: ProduccionesAdminPage },
+                component: ProduccionesAdminPage,
                 meta: { title: 'Administración de Producciones' }
             },
             {
                 path: 'sagas',
                 name: 'AdminSagas',
-                components: { default: SagasAdminPages },
+                component: SagasAdminPages,
                 meta: { title: 'Administración de Sagas' }
             },
             {
                 path: 'profesionales',
                 name: 'AdminProfesionales',
-                components: { default: ProfesionalesAdminPage },
+                component: ProfesionalesAdminPage,
                 meta: { title: 'Administración de Profesionales' }
             }
         ]
@@ -120,12 +143,8 @@ const routes = [
     {
         path: '/profesionales',
         name: 'Profesionales',
-        component: Profesionales
-    },
-    {
-        path: '/profile',
-        name: 'Profile',
-        component: Profile
+        component: Profesionales,
+        meta: { public: true }
     },
     {
         path: '/:pathMatch(.*)*',
@@ -133,30 +152,49 @@ const routes = [
         component: NotFound,
         meta: { public: true }
     }
-
 ]
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    scrollBehavior(to, from, savedPosition) {
+        return { top: 0 }
+    }
 })
 
 router.beforeEach(async (to, from, next) => {
+    const authStore = useAuthStore()
     const token = localStorage.getItem('token')
-    const isAuthenticated = !!token
 
-    // Configura el token en axios si existe
+    // Configurar token en axios si existe
     if (token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
     }
 
-    if (to.meta.onlyGuest && isAuthenticated) {
-        return next('/myprofile')
+    // Intentar cargar el usuario si hay token pero no está cargado
+    if (token && !authStore.user) {
+        try {
+            await authStore.checkAuth()
+        } catch (error) {
+            console.error('Error al verificar autenticación:', error)
+            localStorage.removeItem('token')
+        }
+    }
+
+    // Redirigir usuarios autenticados que intentan acceder a rutas onlyGuest
+    if (to.meta.onlyGuest && authStore.isAuthenticated) {
+        // Cambio aquí: redirigir a /admin si es administrador
+        return next(authStore.isAdmin ? '/admin' : '/myprofile')
     }
 
     // Rutas que requieren autenticación
-    if (to.meta.requiresAuth && !isAuthenticated) {
-        return next('/auth/login') // Redirige a login si no está autenticado
+    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+        return next('/auth/login')
+    }
+
+    // Rutas que requieren ser admin
+    if (to.meta.requiresAdmin && !authStore.isAdmin) {
+        return next(from.path || '/')
     }
 
     next()

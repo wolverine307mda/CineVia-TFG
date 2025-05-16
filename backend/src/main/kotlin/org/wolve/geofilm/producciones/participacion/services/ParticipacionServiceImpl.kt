@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponseProfesional
 import org.wolve.geofilm.producciones.participacion.exceptions.ParticipacionNotFoundException
 import org.wolve.geofilm.producciones.participacion.exceptions.RelacionNotFoundException
 import org.wolve.geofilm.producciones.participacion.mappers.*
@@ -90,25 +91,13 @@ class ParticipacionServiceImpl(
     }
 
     override fun getByProfesional(
-        profesionalId: String,
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginationUtils.PaginatedResponse<ParticipacionResponse> {
-        val profesional = profesionalService.findEntityById(profesionalId)
+        profesionalId: String
+    ): List<ParticipacionResponseProfesional> {
+        val findByProfesional = profesionalService.findEntityById(profesionalId)
             ?: throw RelacionNotFoundException("Profesional no encontrado con ID: $profesionalId")
 
-        val pageable = PaginationUtils.createPageable(
-            page = page,
-            size = size,
-            sortBy = sortBy,
-            sortDirection = sortDirection,
-            allowedSortFields = ALLOWED_SORT_FIELDS
-        )
-
-        val pageResult = participacionRepository.findByProfesional(profesional, pageable)
-        return participacionMapper.toPaginatedResponse(pageResult)
+        val resultList = participacionRepository.findAllByProfesional(findByProfesional)
+        return participacionMapper.toResponseProfesional(resultList)
     }
 
     @Transactional

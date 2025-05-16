@@ -8,11 +8,12 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import org.wolve.geofilm.users.repositories.UsuarioRepository
 
 @Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
-    private val userDetailsService: CustomUserDetailsService
+    private val userRepository: UsuarioRepository
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -32,7 +33,11 @@ class JwtAuthenticationFilter(
             val userEmail = jwtService.extractUserName(jwt)
 
             if (SecurityContextHolder.getContext().authentication == null) {
-                val userDetails = userDetailsService.loadUserByUsername(userEmail)
+                val userDetails = userRepository.findByEmail(userEmail).orElse(null)
+                if (userDetails == null) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no encontrado")
+                    return
+                }
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     val authToken = UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.authorities

@@ -131,7 +131,7 @@ export default {
         // Redirige según el rol
         if (authStore.isAuthenticated) {
           if (authStore.isAdmin) {
-            await router.push('/admin/dashboard');
+            await router.push('/admin');
           } else {
             await router.push('/myprofile');
           }

@@ -5,5 +5,8 @@ data class SignUpRequest(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val password: String
+    val password: String,
+    val telefono: String,
+    val avatar: String,
+    val fechaNacimiento: String,
 )

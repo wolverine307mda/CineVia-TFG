@@ -20,6 +20,11 @@
           <p>Completa los siguientes pasos para registrarte</p>
         </div>
 
+        <!-- Error message -->
+        <div v-if="errorMessage" class="error-message">
+          <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+        </div>
+
         <!-- Stepper -->
         <div class="stepper">
           <div
@@ -34,21 +39,24 @@
         </div>
 
         <!-- Step 1: Personal Information -->
-        <form @submit.prevent="nextStep" class="register-form" v-show="currentStep === 0">
+        <form @submit.prevent="validateStep1" class="register-form" v-show="currentStep === 0">
           <div class="form-row">
             <div class="form-group">
               <label for="firstName">Nombre</label>
               <div class="input-group">
                 <input
                     id="firstName"
-                    v-model="formData.firstName"
+                    v-model.trim="formData.firstName"
                     type="text"
                     placeholder="Ej: Juan"
                     required
                     autocomplete="given-name"
+                    :class="{ 'invalid': errors.firstName }"
+                    @blur="validateFirstName"
                 >
                 <i class="fas fa-user input-icon" />
               </div>
+              <div class="input-error" v-if="errors.firstName">{{ errors.firstName }}</div>
             </div>
 
             <div class="form-group">
@@ -56,14 +64,17 @@
               <div class="input-group">
                 <input
                     id="lastName"
-                    v-model="formData.lastName"
+                    v-model.trim="formData.lastName"
                     type="text"
                     placeholder="Ej: Pérez García"
                     required
                     autocomplete="family-name"
+                    :class="{ 'invalid': errors.lastName }"
+                    @blur="validateLastName"
                 >
                 <i class="fas fa-user input-icon" />
               </div>
+              <div class="input-error" v-if="errors.lastName">{{ errors.lastName }}</div>
             </div>
           </div>
 
@@ -72,38 +83,64 @@
             <div class="input-group">
               <input
                   id="username"
-                  v-model="formData.username"
+                  v-model.trim="formData.username"
                   type="text"
                   placeholder="Ej: juanpg"
                   required
                   autocomplete="username"
+                  :class="{ 'invalid': errors.username }"
+                  @blur="validateUsername"
+                  @input="debouncedCheckUsername"
               >
               <i class="fas fa-at input-icon" />
+              <span v-if="checkingUsername" class="input-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+              </span>
+              <span v-if="usernameAvailable !== null && !errors.username" class="input-status">
+                <i :class="usernameAvailable ? 'fas fa-check-circle available' : 'fas fa-times-circle taken'"></i>
+              </span>
             </div>
             <div class="input-hint">Este será tu identificador único</div>
+            <div class="input-error" v-if="errors.username">{{ errors.username }}</div>
+            <div v-if="usernameAvailable === false && !errors.username" class="input-error">
+              Este nombre de usuario ya está en uso
+            </div>
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="step-button next">
+            <button type="submit" class="step-button next" :disabled="hasStep1Errors">
               Siguiente <i class="fas fa-arrow-right" />
             </button>
           </div>
         </form>
 
         <!-- Step 2: Contact Information -->
-        <form @submit.prevent="nextStep" class="register-form" v-show="currentStep === 1">
+        <form @submit.prevent="validateStep2" class="register-form" v-show="currentStep === 1">
           <div class="form-group">
             <label for="email">Correo electrónico</label>
             <div class="input-group">
               <input
                   id="email"
-                  v-model="formData.email"
+                  v-model.trim="formData.email"
                   type="email"
                   placeholder="tu@email.com"
                   required
                   autocomplete="email"
+                  :class="{ 'invalid': errors.email }"
+                  @blur="validateEmail"
+                  @input="debouncedCheckEmail"
               >
               <i class="fas fa-envelope input-icon" />
+              <span v-if="checkingEmail" class="input-loading">
+                <i class="fas fa-spinner fa-spin"></i>
+              </span>
+              <span v-if="emailAvailable !== null && !errors.email" class="input-status">
+                <i :class="emailAvailable ? 'fas fa-check-circle available' : 'fas fa-times-circle taken'"></i>
+              </span>
+            </div>
+            <div class="input-error" v-if="errors.email">{{ errors.email }}</div>
+            <div v-if="emailAvailable === false && !errors.email" class="input-error">
+              Este correo electrónico ya está registrado
             </div>
           </div>
 
@@ -112,21 +149,23 @@
             <div class="input-group">
               <input
                   id="phone"
-                  v-model="formData.phone"
+                  v-model.trim="formData.phone"
                   type="tel"
                   placeholder="Ej: +34 123 456 789"
-                  required
                   autocomplete="tel"
+                  :class="{ 'invalid': errors.phone }"
+                  @blur="validatePhone"
               >
               <i class="fas fa-phone input-icon" />
             </div>
+            <div class="input-error" v-if="errors.phone">{{ errors.phone }}</div>
           </div>
 
           <div class="form-actions">
             <button type="button" class="step-button back" @click="prevStep">
               <i class="fas fa-arrow-left" /> Anterior
             </button>
-            <button type="submit" class="step-button next">
+            <button type="submit" class="step-button next" :disabled="hasStep2Errors">
               Siguiente <i class="fas fa-arrow-right" />
             </button>
           </div>
@@ -139,11 +178,13 @@
             <div class="input-group">
               <input
                   id="password"
-                  v-model="formData.password"
+                  v-model.trim="formData.password"
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="••••••••"
                   required
                   autocomplete="new-password"
+                  :class="{ 'invalid': errors.password }"
+                  @input="validatePassword"
               >
               <button
                   type="button"
@@ -157,6 +198,7 @@
             <div class="password-strength" :class="passwordStrengthClass">
               Seguridad: {{ passwordStrength }}
             </div>
+            <div class="input-error" v-if="errors.password">{{ errors.password }}</div>
           </div>
 
           <div class="form-group">
@@ -164,32 +206,42 @@
             <div class="input-group">
               <input
                   id="confirmPassword"
-                  v-model="formData.confirmPassword"
+                  v-model.trim="formData.confirmPassword"
                   type="password"
                   placeholder="••••••••"
                   required
                   autocomplete="new-password"
+                  :class="{ 'invalid': errors.confirmPassword }"
+                  @blur="validateConfirmPassword"
               >
               <i class="fas fa-lock input-icon" />
             </div>
-            <div class="input-error" v-if="passwordMismatch">
-              Las contraseñas no coinciden
-            </div>
+            <div class="input-error" v-if="errors.confirmPassword">{{ errors.confirmPassword }}</div>
           </div>
 
           <div class="terms-container">
-            <input type="checkbox" id="terms" v-model="formData.termsAccepted" required>
+            <input
+                type="checkbox"
+                id="terms"
+                v-model="formData.termsAccepted"
+                :class="{ 'invalid': errors.termsAccepted }"
+            >
             <label for="terms">
               Acepto los <a href="/terms" class="terms-link">Términos y Condiciones</a> y la
               <a href="/privacy" class="terms-link">Política de Privacidad</a>
             </label>
+            <div class="input-error" v-if="errors.termsAccepted">{{ errors.termsAccepted }}</div>
           </div>
 
           <div class="form-actions">
             <button type="button" class="step-button back" @click="prevStep">
               <i class="fas fa-arrow-left" /> Anterior
             </button>
-            <button type="submit" class="register-button" :disabled="loading || !formData.termsAccepted || passwordMismatch">
+            <button
+                type="submit"
+                class="register-button"
+                :disabled="loading || hasStep3Errors || !formData.termsAccepted || passwordMismatch"
+            >
               <span v-if="!loading">Completar registro</span>
               <span v-else><i class="fas fa-spinner fa-spin" /> Procesando...</span>
             </button>
@@ -207,6 +259,9 @@
 
 <script>
 import AuthLayout from '@/layouts/AuthLayout.vue'
+import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
+import { debounce } from 'lodash'
 
 export default {
   components: {
@@ -230,23 +285,38 @@ export default {
         confirmPassword: '',
         termsAccepted: false
       },
+      errors: {
+        firstName: '',
+        lastName: '',
+        username: '',
+        email: '',
+        phone: '',
+        password: '',
+        confirmPassword: '',
+        termsAccepted: ''
+      },
       showPassword: false,
-      loading: false
+      loading: false,
+      errorMessage: '',
+      checkingUsername: false,
+      usernameAvailable: null,
+      checkingEmail: false,
+      emailAvailable: null
     }
   },
   computed: {
     passwordMismatch() {
       return this.formData.password && this.formData.confirmPassword &&
-          this.formData.password !== this.formData.confirmPassword;
+          this.formData.password !== this.formData.confirmPassword
     },
     passwordStrength() {
-      if (!this.formData.password) return 'Débil';
-      if (this.formData.password.length < 6) return 'Débil';
-      if (this.formData.password.length < 8) return 'Media';
-      if (!/[A-Z]/.test(this.formData.password)) return 'Media';
-      if (!/[0-9]/.test(this.formData.password)) return 'Media';
-      if (!/[^A-Za-z0-9]/.test(this.formData.password)) return 'Fuerte';
-      return 'Muy fuerte';
+      if (!this.formData.password) return 'Débil'
+      if (this.formData.password.length < 6) return 'Débil'
+      if (this.formData.password.length < 8) return 'Media'
+      if (!/[A-Z]/.test(this.formData.password)) return 'Media'
+      if (!/[0-9]/.test(this.formData.password)) return 'Media'
+      if (!/[^A-Za-z0-9]/.test(this.formData.password)) return 'Fuerte'
+      return 'Muy fuerte'
     },
     passwordStrengthClass() {
       return {
@@ -254,33 +324,228 @@ export default {
         'medium': this.passwordStrength === 'Media',
         'strong': this.passwordStrength === 'Fuerte',
         'very-strong': this.passwordStrength === 'Muy fuerte'
-      };
+      }
+    },
+    hasStep1Errors() {
+      return !!this.errors.firstName || !!this.errors.lastName || !!this.errors.username ||
+          !this.formData.firstName || !this.formData.lastName || !this.formData.username ||
+          this.usernameAvailable === false
+    },
+    hasStep2Errors() {
+      return !!this.errors.email || !!this.errors.phone ||
+          !this.formData.email || this.emailAvailable === false
+    },
+    hasStep3Errors() {
+      return !!this.errors.password || !!this.errors.confirmPassword ||
+          !this.formData.password || !this.formData.confirmPassword
     }
+  },
+  created() {
+    this.debouncedCheckUsername = debounce(this.checkUsernameAvailability, 500)
+    this.debouncedCheckEmail = debounce(this.checkEmailAvailability, 500)
   },
   methods: {
     nextStep() {
       if (this.currentStep < this.steps.length - 1) {
-        this.currentStep++;
+        this.currentStep++
       }
     },
     prevStep() {
       if (this.currentStep > 0) {
-        this.currentStep--;
+        this.currentStep--
       }
     },
-    handleRegister() {
-      if (this.passwordMismatch) {
-        return;
+
+    // Validación del paso 1
+    validateStep1() {
+      this.validateFirstName()
+      this.validateLastName()
+      this.validateUsername()
+
+      if (!this.hasStep1Errors) {
+        this.nextStep()
+      }
+    },
+
+    // Validación del paso 2
+    validateStep2() {
+      this.validateEmail()
+      this.validatePhone()
+
+      if (!this.hasStep2Errors) {
+        this.nextStep()
+      }
+    },
+
+    // Validaciones individuales
+    validateFirstName() {
+      if (!this.formData.firstName) {
+        this.errors.firstName = 'El nombre es obligatorio'
+      } else if (this.formData.firstName.length < 2) {
+        this.errors.firstName = 'El nombre debe tener al menos 2 caracteres'
+      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(this.formData.firstName)) {
+        this.errors.firstName = 'El nombre solo puede contener letras'
+      } else {
+        this.errors.firstName = ''
+      }
+    },
+
+    validateLastName() {
+      if (!this.formData.lastName) {
+        this.errors.lastName = 'Los apellidos son obligatorios'
+      } else if (this.formData.lastName.length < 2) {
+        this.errors.lastName = 'Los apellidos deben tener al menos 2 caracteres'
+      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(this.formData.lastName)) {
+        this.errors.lastName = 'Los apellidos solo pueden contener letras'
+      } else {
+        this.errors.lastName = ''
+      }
+    },
+
+    validateUsername() {
+      if (!this.formData.username) {
+        this.errors.username = 'El nombre de usuario es obligatorio'
+      } else if (this.formData.username.length < 4) {
+        this.errors.username = 'El usuario debe tener al menos 4 caracteres'
+      } else if (!/^[a-zA-Z0-9_]+$/.test(this.formData.username)) {
+        this.errors.username = 'Solo se permiten letras, números y guiones bajos'
+      } else {
+        this.errors.username = ''
+      }
+    },
+
+    validateEmail() {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!this.formData.email) {
+        this.errors.email = 'El correo electrónico es obligatorio'
+      } else if (!emailRegex.test(this.formData.email)) {
+        this.errors.email = 'Por favor ingresa un correo electrónico válido'
+      } else {
+        this.errors.email = ''
+      }
+    },
+
+    validatePhone() {
+      if (this.formData.phone && !/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(this.formData.phone)) {
+        this.errors.phone = 'Por favor ingresa un número de teléfono válido'
+      } else {
+        this.errors.phone = ''
+      }
+    },
+
+    validatePassword() {
+      if (!this.formData.password) {
+        this.errors.password = 'La contraseña es obligatoria'
+      } else if (this.formData.password.length < 6) {
+        this.errors.password = 'La contraseña debe tener al menos 6 caracteres'
+      } else {
+        this.errors.password = ''
+      }
+      this.validateConfirmPassword()
+    },
+
+    validateConfirmPassword() {
+      if (!this.formData.confirmPassword) {
+        this.errors.confirmPassword = 'Por favor confirma tu contraseña'
+      } else if (this.formData.password !== this.formData.confirmPassword) {
+        this.errors.confirmPassword = 'Las contraseñas no coinciden'
+      } else {
+        this.errors.confirmPassword = ''
+      }
+    },
+
+    // Verificación de disponibilidad
+    async checkUsernameAvailability() {
+      if (this.errors.username || !this.formData.username) return
+
+      this.checkingUsername = true
+      try {
+        // Aquí deberías hacer una llamada a tu API para verificar el username
+        // Ejemplo:
+        // const response = await axios.get(`/api/check-username?username=${this.formData.username}`)
+        // this.usernameAvailable = response.data.available
+
+        // Simulación:
+        await new Promise(resolve => setTimeout(resolve, 800))
+        this.usernameAvailable = Math.random() > 0.5 // Simula disponibilidad aleatoria
+      } catch (error) {
+        console.error('Error al verificar username:', error)
+      } finally {
+        this.checkingUsername = false
+      }
+    },
+
+    async checkEmailAvailability() {
+      if (this.errors.email || !this.formData.email) return
+
+      this.checkingEmail = true
+      try {
+        // Aquí deberías hacer una llamada a tu API para verificar el email
+        // Ejemplo:
+        // const response = await axios.get(`/api/check-email?email=${this.formData.email}`)
+        // this.emailAvailable = response.data.available
+
+        // Simulación:
+        await new Promise(resolve => setTimeout(resolve, 800))
+        this.emailAvailable = Math.random() > 0.5 // Simula disponibilidad aleatoria
+      } catch (error) {
+        console.error('Error al verificar email:', error)
+      } finally {
+        this.checkingEmail = false
+      }
+    },
+
+    // Registro final
+    async handleRegister() {
+      // Validar todos los campos antes de enviar
+      this.validatePassword()
+      this.validateConfirmPassword()
+
+      if (!this.formData.termsAccepted) {
+        this.errors.termsAccepted = 'Debes aceptar los términos y condiciones'
+        return
+      } else {
+        this.errors.termsAccepted = ''
       }
 
-      this.loading = true;
+      if (this.hasStep3Errors || this.passwordMismatch || !this.formData.termsAccepted) {
+        return
+      }
 
-      // Simulate API call
-      setTimeout(() => {
-        this.loading = false;
-        console.log('Registration data:', this.formData);
-        alert(`Registro exitoso para ${this.formData.email}`);
-      }, 1500);
+      this.loading = true
+      this.errorMessage = ''
+
+      try {
+        const authStore = useAuthStore()
+        const router = useRouter()
+
+        // Preparar los datos para el endpoint (eliminar confirmPassword y termsAccepted)
+        const { confirmPassword, termsAccepted, ...registrationData } = this.formData
+
+        // Llamar al método de registro del store
+        await authStore.register(registrationData)
+
+        // Redirigir después del registro exitoso
+        router.push('/dashboard')
+      } catch (error) {
+        console.error('Error en el registro:', error)
+        this.errorMessage = error.response?.data?.message ||
+            error.message ||
+            'Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.'
+
+        // Desplazar al usuario al paso correspondiente si hay errores de campo
+        if (error.response?.data?.errors) {
+          const { errors } = error.response.data
+
+          if (errors.email || errors.username) {
+            this.currentStep = 1
+          } else if (errors.password) {
+            this.currentStep = 2
+          }
+        }
+      } finally {
+        this.loading = false
+      }
     }
   }
 }
@@ -796,5 +1061,56 @@ export default {
   .step-label {
     display: none;
   }
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.dark-mode .error-message {
+  background-color: rgba(220, 38, 38, 0.2);
+}
+
+.input-group .input-loading,
+.input-group .input-status {
+  position: absolute;
+  right: 2.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+}
+
+.input-group .input-status .available {
+  color: #10b981;
+}
+
+.input-group .input-status .taken {
+  color: #ef4444;
+}
+
+input.invalid {
+  border-color: #ef4444 !important;
+}
+
+input.invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.dark-mode input.invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}
+
+.terms-container .invalid {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 </style>

@@ -1,7 +1,7 @@
 package org.wolve.geofilm.users.dto
 
 import org.wolve.geofilm.users.models.RolUsuario
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 data class CreateUsuarioRequest(
     val username: String,
@@ -11,6 +11,6 @@ data class CreateUsuarioRequest(
     val apellido: String?,
     val rol: RolUsuario = RolUsuario.USUARIO,
     val telefono: String?,
-    val fechaNacimiento: LocalDateTime?,
+    val fechaNacimiento: LocalDate,
     val avatar: String?
 )

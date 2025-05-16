@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="card-base" :class="{ 'dark-mode': darkMode }">
+  <router-link :to="`/saga/${saga.id}`" style="text-decoration: none;" class="card-base" :class="{ 'dark-mode': darkMode }">
     <div class="card-image" style="padding-bottom: 150%">
       <img :src="saga.imagen || 'default-saga.jpg'" :alt="saga.nombre" loading="lazy">
       <div class="status-badge" :class="{ 'finished': saga.isAcabada, 'ongoing': !saga.isAcabada }">
@@ -23,12 +23,8 @@
       </div>
 
       <p class="card-description">{{ truncateText(saga.descripcion, 120) }}</p>
-
-      <button class="details-btn" @click.stop="viewDetails">
-        Ver detalles <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script>

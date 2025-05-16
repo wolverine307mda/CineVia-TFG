@@ -10,11 +10,11 @@
           Descubre los lugares donde se filmaron tus películas y series favoritas. ¡Explora el cine en todo el mundo!
         </p>
         <div class="cta-buttons">
-          <router-link to="/explore" class="btn btn-primary">
-            <i class="fas fa-map-marked-alt"></i> Explorar Lugares
+          <router-link to="/producciones" class="btn btn-primary">
+            <i class="fas fa-film"></i> Explorar Producciones
           </router-link>
-          <router-link to="/favorites" class="btn btn-secondary">
-            <i class="fas fa-heart"></i> Mis Favoritos
+          <router-link to="/auth/login" class="btn btn-secondary">
+            <i class="fas fa-ghost"></i> Mis Cuenta
           </router-link>
         </div>
       </div>
@@ -80,13 +80,13 @@
         <div class="testimonial-card">
           <div class="testimonial-content">
             <i class="fas fa-quote-left quote-icon"></i>
-            <p>GeoFilm es la herramienta perfecta para los cinéfilos. Puedo ver exactamente dónde se filmaron mis películas favoritas. ¡Es increíble!</p>
+            <p>La herramienta perfecta para los cinéfilos. Puedo ver exactamente dónde se filmaron mis películas favoritas. ¡Es increíble!</p>
           </div>
           <div class="testimonial-author">
-            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Laura">
+            <img src="https://media.licdn.com/dms/image/v2/D4E35AQGLSAQ4duIqlg/profile-framedphoto-shrink_800_800/profile-framedphoto-shrink_800_800/0/1731593963573?e=1747605600&v=beta&t=xvwr-tnB-qKb4NOHxtFXuzFoLg2uBTKII1bYERZ_qc4" alt="Laura">
             <div>
-              <h4>Laura</h4>
-              <p>Cinéfila</p>
+              <h4>Eva</h4>
+              <p>Estudiante y Cinéfila</p>
             </div>
           </div>
         </div>
@@ -96,10 +96,10 @@
             <p>¡Una app espectacular! Me encanta ver los lugares que aparecen en las películas. Definitivamente la recomiendo.</p>
           </div>
           <div class="testimonial-author">
-            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Andrés">
+            <img src="https://media.licdn.com/dms/image/v2/D4E03AQGz-7Rm3kuq0A/profile-displayphoto-shrink_800_800/B4EZYFUfTYHkAg-/0/1743845980367?e=1752710400&v=beta&t=BlxjPpEivXduNMzDg7H2A1jXs3GLgEl2fW53qrL5FNU" alt="Andrés">
             <div>
-              <h4>Andrés</h4>
-              <p>Viajero y amante del cine</p>
+              <h4>Andrea</h4>
+              <p>Viajera y amante del cine</p>
             </div>
           </div>
         </div>
@@ -273,10 +273,10 @@ export default {
 .hero-section {
   display: flex;
   align-items: center;
-  min-height: 110vh;
+  height: 92vh;
   padding: 4rem 2rem;
-  background: linear-gradient(135deg, #18182f, #0f0f1a); /* Fijo en oscuro */
-  color: #f8f9fa; /* Texto claro fijo */
+  background: linear-gradient(135deg, #18182f, #0f0f1a);
+  color: #f8f9fa;
   position: relative;
   overflow: hidden;
 }
@@ -286,7 +286,6 @@ export default {
   position: absolute;
   top: 0;
   left: 0;
-  min-height: 110vh;
   width: 100%;
   height: 100%;
   background: url('https://images.unsplash.com/photo-1573614999645-e5f0f16ec15d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover;

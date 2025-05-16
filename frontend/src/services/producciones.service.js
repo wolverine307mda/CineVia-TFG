@@ -1,29 +1,30 @@
 ﻿import axios from 'axios';
 
 class ProduccionesService {
-    constructor() {
-        this.api = axios.create({
-            baseURL: '/api/producciones'
-        });
-    }
 
     async fetchProducciones(filters = {}, pagination = { page: 0, size: 10 }) {
         try {
-            // Construir parámetros de consulta
+            const cleanFilters = Object.fromEntries(
+                Object.entries(filters).filter(([_, v]) => v !== null && v !== '' && !(Array.isArray(v) && v.length === 0))
+            );
+
+            if (cleanFilters.estrenoDesde) cleanFilters.estrenoDesde = parseInt(cleanFilters.estrenoDesde);
+            if (cleanFilters.estrenoHasta) cleanFilters.estrenoHasta = parseInt(cleanFilters.estrenoHasta);
+            if (cleanFilters.duracionMin) cleanFilters.duracionMin = parseInt(cleanFilters.duracionMin);
+            if (cleanFilters.duracionMax) cleanFilters.duracionMax = parseInt(cleanFilters.duracionMax);
+
             const params = {
                 page: pagination.page,
                 size: pagination.size,
-                sortBy: pagination.sortBy || 'titulo',
-                sortDirection: pagination.sortDirection || 'asc',
-                ...filters
+                ...cleanFilters
             };
 
-            // Manejar array de categorías
-            if (filters.categorias && filters.categorias.length > 0) {
-                params.categorias = filters.categorias;
+            if (pagination.sortBy) {
+                params.sortBy = pagination.sortBy;
+                params.sortDirection = pagination.sortDirection || 'asc';
             }
 
-            const response = await this.api.get('/filtrar', {
+            const response = await axios.get('/api/producciones/filtrar', {
                 params,
                 paramsSerializer: params => {
                     const parts = [];
@@ -32,7 +33,7 @@ class ProduccionesService {
                             const value = params[key];
                             if (Array.isArray(value)) {
                                 value.forEach(v => parts.push(`${key}=${encodeURIComponent(v)}`));
-                            } else {
+                            } else if (value !== null && value !== undefined) {
                                 parts.push(`${key}=${encodeURIComponent(value)}`);
                             }
                         }
@@ -41,9 +42,7 @@ class ProduccionesService {
                 }
             });
 
-            // Formato compatible con ambas páginas
             const formattedData = response.data?.data?.map(item => ({
-                // Campos para la página de administración
                 id: item.id,
                 titulo: item.titulo,
                 tipo: item.tipo,
@@ -54,8 +53,6 @@ class ProduccionesService {
                 clasificacionEdad: item.clasificacionEdad,
                 categorias: item.categorias || [],
                 puntuacion: item.puntuacion || 0,
-
-                // Campos para la página normal de producciones
                 title: item.titulo,
                 type: item.tipo,
                 plot: item.sinopsis,
@@ -76,9 +73,28 @@ class ProduccionesService {
         }
     }
 
+    async fetchFilterOptions() {
+        try {
+            const [tiposRes, categoriasRes, clasificacionesRes] = await Promise.all([
+                axios.get('/api/producciones/tipos'),
+                axios.get('/api/producciones/categorias'),
+                axios.get('/api/producciones/clasificaciones-edad')
+            ]);
+
+            return {
+                tiposProduccion: tiposRes.data?.map(t => t.toString()) || [],
+                categoriasDisponibles: categoriasRes.data?.map(c => c.toString()) || [],
+                clasificacionesEdad: clasificacionesRes.data?.map(c => c.toString()) || []
+            };
+        } catch (error) {
+            console.error('Error fetching filter options:', error);
+            throw error;
+        }
+    }
+
     async createProduccion(produccionData) {
         try {
-            const response = await this.api.post('', produccionData);
+            const response = await axios.post('/api/producciones', produccionData);
             return this.formatProduccion(response.data);
         } catch (error) {
             console.error('Error creating produccion:', error);
@@ -88,7 +104,7 @@ class ProduccionesService {
 
     async updateProduccion(id, produccionData) {
         try {
-            const response = await this.api.put(`/${id}`, produccionData);
+            const response = await axios.put(`/api/producciones/${id}`, produccionData);
             return this.formatProduccion(response.data);
         } catch (error) {
             console.error('Error updating produccion:', error);
@@ -98,7 +114,7 @@ class ProduccionesService {
 
     async deleteProduccion(id) {
         try {
-            await this.api.delete(`/${id}`);
+            await axios.delete(`/api/producciones/${id}`);
             return true;
         } catch (error) {
             console.error('Error deleting produccion:', error);
@@ -131,21 +147,103 @@ class ProduccionesService {
         return tiposMap[tipo] || tipo;
     }
 
-    formatDate(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    formatCategoria(categoria) {
+        const map = {
+            'ACCION': 'Acción',
+            'AVENTURA': 'Aventura',
+            'COMEDIA': 'Comedia',
+            'DRAMA': 'Drama',
+            'TERROR': 'Terror',
+            'CIENCIA_FICCION': 'Ciencia Ficción',
+            'ANIMACION': 'Animación',
+            'SUSPENSE': 'Suspense',
+            'ROMANCE': 'Romance',
+            'FANTASIA': 'Fantasía',
+            'DOCUMENTAL': 'Documental',
+            'INFANTIL': 'Infantil'
+        };
+        return map[categoria] || categoria;
     }
 
     formatClasificacionEdad(clasificacion) {
         const map = {
-            'TP': 'Todo público',
+            '0': 'Todo público',
             '7': '+7 años',
             '12': '+12 años',
             '16': '+16 años',
             '18': '+18 años'
         };
         return map[clasificacion] || clasificacion;
+    }
+
+    formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    async fetchPeliculaCompleta(idProduccion) {
+        try {
+            const produccionResponse = await axios.get(`/api/producciones/completa/${idProduccion}`);
+            const produccionData = produccionResponse.data;
+
+            const peliculaCompleta = {
+                ...produccionData,
+                sagaCompleta: null,
+                participacionesCompletas: [],
+                rodajesCompletos: []
+            };
+
+            const secondaryRequests = [];
+
+            if (produccionData.saga?.id) {
+                secondaryRequests.push(
+                    axios.get(`/api/sagas/${produccionData.saga.id}`)
+                        .then(response => {
+                            peliculaCompleta.sagaCompleta = response.data;
+                        })
+                        .catch(error => {
+                            console.error('Error al obtener la saga:', error);
+                            peliculaCompleta.sagaCompleta = null;
+                        })
+                );
+            }
+
+            if (produccionData.participaciones?.length > 0) {
+                produccionData.participaciones.forEach(participacion => {
+                    secondaryRequests.push(
+                        axios.get(`/api/participaciones/${participacion.id}`)
+                            .then(response => {
+                                peliculaCompleta.participacionesCompletas.push(response.data);
+                            })
+                            .catch(error => {
+                                console.error(`Error al obtener participación ${participacion.id}:`, error);
+                            })
+                    );
+                });
+            }
+
+            if (produccionData.rodajes?.length > 0) {
+                produccionData.rodajes.forEach(rodaje => {
+                    secondaryRequests.push(
+                        axios.get(`/api/rodajes/${rodaje.id}`)
+                            .then(response => {
+                                peliculaCompleta.rodajesCompletos.push(response.data);
+                            })
+                            .catch(error => {
+                                console.error(`Error al obtener rodaje ${rodaje.id}:`, error);
+                            })
+                    );
+                });
+            }
+
+            await Promise.all(secondaryRequests);
+
+            return peliculaCompleta;
+        } catch (error) {
+            console.error('Error al obtener la película completa:', error);
+            throw error;
+        }
     }
 }
 

@@ -32,9 +32,6 @@ data class Produccion(
     @Column(nullable = false, length = 1000)
     var sinopsis: String = "",
 
-    @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val participaciones: MutableList<Participacion> = mutableListOf(),
-
     @Column(nullable = true)
     var imagen: String? = null,
 
@@ -57,7 +54,10 @@ data class Produccion(
     var clasificacionEdad: ClasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS,
 
     @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val rodajes: MutableList<Rodaje> = mutableListOf(),
+    val participaciones: Set<Participacion> = mutableSetOf(),
+
+    @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
+    val rodajes: Set<Rodaje> = mutableSetOf(),
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "saga_id")
@@ -75,4 +75,7 @@ data class Produccion(
         puntuacion = 0.0,
         clasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS
     )
+
+    override fun equals(other: Any?) = this === other || (other is Produccion && id == other.id)
+    override fun hashCode(): Int = id.hashCode()
 }

@@ -1,11 +1,11 @@
 package org.wolve.geofilm.users.dto
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 
 data class UpdateUsuarioRequest(
     val nombre: String?,
     val apellido: String?,
     val telefono: String?,
-    val fechaNacimiento: LocalDateTime?,
+    val fechaNacimiento: LocalDate?,
     val avatar: String?
 )

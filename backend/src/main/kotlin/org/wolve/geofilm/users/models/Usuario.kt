@@ -7,7 +7,9 @@ import java.time.LocalDateTime
 import java.util.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.wolve.geofilm.utils.generators.GuidGenerator
+import java.time.LocalDate
 
 @Entity
 @Table(name = "usuarios")
@@ -39,7 +41,7 @@ data class Usuario(
     val rol: RolUsuario = RolUsuario.USUARIO,
 
     @Column(nullable = true)
-    var fechaNacimiento: LocalDateTime? = null,
+    var fechaNacimiento: LocalDate? = null,
 
     @Column(nullable = true)
     var avatar: String? = null,
@@ -55,15 +57,15 @@ data class Usuario(
     @Column(name = "updated_at")
     val updatedAt: LocalDateTime? = null
 ) : UserDetails {
-    override fun getAuthorities(): Collection<GrantedAuthority> =
-        listOf(GrantedAuthority { rol.name })
-
+    override fun getUsername(): String = email
     override fun getPassword(): String = password
-    override fun getUsername(): String = username
     override fun isAccountNonExpired(): Boolean = true
     override fun isAccountNonLocked(): Boolean = true
     override fun isCredentialsNonExpired(): Boolean = true
     override fun isEnabled(): Boolean = true
+    override fun getAuthorities(): Collection<GrantedAuthority> {
+        return listOf(SimpleGrantedAuthority("ROLE_${rol.name}"))
+    }
 }
 
 enum class RolUsuario {

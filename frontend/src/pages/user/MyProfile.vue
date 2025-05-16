@@ -1,5 +1,19 @@
 ﻿<template>
   <div class="profile-layout" :class="{'dark-mode': darkMode}">
+    <!-- Botones flotantes -->
+    <button class="floating-btn home-btn" @click="goHome">
+      <i class="fas fa-home"></i>
+    </button>
+    <button class="floating-btn logout-btn" @click="logout">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
+
+    <!-- Burbujas de fondo -->
+    <div class="bubbles">
+      <div v-for="(bubble, index) in bubbles" :key="index" class="bubble"
+           :style="bubble.style"></div>
+    </div>
+
     <div class="profile-container">
       <div class="profile-card">
         <!-- Botón de modo oscuro/diurno -->
@@ -17,7 +31,7 @@
           </div>
           <h2 class="profile-title">{{ user.nombre }}</h2>
           <p class="profile-subtitle">
-            <span class="badge" :class="user.rol === 'ADMINISTRADOR' ? 'bg-admin.css' : 'bg-user'">
+            <span class="badge" :class="user.rol === 'ADMINISTRADOR' ? 'bg-admin' : 'bg-user'">
               {{ user.rol === 'ADMINISTRADOR' ? 'Administrador' : 'Usuario' }}
             </span>
           </p>
@@ -80,6 +94,7 @@ export default {
     const router = useRouter();
     const darkMode = ref(false);
     const defaultAvatar = 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff';
+    const bubbles = ref([]);
 
     // Cargar datos del usuario desde el store
     const user = computed(() => authStore.user || {});
@@ -119,8 +134,30 @@ export default {
 
     const editProfile = () => router.push('/profile/edit');
     const changePassword = () => router.push('/profile/change-password');
-    const adminPanel = () => router.push('/admin.css');
+    const adminPanel = () => router.push('/admin');
     const openAvatarUpload = () => console.log('Subir nuevo avatar');
+    const goHome = () => router.push('/');
+    const logout = () => {
+      authStore.logout();
+      router.push('/auth/login');
+    };
+
+    // Crear burbujas animadas
+    const createBubbles = () => {
+      const bubbleCount = 15;
+      for (let i = 0; i < bubbleCount; i++) {
+        bubbles.value.push({
+          style: {
+            left: `${Math.random() * 100}%`,
+            width: `${Math.random() * 20 + 10}px`,
+            height: `${Math.random() * 20 + 10}px`,
+            opacity: Math.random() * 0.5 + 0.1,
+            animationDuration: `${Math.random() * 20 + 10}s`,
+            animationDelay: `${Math.random() * 5}s`
+          }
+        });
+      }
+    };
 
     // Cargar datos iniciales
     onMounted(async () => {
@@ -137,6 +174,9 @@ export default {
         if (!authStore.isAuthenticated) {
           router.push('/auth/login');
         }
+
+        loadDarkModePreference();
+        createBubbles();
       } catch (error) {
         console.error('Error loading user:', error);
         router.push('/auth/login');
@@ -148,13 +188,16 @@ export default {
       defaultAvatar,
       user,
       isAdmin,
+      bubbles,
       formattedBirthDate,
       formattedRegDate,
       toggleDarkMode,
       editProfile,
       changePassword,
       adminPanel,
-      openAvatarUpload
+      openAvatarUpload,
+      goHome,
+      logout
     };
   }
 };
@@ -176,6 +219,8 @@ export default {
   min-height: 100vh;
   transition: all 0.3s ease;
   background-color: #f8f9fa;
+  position: relative;
+  overflow: hidden;
 }
 
 .profile-container {
@@ -185,11 +230,13 @@ export default {
   min-height: 100vh;
   padding: 2rem;
   background-image:
-      linear-gradient(rgba(26, 28, 28, 0.6), rgba(44, 43, 43, 0.65)),
+      linear-gradient(rgba(126, 91, 239, 0.1), rgba(126, 91, 239, 0.1)),
       url("https://images.unsplash.com/photo-1573614999645-e5f0f16ec15d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
   background-attachment: fixed;
   background-size: cover;
   background-position: center;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-card {
@@ -197,10 +244,12 @@ export default {
   max-width: 800px;
   padding: 2.5rem;
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(126, 91, 239, 0.2);
   background-color: rgba(255, 255, 255, 0.95);
   position: relative;
-  border: 1px solid rgba(126, 91, 239, 0.1);
+  border: 1px solid rgba(126, 91, 239, 0.2);
+  backdrop-filter: blur(5px);
+  z-index: 2;
 }
 
 .toggle-dark {
@@ -234,7 +283,7 @@ export default {
   border-radius: 50%;
   object-fit: cover;
   border: 4px solid #7e5bef;
-  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.2);
+  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.4);
 }
 
 .btn-edit-avatar {
@@ -257,13 +306,15 @@ export default {
 .btn-edit-avatar:hover {
   background-color: #6d46e8;
   transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(126, 91, 239, 0.5);
 }
 
 .profile-title {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.25rem;
-  color: #343a40;
+  color: #5a4fcf;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 .profile-subtitle {
@@ -290,7 +341,7 @@ export default {
 }
 
 .bg-admin {
-  background-color: #ef4444;
+  background-color: #ef476f;
   color: white;
 }
 
@@ -298,7 +349,7 @@ export default {
   font-size: 1.25rem;
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(126, 91, 239, 0.2);
+  border-bottom: 1px solid rgba(126, 91, 239, 0.3);
   color: #7e5bef;
   display: flex;
   align-items: center;
@@ -330,6 +381,7 @@ export default {
   padding: 0.75rem;
   border-radius: 8px;
   border-left: 3px solid #7e5bef;
+  box-shadow: 0 2px 5px rgba(126, 91, 239, 0.1);
 }
 
 .btn-primary {
@@ -338,12 +390,13 @@ export default {
   padding: 0.75rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary:hover {
   background-color: #6d46e8;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.2);
+  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.4);
 }
 
 .btn-outline-secondary {
@@ -353,28 +406,102 @@ export default {
   padding: 0.75rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
 .btn-outline-secondary:hover {
   background-color: #7e5bef;
   color: white;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.2);
+  box-shadow: 0 5px 15px rgba(126, 91, 239, 0.3);
 }
 
 .btn-admin {
-  background-color: #ef4444;
+  background-color: #ef476f;
   border: none;
   color: white;
   padding: 0.75rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
 .btn-admin:hover {
-  background-color: #dc2626;
+  background-color: #dc1444;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 5px 15px rgba(239, 71, 111, 0.3);
+}
+
+/* Botones flotantes */
+.floating-btn {
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border: none;
+  color: white;
+}
+
+.floating-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+}
+
+.home-btn {
+  top: 30px;
+  left: 30px;
+  background-color: #7e5bef;
+}
+
+.logout-btn {
+  top: 30px;
+  right: 30px;
+  background-color: #c547ef;
+}
+
+/* Animación de burbujas */
+.bubbles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -100px;
+  background: rgba(126, 91, 239, 0.2);
+  border-radius: 50%;
+  animation: rise 15s infinite ease-in;
+}
+
+.bubble:nth-child(odd) {
+  background: rgba(167, 139, 250, 0.3);
+}
+
+@keyframes rise {
+  0% {
+    bottom: -100px;
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(100px);
+  }
+  100% {
+    bottom: 100%;
+    transform: translateX(-200px);
+  }
 }
 
 /* Estilos para modo oscuro */
@@ -390,8 +517,8 @@ export default {
 
 .dark-mode .profile-card {
   background-color: rgba(30, 30, 30, 0.95);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  border-color: rgba(167, 139, 250, 0.2);
+  box-shadow: 0 10px 30px rgba(126, 91, 239, 0.2);
+  border-color: rgba(167, 139, 250, 0.3);
 }
 
 .dark-mode .toggle-dark {
@@ -404,7 +531,7 @@ export default {
 
 .dark-mode .avatar-img {
   border-color: #a78bfa;
-  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.3);
+  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4);
 }
 
 .dark-mode .btn-edit-avatar {
@@ -416,7 +543,7 @@ export default {
 }
 
 .dark-mode .profile-title {
-  color: #f8f9fa;
+  color: #a78bfa;
 }
 
 .dark-mode .member-since {
@@ -425,7 +552,7 @@ export default {
 
 .dark-mode .section-title {
   color: #a78bfa;
-  border-bottom-color: rgba(167, 139, 250, 0.3);
+  border-bottom-color: rgba(167, 139, 250, 0.4);
 }
 
 .dark-mode .info-item label {
@@ -444,7 +571,7 @@ export default {
 
 .dark-mode .btn-primary:hover {
   background-color: #8b5cf6;
-  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.3);
+  box-shadow: 0 5px 15px rgba(167, 139, 250, 0.4);
 }
 
 .dark-mode .btn-outline-secondary {
@@ -457,6 +584,14 @@ export default {
   color: #212529;
 }
 
+.dark-mode .home-btn {
+  background-color: #a78bfa;
+}
+
+.dark-mode .logout-btn {
+  background-color: rgba(233, 71, 239, 0.85);
+}
+
 @media (max-width: 768px) {
   .profile-card {
     padding: 1.5rem;
@@ -465,11 +600,33 @@ export default {
   .info-grid {
     grid-template-columns: 1fr;
   }
+
+  .floating-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.1rem;
+  }
 }
 
 @media (max-width: 576px) {
   .profile-container {
     padding: 1rem;
+  }
+
+  .floating-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .home-btn {
+    bottom: 20px;
+    left: 20px;
+  }
+
+  .logout-btn {
+    bottom: 20px;
+    right: 20px;
   }
 }
 </style>

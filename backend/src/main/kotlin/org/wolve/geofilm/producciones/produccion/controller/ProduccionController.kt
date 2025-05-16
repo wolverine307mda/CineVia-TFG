@@ -10,10 +10,12 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.models.Categoria
 import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
+import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
 import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
@@ -222,4 +224,13 @@ class ProduccionController(
     fun getTiposProduccion(): ResponseEntity<List<TipoProduccion>> {
         return ResponseEntity.ok(produccionService.getTiposProduccion())
     }
+
+    @GetMapping("/completa/{id}")
+    @Operation(summary = "Obtiene una producción completa con participaciones, saga y rodajes")
+    fun getProduccionCompleta(@PathVariable id: String): ResponseEntity<ProduccionCompletaResponse> {
+        val completa = produccionService.findProduccionCompletaById(id)
+            ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(completa)
+    }
+
 }

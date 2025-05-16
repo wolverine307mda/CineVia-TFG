@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import ProduccionModal from "@/components/modales/ProduccionModal.vue";
+import ProduccionModal from "@/components/modales/edicion/EditarProduccionModal.vue";
 import ProduccionesService from '@/services/producciones.service';
 import ConfirmModal from "@/components/cards/ConfirmModal.vue";
 

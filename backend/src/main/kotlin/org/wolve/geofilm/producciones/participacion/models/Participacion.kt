@@ -15,11 +15,11 @@ data class Participacion(
     @Column(nullable = false, unique = true, columnDefinition = "varchar(255)")
     val id: String = GuidGenerator().generarId(),
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "produccion_id", nullable = false, columnDefinition = "varchar(255)")
     var produccion: Produccion,
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profesional_id", nullable = false, columnDefinition = "varchar(255)")
     var profesional: Profesional,
 
@@ -45,4 +45,7 @@ data class Participacion(
         rol = RolParticipacion.ACTOR,
         papel = null
     )
+
+    override fun equals(other: Any?) = this === other || (other is Participacion && id == other.id)
+    override fun hashCode(): Int = id.hashCode()
 }

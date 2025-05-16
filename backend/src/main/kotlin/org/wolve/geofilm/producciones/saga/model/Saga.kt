@@ -15,7 +15,7 @@ data class Saga(
     @Column(nullable = false, unique = true)
     val nombre: String,
 
-    @Column(length = 1000)
+    @Column(length = 10000)
     val descripcion: String? = null,
 
     @Column(nullable = false)

@@ -48,7 +48,8 @@ class SecurityConfiguration(
                         "/api/sagas/**",
                         "/api/profesionales/**",
                         "/api/participaciones/**",
-                        "/api/ubicaciones/**"
+                        "/api/ubicaciones/**",
+                        "/api/rodajes/**"
                     ).permitAll()
                     .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
                     .requestMatchers("/api/users/me").authenticated()
@@ -64,7 +65,8 @@ class SecurityConfiguration(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        configuration.allowedOrigins = listOf("http://localhost:5173", "http://localhost:5174")
+        //configuration.allowedOrigins = listOf("http://localhost:5173", "http://localhost:5174")
+        configuration.allowedOriginPatterns = listOf("*")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*") // Permitimos todos los headers
         configuration.exposedHeaders = listOf("Authorization")

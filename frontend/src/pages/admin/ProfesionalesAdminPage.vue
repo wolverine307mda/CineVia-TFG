@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import ProfesionalModal from "@/components/modales/ProfesionalModal.vue";
+import ProfesionalModal from "@/components/modales/edicion/ProfesionalModal.vue";
 import ProfessionalsService from '@/services/profesional.service.js';
 import ConfirmModal from "@/components/cards/ConfirmModal.vue";
 

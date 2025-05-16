@@ -23,7 +23,7 @@ data class Profesional(
     val fechaNacimiento: Date,
 
     @Temporal(TemporalType.DATE)
-    @Column(nullable = false, columnDefinition = "date default CURRENT_DATE")
+    @Column(nullable = true, columnDefinition = "date default CURRENT_DATE")
     val fechaInicio: Date,
 
     @Column(nullable = false)

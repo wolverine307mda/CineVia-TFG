@@ -50,11 +50,20 @@
         <professional-card
             v-for="profesional in profesionales"
             :key="profesional.id"
-            :professional="mapToCardData(profesional)"
+            :professional="profesional"
             :dark-mode="darkMode"
             @toggle-favorite="toggleFavorite"
+            @view-details="openProfessionalModal"
         />
       </transition-group>
+
+      <!-- Modal de detalles del profesional -->
+      <ProfessionalModal
+          v-if="showProfessionalModal"
+          :professional-id="selectedProfessionalId"
+          :dark-mode="darkMode"
+          @close="closeProfessionalModal"
+      />
 
       <!-- Paginación -->
       <div class="pagination-controls" v-if="totalPages > 1">
@@ -177,24 +186,20 @@
             </div>
             <div class="section-content" v-show="expandedSection === 'sort'">
               <div class="sort-options">
-                <select v-model="sortBy" class="sort-select">
-                  <option value="nombre">Nombre</option>
-                  <option value="fechaNacimiento">Fecha de Nacimiento</option>
-                  <option value="fechaInicio">Fecha de Inicio</option>
-                </select>
-                <div class="sort-direction">
-                  <button
-                      @click="sortDirection = 'asc'"
-                      :class="{ 'active': sortDirection === 'asc' }"
-                  >
-                    <i class="fas fa-sort-amount-up"></i> Asc
-                  </button>
-                  <button
-                      @click="sortDirection = 'desc'"
-                      :class="{ 'active': sortDirection === 'desc' }"
-                  >
-                    <i class="fas fa-sort-amount-down"></i> Desc
-                  </button>
+                <div class="sort-option" :class="{ 'active': sortBy === 'nombre' }" @click="changeSort('nombre')">
+                  <span>Nombre</span>
+                  <i class="fas" :class="sortBy === 'nombre' ?
+              (sortDirection === 'asc' ? 'fa-sort-alpha-down' : 'fa-sort-alpha-up') : 'fa-sort'"></i>
+                </div>
+                <div class="sort-option" :class="{ 'active': sortBy === 'fechaNacimiento' }" @click="changeSort('fechaNacimiento')">
+                  <span>Fecha de Nacimiento</span>
+                  <i class="fas" :class="sortBy === 'fechaNacimiento' ?
+              (sortDirection === 'asc' ? 'fa-sort-numeric-down' : 'fa-sort-numeric-up') : 'fa-sort'"></i>
+                </div>
+                <div class="sort-option" :class="{ 'active': sortBy === 'fechaInicio' }" @click="changeSort('fechaInicio')">
+                  <span>Fecha de Inicio</span>
+                  <i class="fas" :class="sortBy === 'fechaInicio' ?
+              (sortDirection === 'asc' ? 'fa-sort-numeric-down' : 'fa-sort-numeric-up') : 'fa-sort'"></i>
                 </div>
               </div>
             </div>
@@ -222,7 +227,7 @@
 </template>
 
 <script>
-import ProfessionalCard from '@/components/cards/ProfessionalCard.vue'
+import ProfessionalCard from '@/components/cards/ProfessionalCard.vue';
 import Header from "@/components/principal/Header.vue";
 import Footer from "@/components/principal/Footer.vue";
 import ProfessionalsService from '@/services/profesional.service.js';
@@ -232,7 +237,7 @@ export default {
   components: {
     Footer,
     Header,
-    ProfessionalCard
+    ProfessionalCard,
   },
   data() {
     return {
@@ -255,28 +260,33 @@ export default {
         fechaInicioHasta: null,
         lugarNacimiento: null
       }
-    }
+    };
   },
   methods: {
     async fetchProfesionales() {
       this.isLoading = true;
 
-      const pagination = {
-        page: this.currentPage - 1,
-        size: this.itemsPerPage
-      };
-
-      const sorting = {
-        sortBy: [this.sortBy],
-        sortDirection: this.sortDirection
-      };
-
       try {
-        const response = await ProfessionalsService.fetchProfessionals(this.filters, pagination, sorting);
+        const { data, totalItems, totalPages } = await ProfessionalsService.fetchProfessionals(
+            this.filters,
+            {
+              page: this.currentPage - 1,
+              size: this.itemsPerPage
+            },
+            {
+              sortBy: this.sortBy,
+              sortDirection: this.sortDirection
+            }
+        );
 
-        this.profesionales = response.data;
-        this.totalItems = response.totalItems;
-        this.totalPages = response.totalPages;
+        this.profesionales = data;
+        this.totalItems = totalItems;
+        this.totalPages = totalPages;
+      } catch (error) {
+        console.error("Error fetching profesionales:", error);
+        this.profesionales = [];
+        this.totalItems = 0;
+        this.totalPages = 1;
       } finally {
         this.isLoading = false;
       }
@@ -303,6 +313,12 @@ export default {
       this.filters.fechaInicioHasta = dateRange.hasta;
     },
 
+    applyFilters() {
+      this.showFiltersModal = false;
+      this.currentPage = 1;
+      this.fetchProfesionales();
+    },
+
     resetFilters() {
       this.filters = {
         nombre: null,
@@ -314,12 +330,6 @@ export default {
       };
       this.sortBy = 'nombre';
       this.sortDirection = 'asc';
-      this.currentPage = 1;
-      this.fetchProfesionales();
-    },
-
-    applyFilters() {
-      this.showFiltersModal = false;
       this.currentPage = 1;
       this.fetchProfesionales();
     },
@@ -352,8 +362,14 @@ export default {
       }
     },
 
-    mapToCardData(prof) {
-      return ProfessionalsService.mapProfessionalToCard(prof);
+    changeSort(field) {
+      if (this.sortBy === field) {
+        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortBy = field;
+        this.sortDirection = 'asc';
+      }
+      this.fetchProfesionales();
     }
   },
   created() {
@@ -362,15 +378,8 @@ export default {
       this.darkMode = savedMode === 'true';
     }
     this.fetchProfesionales();
-  }
-}
+  },
+};
 </script>
-
-<style scoped>
-.dark-mode .filters-modal {
-  background-color: rgba(30, 30, 30, 0.95);
-  color: white;
-}
-</style>
 
 <style scoped src="@/assets/styles/general.css"></style>

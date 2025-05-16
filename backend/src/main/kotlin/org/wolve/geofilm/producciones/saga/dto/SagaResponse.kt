@@ -7,9 +7,9 @@ data class SagaResponse(
     val id: String,
     val nombre: String,
     val descripcion: String?,
-    val isAcabada: Boolean,
-    val fechaInicio: Date,
-    val fechaFin: Date?,
+    val fechaInicio: String,
+    val fechaFin: String?,
     val imagen: String?,
-    val producciones: List<ProduccionResponse> = emptyList()
+    val isAcabada: Boolean,
+    val producciones: List<ProduccionResponse>
 )

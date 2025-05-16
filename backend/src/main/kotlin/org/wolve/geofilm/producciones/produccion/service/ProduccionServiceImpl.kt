@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundException
@@ -174,6 +175,8 @@ class ProduccionServiceImpl(
     override fun countParticipacionesByProduccionId(produccionId: String): Long {
         return produccionRepository.countParticipacionesById(produccionId)
     }
+
+
     // endregion
 
     // region Métodos para enumerados
@@ -189,4 +192,10 @@ class ProduccionServiceImpl(
         return TipoProduccion.values().toList()
     }
     // endregion
+
+    override fun findProduccionCompletaById(id: String): ProduccionCompletaResponse? {
+        val produccion = produccionRepository.findCompletaById(id) ?: return null
+        return produccionMapper.toCompletaResponse(produccion)
+    }
+
 }

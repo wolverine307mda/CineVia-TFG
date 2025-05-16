@@ -120,7 +120,7 @@
 <script>
 import { Loader } from '@googlemaps/js-api-loader';
 import { debounce } from 'lodash';
-import UbicacionModal from "@/components/modales/UbicacionModal.vue";
+import UbicacionModal from "@/components/modales/edicion/UbicacionModal.vue";
 
 export default {
   name: 'AdministracionUbicaciones',

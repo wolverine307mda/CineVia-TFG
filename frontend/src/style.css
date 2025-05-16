@@ -90,8 +90,7 @@ button:focus-visible {
 }
 
 .main-content {
-  background-color: var(--color-bg);
-  color: var(--color-text);
-  min-height: 100vh;
+  background-color: #2d1b55; /* mismo fondo de transición */
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
 }

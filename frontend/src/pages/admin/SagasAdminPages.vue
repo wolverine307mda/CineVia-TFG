@@ -116,7 +116,7 @@
 </template>
 
 <script>
-import SagaModal from "@/components/modales/SagaModal.vue";
+import SagaModal from "@/components/modales/edicion/SagaModal.vue";
 import ConfirmModal from "@/components/cards/ConfirmModal.vue";
 import SagasService from '@/services/sagas.service';
 

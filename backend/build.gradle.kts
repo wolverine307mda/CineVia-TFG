@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
     kotlin("plugin.noarg") version "1.9.25"
-    id("org.jetbrains.kotlin.plugin.allopen") version "1.9.0"
+    id("org.jetbrains.kotlin.plugin.allopen") version "1.9.25"
     id("org.springframework.boot") version "3.4.3"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
@@ -35,23 +35,18 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-graphql")
 
     // 📌 Persistencia y Base de Datos
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa") // JPA + Hibernate
-    implementation("org.postgresql:postgresql") // Driver de PostgreSQL
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.postgresql:postgresql")
     implementation("org.flywaydb:flyway-core:10.11.1")
     implementation("org.flywaydb:flyway-database-postgresql:10.11.1")
 
     // 📌 Validaciones
-    implementation("org.springframework.boot:spring-boot-starter-validation") // Validaciones de DTOs
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // 📌 Cache (Opcional, mejora rendimiento)
-    implementation("org.springframework.boot:spring-boot-starter-cache") // Caching con Redis u otros
-
-    // 📌 GraphQL
-    implementation("com.graphql-java-kickstart:graphql-spring-boot-starter:12.0.0") // GraphQL Avanzado
-    implementation("com.graphql-java-kickstart:graphql-java-tools:12.0.0") // Resolver automático de GraphQL
+    // 📌 Cache
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
     // 📌 Conversión de Datos (DTO ↔ Entity)
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
@@ -63,27 +58,25 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
-    // 📌 Documentación API con OpenAPI (Swagger)
+    // 📌 Documentación API con OpenAPI
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 
-    // 📌 Logs avanzados
+    // 📌 Logs
     implementation("ch.qos.logback:logback-classic")
 
-    // 📌 Sesión y Autenticación
+    // 📌 Sesión y JWT
     implementation("org.springframework.session:spring-session-core")
     implementation("com.auth0:java-jwt:4.4.0")
 
-    // 📌 Lombok (Opcional, reduce código)
+    // 📌 Lombok (Opcional)
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
     implementation("jakarta.persistence:jakarta.persistence-api:3.1.0")
 
-    // Redis (Caché)
+    // 📌 Redis
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("io.lettuce:lettuce-core")
-
-    implementation("org.springframework.boot:spring-boot-starter-security")
 
     // 📌 Test y Contenedores
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -96,7 +89,14 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+
+    // ✅ Mockito y MapStruct para tests
+    testImplementation("org.mockito:mockito-core:5.12.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testAnnotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("io.mockk:mockk:1.13.10")
 }
 
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {

@@ -1,25 +1,38 @@
 package org.wolve.geofilm.producciones.participacion.mappers
 
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Component
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponseProfesional
 import org.wolve.geofilm.producciones.participacion.models.Participacion
+import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.produccion.models.Produccion
+import org.wolve.geofilm.producciones.profesional.mapper.ProfesionalMapper
 import org.wolve.geofilm.producciones.profesional.model.Profesional
 import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
 
 @Component
-class ParticipacionMapper {
+class ParticipacionMapper(
+    private val profesionalMapper: ProfesionalMapper,
+    private val produccionMapper: ProduccionMapper
+) {
     fun toResponse(participacion: Participacion): ParticipacionResponse = ParticipacionResponse(
         id = participacion.id,
-        produccionId = participacion.produccion.id,
-        produccionTitulo = participacion.produccion.titulo,
-        profesionalId = participacion.profesional.id,
-        profesionalNombre = participacion.profesional.nombre,
-        rol = participacion.rol,
         papel = participacion.papel,
+        rol = participacion.rol,
+        profesional = profesionalMapper.toResponse(participacion.profesional),
         createdAt = participacion.createdAt,
-        updatedAt = participacion.updatedAt
+        updatedAt = participacion.updatedAt,
+    )
+
+    fun toResponseProfesional(participacion: Participacion): ParticipacionResponseProfesional = ParticipacionResponseProfesional (
+        id = participacion.id,
+        papel = participacion.papel,
+        rol = participacion.rol,
+        produccion = produccionMapper.toResponse(participacion.produccion),
+        createdAt = participacion.createdAt,
+        updatedAt = participacion.updatedAt,
     )
 
     fun toEntity(
@@ -33,8 +46,14 @@ class ParticipacionMapper {
         papel = request.papel
     )
 
-    fun toPaginatedResponse(page: org.springframework.data.domain.Page<Participacion>):
+    fun toPaginatedResponse(page: Page<Participacion>):
             PaginationUtils.PaginatedResponse<ParticipacionResponse> {
         return PaginationUtils.toPaginatedResponse(page.map { toResponse(it) })
+    }
+
+
+
+    fun toResponseProfesional(lista: List<Participacion>): List<ParticipacionResponseProfesional> {
+        return lista.map { toResponseProfesional(it) }
     }
 }

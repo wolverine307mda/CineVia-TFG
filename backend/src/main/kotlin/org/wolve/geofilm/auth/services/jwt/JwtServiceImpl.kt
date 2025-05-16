@@ -45,7 +45,7 @@ class JwtServiceImpl(
             .withSubject(usuario.email) // Usar email como subject consistentemente
             .withIssuedAt(now)
             .withExpiresAt(expirationDate)
-            .withClaim("userId", usuario.id.toString())
+            .withClaim("userId", usuario.id)
             .withClaim("role", usuario.rol.toString())
             .withClaim("email", usuario.email) // Mantener como claim adicional
             .withClaim("username", usuario.username)

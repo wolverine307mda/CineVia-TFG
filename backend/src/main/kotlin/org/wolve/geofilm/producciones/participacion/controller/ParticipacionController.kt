@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
+import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponseProfesional
 import org.wolve.geofilm.producciones.participacion.services.IParticipacionService
 import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
 import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
@@ -111,16 +112,10 @@ class ParticipacionController(
     )
     @GetMapping("/profesional/{profesionalId}")
     fun getByProfesional(
-        @PathVariable profesionalId: String,
-        @RequestParam(defaultValue = "0") page: Int,
-        @RequestParam(defaultValue = "10") size: Int,
-        @RequestParam(defaultValue = "createdAt") sortBy: List<String>,
-        @RequestParam(defaultValue = "desc") sortDirection: String
-    ): ResponseEntity<PaginationUtils.PaginatedResponse<ParticipacionResponse>> {
-        val response = participacionService.getByProfesional(
-            profesionalId, page, size, sortBy, sortDirection
-        )
-        return ResponseEntity.ok(response)
+        @PathVariable profesionalId: String
+    ): ResponseEntity<List<ParticipacionResponseProfesional>> {
+        val responseList = participacionService.getByProfesional(profesionalId)
+        return ResponseEntity.ok(responseList)
     }
 
     @Operation(summary = "Actualizar una participación")

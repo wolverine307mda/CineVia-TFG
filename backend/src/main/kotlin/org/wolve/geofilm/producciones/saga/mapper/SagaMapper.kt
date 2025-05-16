@@ -7,7 +7,9 @@ import org.wolve.geofilm.producciones.saga.dto.SagaResponse
 import org.wolve.geofilm.producciones.saga.model.Saga
 
 @Component
-class SagaMapper {
+class SagaMapper(
+    private val produccionMapper: ProduccionMapper
+) {
 
     fun toSagaEntity(request: SagaRequest): Saga {
         return Saga(
@@ -20,29 +22,16 @@ class SagaMapper {
         )
     }
 
-    fun toSagaResponse(saga: Saga): SagaResponse {
+    fun toSagaResponse(s: Saga): SagaResponse {
         return SagaResponse(
-            id = saga.id,
-            nombre = saga.nombre,
-            descripcion = saga.descripcion,
-            isAcabada = saga.isAcabada,
-            fechaInicio = saga.fechaInicio,
-            fechaFin = saga.fechaFin,
-            imagen = saga.imagen,
-            producciones = emptyList() // No mapeamos las producciones aquí porque "ignore = true"
-        )
-    }
-
-    fun toSagaResponseWithProducciones(saga: Saga, produccionMapper: ProduccionMapper): SagaResponse {
-        return SagaResponse(
-            id = saga.id,
-            nombre = saga.nombre,
-            descripcion = saga.descripcion,
-            isAcabada = saga.isAcabada,
-            fechaInicio = saga.fechaInicio,
-            fechaFin = saga.fechaFin,
-            imagen = saga.imagen,
-            producciones = saga.producciones.map { produccionMapper.toProduccionResponse(it) }
+            id = s.id,
+            nombre = s.nombre,
+            descripcion = s.descripcion,
+            fechaInicio = s.fechaInicio.toString(),
+            fechaFin = s.fechaFin?.toString(),
+            imagen = s.imagen,
+            isAcabada = s.isAcabada,
+            producciones = s.producciones.map { produccionMapper.toResponse(it) }
         )
     }
 }

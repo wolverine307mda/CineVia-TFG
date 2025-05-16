@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="card-base" :class="{ 'dark-mode': darkMode }">
+  <router-link :to="`/produccion/${movie.id}`" style="text-decoration: none;" class="card-base" :class="{ 'dark-mode': darkMode }">
     <div class="card-image" style="padding-bottom: 150%">
       <img :src="movie.poster" :alt="movie.title" loading="lazy">
       <button class="favorite-btn" @click.stop="toggleFavorite"
@@ -36,12 +36,8 @@
       </div>
 
       <p class="card-description">{{ truncateText(movie.plot, 120) }}</p>
-
-      <button class="details-btn" @click.stop="viewDetails">
-        Ver detalles <i class="fas fa-chevron-right"></i>
-      </button>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script>
@@ -61,7 +57,7 @@ export default {
         duration: 0,
         plot: '',
         poster: '',
-        puntuacion: 0, // Rating local (segunda opción)
+        puntuacion: 0,
         clasificacionEdad: 0,
         genres: [],
         isFavorite: false
@@ -99,7 +95,7 @@ export default {
       this.$emit('toggle-favorite', this.movie.id)
     },
     viewDetails() {
-      this.$router.push(`/movie/${this.movie.id}`)
+      this.$router.push(`/produccion/${this.movie.id}`)
     },
     truncateText(text, length) {
       if (!text) return ''

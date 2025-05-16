@@ -93,6 +93,73 @@
         </div>
 
         <div class="modal-body">
+          <!-- Sección de Ordenación -->
+          <div class="filter-section">
+            <div class="section-header" @click="toggleSection('sort')">
+              <i class="fas fa-sort"></i>
+              <span>Ordenar por</span>
+              <i class="section-icon fas" :class="expandedSection === 'sort' ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </div>
+            <div class="section-content" v-show="expandedSection === 'sort'">
+              <div class="sort-options">
+                <div class="sort-option">
+                  <label>
+                    <input
+                        type="radio"
+                        v-model="sortBy"
+                        value="titulo"
+                        @change="fetchProducciones"
+                    >
+                    <span>Título</span>
+                  </label>
+                  <button
+                      class="sort-direction"
+                      @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; fetchProducciones()"
+                      :title="sortDirection === 'asc' ? 'Ascendente' : 'Descendente'"
+                  >
+                    <i class="fas" :class="sortDirection === 'asc' ? 'fa-sort-alpha-down' : 'fa-sort-alpha-up'"></i>
+                  </button>
+                </div>
+                <div class="sort-option">
+                  <label>
+                    <input
+                        type="radio"
+                        v-model="sortBy"
+                        value="estreno"
+                        @change="fetchProducciones"
+                    >
+                    <span>Fecha de estreno</span>
+                  </label>
+                  <button
+                      class="sort-direction"
+                      @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; fetchProducciones()"
+                      :title="sortDirection === 'asc' ? 'Ascendente' : 'Descendente'"
+                  >
+                    <i class="fas" :class="sortDirection === 'asc' ? 'fa-sort-numeric-down' : 'fa-sort-numeric-up'"></i>
+                  </button>
+                </div>
+                <div class="sort-option">
+                  <label>
+                    <input
+                        type="radio"
+                        v-model="sortBy"
+                        value="duracion"
+                        @change="fetchProducciones"
+                    >
+                    <span>Duración</span>
+                  </label>
+                  <button
+                      class="sort-direction"
+                      @click="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; fetchProducciones()"
+                      :title="sortDirection === 'asc' ? 'Ascendente' : 'Descendente'"
+                  >
+                    <i class="fas" :class="sortDirection === 'asc' ? 'fa-sort-amount-down' : 'fa-sort-amount-up'"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Filtro por tipo -->
           <div class="filter-section">
             <div class="section-header" @click="toggleSection('type')">
@@ -244,10 +311,10 @@
 </template>
 
 <script>
-import MovieCard from '../../components/cards/MovieCard.vue';
-import Header from "../../components/principal/Header.vue";
-import Footer from "../../components/principal/Footer.vue";
-import ProduccionesService from '../../services/producciones.service';
+import MovieCard from '../../../components/cards/MovieCard.vue';
+import Header from "../../../components/principal/Header.vue";
+import Footer from "../../../components/principal/Footer.vue";
+import ProduccionesService from '../../../services/producciones.service.js';
 
 export default {
   name: 'MoviesCatalog',
@@ -269,6 +336,8 @@ export default {
       itemsPerPage: 12,
       totalItems: 0,
       totalPages: 1,
+      sortBy: 'titulo',
+      sortDirection: 'asc',
       filters: {
         titulo: null,
         tipo: null,
@@ -290,7 +359,7 @@ export default {
 
       // Preparar filtros (eliminar valores null o vacíos)
       const cleanFilters = Object.fromEntries(
-          Object.entries(this.filters).filter(([_, v]) => v !== null && v !== '')
+          Object.entries(this.filters).filter(([_, v]) => v !== null && v !== '' && !(Array.isArray(v) && v.length === 0))
       );
 
       // Si estrenoDesde/estrenoHasta no están definidos, usar los valores por defecto
@@ -309,24 +378,38 @@ export default {
       try {
         const { data, totalItems, totalPages } = await ProduccionesService.fetchProducciones(
             cleanFilters,
-            { page: this.currentPage - 1, size: this.itemsPerPage }
+            {
+              page: this.currentPage - 1,
+              size: this.itemsPerPage,
+              sortBy: this.sortBy,
+              sortDirection: this.sortDirection
+            }
         );
 
         this.producciones = data;
         this.totalItems = totalItems;
         this.totalPages = totalPages;
+      } catch (error) {
+        console.error("Error fetching producciones:", error);
+        this.producciones = [];
+        this.totalItems = 0;
+        this.totalPages = 1;
       } finally {
         this.isLoading = false;
       }
     },
 
     async fetchFilterOptions() {
-      const { tiposProduccion, categoriasDisponibles, clasificacionesEdad } =
-          await ProduccionesService.fetchFilterOptions();
+      try {
+        const { tiposProduccion, categoriasDisponibles, clasificacionesEdad } =
+            await ProduccionesService.fetchFilterOptions();
 
-      this.tiposProduccion = tiposProduccion;
-      this.categoriasDisponibles = categoriasDisponibles;
-      this.clasificacionesEdad = clasificacionesEdad;
+        this.tiposProduccion = tiposProduccion;
+        this.categoriasDisponibles = categoriasDisponibles;
+        this.clasificacionesEdad = clasificacionesEdad;
+      } catch (error) {
+        console.error("Error fetching filter options:", error);
+      }
     },
 
     toggleDarkMode() {
@@ -365,13 +448,15 @@ export default {
       this.filters = {
         titulo: null,
         tipo: null,
-        estrenoDesde: null,
-        estrenoHasta: null,
+        estrenoDesde: this.minYear,
+        estrenoHasta: this.maxYear,
         categorias: null,
         clasificacionEdad: null,
         duracionMin: null,
         duracionMax: null,
       };
+      this.sortBy = 'titulo';
+      this.sortDirection = 'asc';
       this.currentPage = 1;
       this.fetchProducciones();
     },
@@ -404,7 +489,14 @@ export default {
       }
     },
 
-    // Métodos de formato que ahora usan el servicio
+    updateYearRange() {
+      // Asegurar que estrenoDesde no sea mayor que estrenoHasta
+      if (this.filters.estrenoDesde > this.filters.estrenoHasta) {
+        this.filters.estrenoHasta = this.filters.estrenoDesde;
+      }
+    },
+
+    // Métodos de formato que usan el servicio
     formatTipoProduccion(tipo) {
       return ProduccionesService.formatTipoProduccion(tipo);
     },
@@ -415,6 +507,16 @@ export default {
 
     formatClasificacionEdad(clasificacion) {
       return ProduccionesService.formatClasificacionEdad(clasificacion);
+    },
+
+    sortProducciones(field) {
+      if (this.sortBy === field) {
+        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortBy = field;
+        this.sortDirection = 'asc';
+      }
+      this.fetchProducciones();
     }
   },
   created() {
@@ -639,7 +741,54 @@ export default {
   margin-bottom: 10px;
 }
 
+/* Estilos para la sección de ordenación */
+.sort-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+.sort-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.sort-option label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex-grow: 1;
+}
+
+.sort-option input[type="radio"] {
+  margin: 0;
+}
+
+.sort-direction {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: inherit;
+}
+
+.sort-direction:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .sort-option {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .sort-direction:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
 </style>
 
-<style scoped src="../../assets/styles/general.css"></style>
+<style scoped src="../../../assets/styles/general.css"></style>

@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="card-base" :class="{ 'dark-mode': darkMode }">
+  <router-link :to="`/profesional/${professional.id}`" style="text-decoration: none;" class="card-base" :class="{ 'dark-mode': darkMode }">
     <div class="card-image" style="padding-bottom: 120%">
       <img :src="professional.foto" :alt="professional.nombre" loading="lazy" />
       <button class="favorite-btn" @click.stop="toggleFavorite"
@@ -34,13 +34,8 @@
         <span class="tag">{{ professional.participacionesCount }} producción(es)</span>
       </div>
 
-      <div class="card-footer">
-        <button class="details-btn" @click.stop="viewDetails">
-          Ver perfil <i class="fas fa-chevron-right"></i>
-        </button>
-      </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script>
@@ -63,7 +58,7 @@ export default {
       this.$emit('toggle-favorite', this.professional.id)
     },
     viewDetails() {
-      this.$router.push(`/professional/${this.professional.id}`)
+      this.$router.push(`/profesional/${this.professional.id}`)
     },
     truncateText(text, length) {
       if (!text) return ''
