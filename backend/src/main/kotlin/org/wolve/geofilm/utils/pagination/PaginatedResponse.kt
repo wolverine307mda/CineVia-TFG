@@ -1,4 +1,4 @@
-package org.wolve.geofilm.utils.paginationUtils
+package org.wolve.geofilm.utils.pagination
 
 import org.springframework.data.domain.Page
 

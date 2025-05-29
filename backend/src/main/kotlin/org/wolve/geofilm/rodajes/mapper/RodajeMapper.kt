@@ -9,8 +9,8 @@ import org.wolve.geofilm.ubicaciones.mapper.UbicacionMapper
 class RodajeMapper(
     private val ubicacionMapper: UbicacionMapper
 ) {
-    fun toResponse(entity: Rodaje): RodajeResponse =
-        RodajeResponse(
+    fun toResponse(entity: Rodaje): RodajeResponse {
+        return RodajeResponse(
             id = entity.id,
             notas = entity.notas,
             imagenes = entity.imagenes,
@@ -18,4 +18,5 @@ class RodajeMapper(
             updatedAt = entity.updatedAt,
             ubicacion = ubicacionMapper.toResponse(entity.ubicacion)
         )
+    }
 }

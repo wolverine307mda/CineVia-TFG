@@ -30,10 +30,9 @@ data class Saga(
     val fechaFin: Date? = null,
 
     @Column(nullable = true)
-    val imagen: String? = null,
+    var imagen: String? = null,
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JoinColumn(name = "saga_id")
+    @OneToMany(mappedBy = "saga")
     val producciones: MutableList<Produccion> = mutableListOf()
 ) {
     constructor() : this(

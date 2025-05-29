@@ -6,6 +6,7 @@ data class UpdateUsuarioRequest(
     val nombre: String?,
     val apellido: String?,
     val telefono: String?,
+    val rol: String?,
     val fechaNacimiento: LocalDate?,
     val avatar: String?
 )

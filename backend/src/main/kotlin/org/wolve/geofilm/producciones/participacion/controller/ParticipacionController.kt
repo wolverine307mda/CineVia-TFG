@@ -13,8 +13,8 @@ import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponseProfesional
 import org.wolve.geofilm.producciones.participacion.services.IParticipacionService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @RestController
 @RequestMapping("/api/participaciones")

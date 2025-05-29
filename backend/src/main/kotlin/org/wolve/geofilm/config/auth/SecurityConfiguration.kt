@@ -1,6 +1,5 @@
 package org.wolve.geofilm.config.auth
 
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -18,7 +17,7 @@ import org.springframework.web.cors.CorsConfiguration
 import org.springframework.web.cors.CorsConfigurationSource
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 import org.wolve.geofilm.auth.services.jwt.JwtAuthenticationFilter
-
+import jakarta.servlet.http.HttpServletResponse
 
 @Configuration
 @EnableWebSecurity
@@ -39,23 +38,19 @@ class SecurityConfiguration(
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
                 auth
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers(
-                        "/api/v1/auth/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui/**",
-                        "/api/producciones/**",
-                        "/api/sagas/**",
-                        "/api/profesionales/**",
-                        "/api/participaciones/**",
-                        "/api/ubicaciones/**",
-                        "/api/rodajes/**"
-                    ).permitAll()
-                    .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
-                    .requestMatchers("/api/users/me").authenticated()
-                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()
             }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .exceptionHandling {
+                it.authenticationEntryPoint { _, response, _ ->
+                    response.status = HttpServletResponse.SC_UNAUTHORIZED
+                    response.writer.write("""{ "message": "No autenticado" }""")
+                }
+                it.accessDeniedHandler { _, response, _ ->
+                    response.status = HttpServletResponse.SC_FORBIDDEN
+                    response.writer.write("""{ "message": "No tienes permisos" }""")
+                }
+            }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
 
         return http.build()

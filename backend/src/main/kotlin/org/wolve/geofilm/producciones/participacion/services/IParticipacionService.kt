@@ -3,7 +3,7 @@ package org.wolve.geofilm.producciones.participacion.services
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponseProfesional
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 interface IParticipacionService {
     fun createParticipacion(request: ParticipacionRequest): ParticipacionResponse

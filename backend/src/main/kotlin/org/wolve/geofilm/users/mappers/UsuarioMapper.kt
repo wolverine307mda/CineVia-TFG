@@ -6,6 +6,7 @@ import org.wolve.geofilm.users.dto.UpdateUsuarioRequest
 import org.wolve.geofilm.users.models.Usuario
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
+import org.wolve.geofilm.users.models.RolUsuario
 
 @Component
 class UsuarioMapper @Autowired constructor(
@@ -30,6 +31,7 @@ class UsuarioMapper @Autowired constructor(
             nombre = dto.nombre ?: nombre
             apellido = dto.apellido ?: apellido
             telefono = dto.telefono ?: telefono
+            rol = dto.rol?.let { RolUsuario.valueOf(it.uppercase()) } ?: rol
             fechaNacimiento = dto.fechaNacimiento ?: fechaNacimiento
             avatar = dto.avatar ?: avatar
         }

@@ -8,8 +8,5 @@ data class UsuarioProfileResponse(
     val apellido: String?,
     val avatar: String?,
     val telefono: String?,
-    val fechaNacimiento: String?,
-    val stats: Map<String, Int>,
-    val favorites: List<Any>,
-    val reviews: List<Any>
+    val fechaNacimiento: String?
 )

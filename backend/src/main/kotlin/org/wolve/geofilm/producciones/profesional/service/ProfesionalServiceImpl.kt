@@ -9,7 +9,9 @@ import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.mapper.ProfesionalMapper
 import org.wolve.geofilm.producciones.profesional.model.Profesional
 import org.wolve.geofilm.producciones.profesional.repository.IProfesionalRepository
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.producciones.saga.dto.SagaResponse
+import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -60,6 +62,15 @@ class ProfesionalServiceImpl(
                 profesionalMapper.toResponse(profesionalRepository.save(updated))
             }
             .orElse(null)
+    }
+
+    override fun actualizarImagen(id: String, nuevaUrl: String): ProfesionalResponse? {
+        val profesional = profesionalRepository.findById(id)
+            .orElseThrow { SagaNotFoundException("Saga no encontrada con ID $id") }
+
+        profesional.foto = nuevaUrl
+        val actualizada = profesionalRepository.save(profesional)
+        return profesionalMapper.toResponse(actualizada)
     }
 
     @CacheEvict(value = ["profesionales"], allEntries = true)

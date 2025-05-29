@@ -32,5 +32,5 @@ interface ProduccionRepository : JpaRepository<Produccion, String>, JpaSpecifica
         WHERE p.id = :id
     """)
     fun findCompletaById(@Param("id") id: String): Produccion?
-
+    fun findAllBySagaId(sagaId: String): List<Produccion>
 }

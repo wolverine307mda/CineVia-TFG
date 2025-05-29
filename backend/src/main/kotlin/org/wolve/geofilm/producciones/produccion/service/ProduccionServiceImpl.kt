@@ -11,8 +11,10 @@ import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundEx
 import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.produccion.models.*
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
+import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Service
 class ProduccionServiceImpl(
@@ -72,6 +74,15 @@ class ProduccionServiceImpl(
                 produccionMapper.toProduccionResponse(produccionRepository.save(updated))
             }
             .orElse(null)
+    }
+
+    override fun actualizarImagen(id: String, nuevaUrl: String): ProduccionResponse? {
+        val profesional = produccionRepository.findById(id)
+            .orElseThrow { SagaNotFoundException("Saga no encontrada con ID $id") }
+
+        profesional.imagen = nuevaUrl
+        val actualizada = produccionRepository.save(profesional)
+        return produccionMapper.toResponse(actualizada)
     }
 
     @CacheEvict(value = ["producciones", "produccionesByTitulo"], allEntries = true)

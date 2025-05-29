@@ -16,7 +16,7 @@ data class Profesional(
     val nombre: String,
 
     @Column(nullable = true)
-    val foto: String? = null,
+    var foto: String? = null,
 
     @Temporal(TemporalType.DATE)
     @Column(nullable = false)

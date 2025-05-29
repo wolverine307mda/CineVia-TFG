@@ -3,7 +3,10 @@ package org.wolve.geofilm.producciones.saga.service
 import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundException
+import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
 import org.wolve.geofilm.producciones.saga.dto.SagaFilterParams
 import org.wolve.geofilm.producciones.saga.dto.SagaRequest
 import org.wolve.geofilm.producciones.saga.dto.SagaResponse
@@ -11,13 +14,13 @@ import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
 import org.wolve.geofilm.producciones.saga.exceptions.SagaValidationException
 import org.wolve.geofilm.producciones.saga.mapper.SagaMapper
 import org.wolve.geofilm.producciones.saga.repository.SagaRepository
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
-import java.util.*
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Service
 class SagaServiceImpl(
     private val sagaRepository: SagaRepository,
+    private val produccionRepository: ProduccionRepository,
     private val sagaMapper: SagaMapper
 ) : ISagaService {
 
@@ -30,7 +33,7 @@ class SagaServiceImpl(
         private const val DEFAULT_SORT_FIELD = "nombre"
     }
 
-    // region CRUD básico
+    //CRUD básico
     @Cacheable(value = ["sagas"], key = "#id")
     override fun getSagaById(id: String): SagaResponse? {
         return sagaRepository.findById(id)
@@ -74,20 +77,54 @@ class SagaServiceImpl(
             .orElse(null)
     }
 
+    override fun actualizarImagenSaga(id: String, nuevaUrl: String): SagaResponse {
+        val saga = sagaRepository.findById(id)
+            .orElseThrow { SagaNotFoundException("Saga no encontrada con ID $id") }
+
+        saga.imagen = nuevaUrl
+        val actualizada = sagaRepository.save(saga)
+        return sagaMapper.toSagaResponse(actualizada)
+    }
+
     @CacheEvict(value = ["sagas", "filteredSagas"], allEntries = true)
     @Transactional
     override fun deleteSaga(id: String) {
-        sagaRepository.deleteById(id)
+        val saga = sagaRepository.findByIdOrNull(id)
+            ?: throw SagaNotFoundException("Saga con ID $id no encontrada")
+
+        val producciones = produccionRepository.findAllBySagaId(id)
+        producciones.forEach { it.saga = null }
+
+        sagaRepository.delete(saga)
     }
-    // endregion
+
+    @Transactional
+    override fun agregarProduccionASaga(sagaId: String, produccionId: String) {
+        val saga = sagaRepository.findById(sagaId)
+            .orElseThrow { SagaNotFoundException("Saga con ID $sagaId no encontrada") }
+
+        val produccion = produccionRepository.findById(produccionId)
+            .orElseThrow { ProduccionNotFoundException("Producción con ID $produccionId no encontrada") }
+
+        produccion.saga = saga
+        produccionRepository.save(produccion)
+    }
+
+    @Transactional
+    override fun eliminarProduccionDeSaga(produccionId: String) {
+        val produccion = produccionRepository.findById(produccionId)
+            .orElseThrow { ProduccionNotFoundException("Producción con ID $produccionId no encontrada") }
+
+        if (produccion.saga == null) {
+            throw IllegalStateException("La producción no pertenece a ninguna saga.")
+        }
+
+        produccion.saga = null
+        produccionRepository.save(produccion)
+    }
 
     // region Operaciones paginadas
-    override fun getAllSagasPaginated(
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginationUtils.PaginatedResponse<SagaResponse> {
+    override fun getAllSagasPaginated( page: Int, size: Int, sortBy: List<String>, sortDirection: String ): PaginationUtils.PaginatedResponse<SagaResponse> {
         val pageable = PaginationUtils.createPageable(
             page = page,
             size = size,
@@ -101,19 +138,10 @@ class SagaServiceImpl(
             pageResult.map { sagaMapper.toSagaResponse(it) }
         )
     }
-    // endregion
 
-    // region Filtrado
-    override fun filterSagas(
-        params: SagaFilterParams,
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginatedResponse<SagaResponse> {
+    override fun filterSagas( params: SagaFilterParams, page: Int, size: Int, sortBy: List<String>, sortDirection: String ): PaginatedResponse<SagaResponse> {
         val allSagas = sagaRepository.findAll()
 
-        // Filtrado
         val filtered = allSagas.filter { saga ->
             (params.nombre.isNullOrBlank() || saga.nombre.contains(params.nombre, ignoreCase = true)) &&
                     (params.isAcabada == null || saga.isAcabada == params.isAcabada) &&
@@ -122,7 +150,6 @@ class SagaServiceImpl(
                     (params.tieneImagen == null || (params.tieneImagen && saga.imagen != null) || (!params.tieneImagen && saga.imagen == null))
         }
 
-        // Ordenación
         val sorted = when {
             sortBy.any { it.equals("nombre", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
                 filtered.sortedBy { it.nombre }
@@ -139,7 +166,6 @@ class SagaServiceImpl(
             else -> filtered.sortedByDescending { it.fechaInicio }
         }
 
-        // Paginación manual
         val totalItems = sorted.size.toLong()
         val totalPages = if (size > 0) (totalItems + size - 1) / size else 0
         val paginatedItems = sorted
@@ -156,7 +182,6 @@ class SagaServiceImpl(
         )
     }
 
-    // region Métodos de apoyo
     override fun existsById(id: String): Boolean {
         return sagaRepository.existsById(id)
     }

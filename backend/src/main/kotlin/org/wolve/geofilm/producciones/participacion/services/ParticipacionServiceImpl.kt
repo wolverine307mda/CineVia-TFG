@@ -13,7 +13,7 @@ import org.wolve.geofilm.producciones.participacion.mappers.*
 import org.wolve.geofilm.producciones.participacion.repository.IParticipacionRepository
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
 import org.wolve.geofilm.producciones.profesional.service.IProfesionalService
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Service
 class ParticipacionServiceImpl(

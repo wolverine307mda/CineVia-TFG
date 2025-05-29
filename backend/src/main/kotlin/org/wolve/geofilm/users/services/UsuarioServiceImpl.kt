@@ -1,23 +1,29 @@
-// UsuarioServiceImpl.kt
 package org.wolve.geofilm.users.services
 
-import org.springframework.security.core.userdetails.UsernameNotFoundException
+import jakarta.transaction.Transactional
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.wolve.geofilm.users.exceptions.UsuarioNotFoundException
 import org.wolve.geofilm.users.dto.*
 import org.wolve.geofilm.users.mappers.UsuarioMapper
+import org.wolve.geofilm.users.models.RolUsuario
 import org.wolve.geofilm.users.models.Usuario
 import org.wolve.geofilm.users.repositories.UsuarioRepository
-import java.util.*
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
 
 @Service
+@Transactional
 class UsuarioServiceImpl(
     private val usuarioRepository: UsuarioRepository,
-    private val usuarioMapper: UsuarioMapper
+    private val usuarioMapper: UsuarioMapper,
+    private val passwordEncoder: PasswordEncoder
 ) : UsuarioService {
 
     override fun createUsuario(dto: CreateUsuarioRequest): Usuario {
         if (usuarioRepository.existsByEmail(dto.email)) {
-            throw IllegalArgumentException("El email ya está registrado")
+            throw IllegalArgumentException("El email ya está en uso")
         }
         if (usuarioRepository.existsByUsername(dto.username)) {
             throw IllegalArgumentException("El nombre de usuario ya está en uso")
@@ -27,34 +33,67 @@ class UsuarioServiceImpl(
         return usuarioRepository.save(usuario)
     }
 
+    override fun createAdmin(dto: CreateUsuarioRequest): Usuario {
+        if (usuarioRepository.existsByEmail(dto.email)) {
+            throw IllegalArgumentException("El email ya está en uso")
+        }
+        if (usuarioRepository.existsByUsername(dto.username)) {
+            throw IllegalArgumentException("El nombre de usuario ya está en uso")
+        }
+
+        val adminDto = dto.copy(rol = RolUsuario.ADMINISTRADOR)
+        val usuario = usuarioMapper.toEntity(adminDto)
+        return usuarioRepository.save(usuario)
+    }
+
     override fun findByUsername(username: String): Usuario {
         return usuarioRepository.findByUsername(username)
-            .orElseThrow { UsernameNotFoundException("Usuario no encontrado: $username") }
+            .orElseThrow { UsuarioNotFoundException("Usuario con username $username no encontrado") }
     }
 
     override fun findByEmail(email: String): Usuario {
         return usuarioRepository.findByEmail(email)
-            .orElseThrow { UsernameNotFoundException("Usuario no encontrado: $email") }
+            .orElseThrow { UsuarioNotFoundException("Usuario con email $email no encontrado") }
     }
 
-    override fun findById(id: UUID): Usuario {
+    override fun findById(id: String): Usuario {
         return usuarioRepository.findById(id)
-            .orElseThrow { NoSuchElementException("Usuario no encontrado con ID: $id") }
+            .orElseThrow { UsuarioNotFoundException("Usuario con id $id no encontrado") }
     }
 
-    override fun findAll(): List<Usuario> {
-        return usuarioRepository.findAll()
+    override fun findAll(pageable: Pageable): Page<UsuarioResponse> {
+        val page = usuarioRepository.findAll(pageable)
+        return page.map { UsuarioResponse.fromEntity(it) }
     }
 
-    override fun updateUser(id: UUID, dto: UpdateUsuarioRequest): Usuario {
+    override fun updateUser(id: String, dto: UpdateUsuarioRequest): Usuario {
         val usuario = findById(id)
         val updatedUsuario = usuarioMapper.updateEntity(usuario, dto)
         return usuarioRepository.save(updatedUsuario)
     }
 
-    override fun deleteUser(id: UUID) {
+    override fun updateAvatar(id: String, avatarUrl: String): Usuario {
+        val user = usuarioRepository.findById(id)
+            .orElseThrow { UsuarioNotFoundException("Usuario no encontrado con ID $id") }
+
+        user.avatar = avatarUrl
+        return usuarioRepository.save(user)
+    }
+
+    override fun deleteUser(id: String) {
         val usuario = findById(id)
-        usuario.idDelete = UUID.randomUUID()
+        usuarioRepository.delete(usuario)
+    }
+
+    override fun softDelete(id: String) {
+        val usuario = findById(id)
+        usuario.isDelete = true
+        usuarioRepository.save(usuario)
+    }
+
+    override fun restoreUser(id: String) {
+        val usuario = findById(id)
+        usuario.isDelete = false
         usuarioRepository.save(usuario)
     }
 
@@ -62,44 +101,71 @@ class UsuarioServiceImpl(
         val usuario = findByEmail(email)
         return UsuarioProfileResponse(
             id = usuario.id,
-            username = usuario.username,
+            username = usuario.getNombreUsuario(),
             email = usuario.email,
             nombre = usuario.nombre,
             apellido = usuario.apellido,
             avatar = usuario.avatar,
             telefono = usuario.telefono,
             fechaNacimiento = usuario.fechaNacimiento?.toString(),
-            stats = getProfileStats(usuario.id),
-            favorites = getRecentFavorites(usuario.id),
-            reviews = getRecentReviews(usuario.id)
         )
     }
 
-    override fun getProfileStats(userId: String): Map<String, Int> {
-        // Implementar lógica real aquí
-        return mapOf(
-            "favorites" to 0,
-            "reviews" to 0,
-            "comments" to 0
-        )
-    }
+    override fun findAllFiltered(
+        search: String?,
+        rol: RolUsuario?,
+        isDeleted: Boolean?,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginatedResponse<UsuarioResponse> {
 
-    override fun getRecentFavorites(userId: String): List<Any> {
-        // Implementar lógica real aquí
-        return emptyList()
-    }
+        val usuarios = usuarioRepository.findAll()
 
-    override fun getRecentReviews(userId: String): List<Any> {
-        // Implementar lógica real aquí
-        return emptyList()
-    }
-
-    override fun loadUserByUsername(username: String): Usuario {
-        // Primero intenta por email, luego por username
-        return try {
-            findByEmail(username)
-        } catch (e: UsernameNotFoundException) {
-            findByUsername(username)
+        val filtrados = usuarios.filter { usuario ->
+            (search.isNullOrBlank() || usuario.nombre.contains(search, ignoreCase = true) || usuario.email.contains(search, ignoreCase = true)) &&
+                    (rol == null || usuario.rol == rol) &&
+                    (isDeleted == null || usuario.isDelete == isDeleted)
         }
+
+        val sorted = when {
+            sortBy.any { it.equals("nombre", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtrados.sortedBy { it.nombre }
+            sortBy.any { it.equals("nombre", ignoreCase = true) } ->
+                filtrados.sortedByDescending { it.nombre }
+            sortBy.any { it.equals("email", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtrados.sortedBy { it.email }
+            sortBy.any { it.equals("email", ignoreCase = true) } ->
+                filtrados.sortedByDescending { it.email }
+            sortBy.any { it.equals("createdAt", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtrados.sortedBy { it.createdAt }
+            else -> filtrados.sortedByDescending { it.createdAt }
+        }
+
+        val totalItems = sorted.size.toLong()
+        val totalPages = if (size > 0) (totalItems + size - 1) / size else 0
+        val paginados = sorted
+            .drop(page * size)
+            .take(size)
+            .map { UsuarioResponse.fromEntity(it) }
+
+        return PaginatedResponse(
+            data = paginados,
+            totalItems = totalItems,
+            totalPages = totalPages.toInt(),
+            currentPage = page,
+            pageSize = size
+        )
     }
+
+    override fun existsByEmail(email: String): Boolean {
+        return usuarioRepository.existsByEmail(email)
+    }
+
+    override fun existsByUsername(username: String): Boolean {
+        return usuarioRepository.existsByUsername(username)
+    }
+
+    override fun loadUserByUsername(username: String) = findByEmail(username)
 }

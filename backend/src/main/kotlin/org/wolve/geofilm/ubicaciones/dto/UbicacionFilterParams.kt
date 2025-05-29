@@ -1,4 +1,5 @@
 package org.wolve.geofilm.ubicaciones.dto
 
-class UbicacionFilterParams {
-}
+data class UbicacionFilterParams(
+    val nombre: String? = null
+)

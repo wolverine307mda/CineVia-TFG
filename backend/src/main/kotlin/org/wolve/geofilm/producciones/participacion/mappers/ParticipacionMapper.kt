@@ -10,7 +10,7 @@ import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.profesional.mapper.ProfesionalMapper
 import org.wolve.geofilm.producciones.profesional.model.Profesional
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Component
 class ParticipacionMapper(

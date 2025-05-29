@@ -1,4 +1,8 @@
 package org.wolve.geofilm.auth.dto
 
-class DeviceInfo {
-}
+data class DeviceInfo(
+    val type: String,
+    val os: String,
+    val browser: String,
+    val userAgent: String
+)

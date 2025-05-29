@@ -9,17 +9,23 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.saga.dto.SagaFilterParams
 import org.wolve.geofilm.producciones.saga.dto.SagaRequest
 import org.wolve.geofilm.producciones.saga.dto.SagaResponse
 import org.wolve.geofilm.producciones.saga.service.ISagaService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
+import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/sagas")
 @Tag(name = "Sagas", description = "API para gestión de sagas cinematográficas")
-class SagaController(private val sagaService: ISagaService) {
+class SagaController(
+    private val sagaService: ISagaService,
+    private val firebaseStorageService: FirebaseStorageService
+) {
 
     @Operation(summary = "Obtener una saga por ID")
     @ApiResponses(value = [
@@ -147,5 +153,49 @@ class SagaController(private val sagaService: ISagaService) {
         @Parameter(description = "Nombre de la saga") @PathVariable nombre: String
     ): ResponseEntity<Boolean> {
         return ResponseEntity.ok(sagaService.existsByNombre(nombre))
+    }
+
+    @PostMapping("/{sagaId}/producciones/{produccionId}")
+    fun agregarProduccionASaga(
+        @PathVariable sagaId: String,
+        @PathVariable produccionId: String
+    ): ResponseEntity<Void> {
+        sagaService.agregarProduccionASaga(sagaId, produccionId)
+        return ResponseEntity.ok().build()
+    }
+    @DeleteMapping("/{sagaId}/producciones/{produccionId}")
+    fun eliminarProduccionDeSaga(
+        @PathVariable produccionId: String
+    ): ResponseEntity<Void> {
+        sagaService.eliminarProduccionDeSaga(produccionId)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{id}/upload-image")
+    fun uploadSagaImage(
+        @PathVariable id: String,
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<String> {
+        val saga = sagaService.getSagaById(id)
+            ?: return ResponseEntity.notFound().build()
+
+        // Eliminar imagen anterior si es de Firebase
+        saga.imagen?.let { urlAnterior ->
+            val bucketPrefix = "https://storage-download.googleapis.com/movietrip-e3a91.appspot.com/"
+            if (urlAnterior.startsWith(bucketPrefix)) {
+                val relativePath = urlAnterior.removePrefix(bucketPrefix)
+                try {
+                    firebaseStorageService.deleteImage(relativePath)
+                } catch (ex: IllegalArgumentException) {
+                    println("⚠️ No se pudo borrar la imagen anterior de la saga: ${ex.message}")
+                }
+            }
+        }
+
+        val time: LocalDateTime = LocalDateTime.now()
+        val filename = "saga_${id}_${time}.png"
+        val nuevaUrl = firebaseStorageService.uploadImage(file, "sagas", filename)
+        sagaService.actualizarImagenSaga(id, nuevaUrl)
+        return ResponseEntity.ok(nuevaUrl)
     }
 }

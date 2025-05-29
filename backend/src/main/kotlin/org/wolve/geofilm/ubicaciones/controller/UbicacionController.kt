@@ -10,11 +10,12 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.wolve.geofilm.ubicaciones.dto.UbicacionFilterParams
 import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
 import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
 import org.wolve.geofilm.ubicaciones.service.IUbicacionService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @RestController
 @RequestMapping("/api/ubicaciones")
@@ -128,5 +129,26 @@ class UbicacionController(
     fun deleteUbicacion(@PathVariable id: String): ResponseEntity<Void> {
         ubicacionService.deleteUbicacion(id)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/filter")
+    fun filterUbicaciones(
+        @RequestBody params: UbicacionFilterParams,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        @RequestParam(defaultValue = "nombre") sortBy: List<String>,
+        @RequestParam(defaultValue = "asc") sortDirection: String
+    ): ResponseEntity<Map<String, Any>> {
+        val result = ubicacionService.filterUbicaciones(params, page, size, sortBy, sortDirection)
+
+        return ResponseEntity.ok(
+            mapOf(
+                "data" to result.data,
+                "totalItems" to result.totalItems,
+                "totalPages" to result.totalPages,
+                "currentPage" to result.currentPage,
+                "pageSize" to result.pageSize
+            )
+        )
     }
 }

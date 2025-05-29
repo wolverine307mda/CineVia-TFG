@@ -38,16 +38,16 @@ data class Usuario(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    val rol: RolUsuario = RolUsuario.USUARIO,
+    var rol: RolUsuario = RolUsuario.USUARIO,
 
     @Column(nullable = true)
     var fechaNacimiento: LocalDate? = null,
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 1024)
     var avatar: String? = null,
 
     @Column(nullable = true)
-    var idDelete: UUID? = null,
+    var isDelete: Boolean = false,
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -66,6 +66,7 @@ data class Usuario(
     override fun getAuthorities(): Collection<GrantedAuthority> {
         return listOf(SimpleGrantedAuthority("ROLE_${rol.name}"))
     }
+    fun getNombreUsuario(): String = username
 }
 
 enum class RolUsuario {

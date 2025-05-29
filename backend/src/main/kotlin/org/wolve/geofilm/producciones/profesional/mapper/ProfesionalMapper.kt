@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.model.Profesional
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Component
 class ProfesionalMapper {

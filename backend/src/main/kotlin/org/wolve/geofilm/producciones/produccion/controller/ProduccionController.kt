@@ -10,22 +10,25 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.models.Categoria
 import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
-import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
+import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/producciones")
 @Tag(name = "Producciones", description = "Endpoints para la gestión de Producciones")
 class ProduccionController(
-    private val produccionService: IProduccionService
+    private val produccionService: IProduccionService,
+    private val firebaseStorageService: FirebaseStorageService
 ) {
 
     @Operation(summary = "Obtiene todas las producciones (sin paginación)")
@@ -231,6 +234,34 @@ class ProduccionController(
         val completa = produccionService.findProduccionCompletaById(id)
             ?: return ResponseEntity.notFound().build()
         return ResponseEntity.ok(completa)
+    }
+
+    @PostMapping("/{id}/upload-image")
+    fun uploadProduccionImage(
+        @PathVariable id: String,
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<String> {
+        val produccion = produccionService.getProduccionById(id)
+            ?: return ResponseEntity.notFound().build()
+
+        // Eliminar imagen anterior si es de Firebase
+        produccion.imagen?.let { urlAnterior ->
+            val bucketPrefix = "https://storage-download.googleapis.com/movietrip-e3a91.appspot.com/"
+            if (urlAnterior.startsWith(bucketPrefix)) {
+                val relativePath = urlAnterior.removePrefix(bucketPrefix)
+                try {
+                    firebaseStorageService.deleteImage(relativePath)
+                } catch (ex: IllegalArgumentException) {
+                    println("⚠️ No se pudo borrar la imagen anterior de la profesional: ${ex.message}")
+                }
+            }
+        }
+
+        val time: LocalDateTime = LocalDateTime.now()
+        val filename = "produccion_${id}_${time}.png"
+        val nuevaUrl = firebaseStorageService.uploadImage(file, "prucciones", filename)
+        produccionService.actualizarImagen(id, nuevaUrl)
+        return ResponseEntity.ok(nuevaUrl)
     }
 
 }

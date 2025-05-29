@@ -3,8 +3,6 @@ package org.wolve.geofilm.ubicaciones.service
 import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
 import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
@@ -13,8 +11,9 @@ import org.wolve.geofilm.ubicaciones.mapper.UbicacionMapper
 import org.wolve.geofilm.ubicaciones.models.Ubicacion
 import org.wolve.geofilm.ubicaciones.repository.UbicacionRepository
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.ubicaciones.dto.UbicacionFilterParams
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Service
 class UbicacionServiceImpl(
@@ -79,8 +78,7 @@ class UbicacionServiceImpl(
     // endregion
 
     // region Operaciones paginadas
-    override fun getAllUbicaciones(
-        page: Int,
+    override fun getAllUbicaciones(page: Int,
         size: Int,
         sortBy: List<String>,
         sortDirection: String
@@ -106,5 +104,43 @@ class UbicacionServiceImpl(
     override fun existsById(id: String): Boolean {
         return ubicacionRepository.existsById(id)
     }
-    // endregion
+
+    override fun filterUbicaciones(
+        params: UbicacionFilterParams,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginatedResponse<UbicacionResponse> {
+        val allUbicaciones = ubicacionRepository.findAll()
+
+        val filtered = allUbicaciones.filter { ubicacion ->
+            (params.nombre.isNullOrBlank() || ubicacion.nombre.contains(params.nombre, ignoreCase = true))
+        }
+
+        val sorted = when {
+            sortBy.any { it.equals("nombre", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.nombre }
+            sortBy.any { it.equals("nombre", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.nombre }
+            sortBy.any { it.equals("createdAt", ignoreCase = true) } && sortDirection.equals("asc", ignoreCase = true) ->
+                filtered.sortedBy { it.createdAt }
+            sortBy.any { it.equals("createdAt", ignoreCase = true) } ->
+                filtered.sortedByDescending { it.createdAt }
+            else -> filtered
+        }
+
+        val totalItems = sorted.size.toLong()
+        val totalPages = if (size > 0) (totalItems + size - 1) / size else 0
+        val paginated = sorted.drop(page * size).take(size).map { ubicacionMapper.toResponse(it) }
+
+        return PaginatedResponse(
+            data = paginated,
+            totalItems = totalItems,
+            totalPages = totalPages.toInt(),
+            currentPage = page,
+            pageSize = size
+        )
+    }
+
 }

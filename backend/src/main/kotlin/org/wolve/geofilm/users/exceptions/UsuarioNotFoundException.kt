@@ -1,3 +1,3 @@
-package org.wolve.geofilm.users
+package org.wolve.geofilm.users.exceptions
 
 class UsuarioNotFoundException(message: String?) : RuntimeException(message)

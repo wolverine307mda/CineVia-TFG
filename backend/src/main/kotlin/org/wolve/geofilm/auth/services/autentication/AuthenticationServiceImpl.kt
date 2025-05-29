@@ -1,7 +1,7 @@
-
 package org.wolve.geofilm.auth.services.autentication
 
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -15,6 +15,7 @@ import org.wolve.geofilm.users.repositories.UsuarioRepository
 import org.wolve.geofilm.users.mappers.UsuarioMapper
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @Service
 class AuthenticationServiceImpl(
@@ -27,17 +28,23 @@ class AuthenticationServiceImpl(
 
     override fun signup(request: SignUpRequest): JwtAuthenticationResponse {
         val formatter = DateTimeFormatter.ISO_LOCAL_DATE
-        val fechaNacimientoParseada: LocalDate = LocalDate.parse(request.fechaNacimiento, formatter)
+        val fechaNacimientoParseada: LocalDate? = request.fechaNacimiento?.let {
+            try {
+                LocalDate.parse(it, formatter)
+            } catch (e: DateTimeParseException) {
+                null
+            }
+        }
 
         val createDto = CreateUsuarioRequest(
             username = request.username,
             email = request.email,
-            password = request.password,
+            password = passwordEncoder.encode(request.password),
             nombre = request.firstName,
             apellido = request.lastName,
-            telefono = request.telefono,
+            telefono = request.phone,
             avatar = request.avatar,
-            fechaNacimiento = fechaNacimientoParseada,
+            fechaNacimiento = fechaNacimientoParseada ?: LocalDate.now(),
             rol = RolUsuario.USUARIO
         )
         val user = usuarioMapper.toEntity(createDto)
@@ -47,11 +54,17 @@ class AuthenticationServiceImpl(
     }
 
     override fun signin(request: SigninRequest): JwtAuthenticationResponse {
-        authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(request.email, request.password)
-        )
+        try {
+            authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken(request.email, request.password)
+            )
+        } catch (e: BadCredentialsException) {
+            throw IllegalArgumentException("Correo o contraseña incorrectos")
+        }
+
         val user = userRepository.findByEmail(request.email)
-            .orElseThrow { IllegalArgumentException("Correo o contraseña incorrectos") }
+            .orElseThrow { IllegalArgumentException("Usuario no encontrado") }
+
         val jwt = jwtService.generateToken(user)
         return JwtAuthenticationResponse(jwt, user.rol.name)
     }

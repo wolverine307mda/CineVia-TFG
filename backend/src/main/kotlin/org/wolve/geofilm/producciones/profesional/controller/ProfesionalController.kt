@@ -9,17 +9,21 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.service.IProfesionalService
-import org.wolve.geofilm.utils.paginationUtils.PaginatedResponse
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
+import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/profesionales")
 @Tag(name = "Profesionales", description = "Endpoints para la gestión de Profesionales")
 class ProfesionalController(
-    private val profesionalService: IProfesionalService
+    private val profesionalService: IProfesionalService,
+    private val firebaseStorageService: FirebaseStorageService
 ) {
 
     @Operation(summary = "Obtiene todos los profesionales (paginados)")
@@ -171,5 +175,33 @@ class ProfesionalController(
         )
 
         return ResponseEntity.ok(response)
+    }
+
+    @PostMapping("/{id}/upload-image")
+    fun uploadProfesionalImage(
+        @PathVariable id: String,
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<String> {
+        val profesional = profesionalService.getProfesionalById(id)
+            ?: return ResponseEntity.notFound().build()
+
+        // Eliminar imagen anterior si es de Firebase
+        profesional.foto?.let { urlAnterior ->
+            val bucketPrefix = "https://storage-download.googleapis.com/movietrip-e3a91.appspot.com/"
+            if (urlAnterior.startsWith(bucketPrefix)) {
+                val relativePath = urlAnterior.removePrefix(bucketPrefix)
+                try {
+                    firebaseStorageService.deleteImage(relativePath)
+                } catch (ex: IllegalArgumentException) {
+                    println("⚠️ No se pudo borrar la imagen anterior de la profesional: ${ex.message}")
+                }
+            }
+        }
+
+        val time: LocalDateTime = LocalDateTime.now()
+        val filename = "profesional_${id}_${time}.png"
+        val nuevaUrl = firebaseStorageService.uploadImage(file, "profesionales", filename)
+        profesionalService.actualizarImagen(id, nuevaUrl)
+        return ResponseEntity.ok(nuevaUrl)
     }
 }

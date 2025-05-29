@@ -7,5 +7,5 @@ import org.springframework.context.annotation.Configuration
 @ConfigurationProperties(prefix = "jwt")
 class JwtConfig {
     lateinit var secret: String
-    var expiration: Long = 3600
+    var expiration: Long = 86400
 }

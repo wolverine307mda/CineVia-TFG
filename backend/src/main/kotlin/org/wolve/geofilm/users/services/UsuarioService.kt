@@ -1,21 +1,39 @@
-// IUsuarioService.kt
 package org.wolve.geofilm.users.services
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.wolve.geofilm.users.dto.*
+import org.wolve.geofilm.users.models.RolUsuario
 import org.wolve.geofilm.users.models.Usuario
-import java.util.*
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
 
 interface UsuarioService : UserDetailsService {
+    // CRUD básico
     fun createUsuario(dto: CreateUsuarioRequest): Usuario
+    fun createAdmin(dto: CreateUsuarioRequest): Usuario
     fun findByUsername(username: String): Usuario
     fun findByEmail(email: String): Usuario
-    fun findById(id: UUID): Usuario
-    fun findAll(): List<Usuario>
-    fun updateUser(id: UUID, dto: UpdateUsuarioRequest): Usuario
-    fun deleteUser(id: UUID)
+    fun findById(id: String): Usuario
+    fun findAll(pageable: Pageable): Page<UsuarioResponse>
+    fun updateUser(id: String, dto: UpdateUsuarioRequest): Usuario
+    fun updateAvatar(id: String, avatarUrl: String): Usuario
+    fun deleteUser(id: String)
+
+    // Funcionalidades adicionales
     fun getCurrentUserProfile(email: String): UsuarioProfileResponse
-    fun getProfileStats(userId: String): Map<String, Int>
-    fun getRecentFavorites(userId: String): List<Any>
-    fun getRecentReviews(userId: String): List<Any>
+    fun findAllFiltered(
+        search: String?,
+        rol: RolUsuario?,
+        isDeleted: Boolean?,
+        page: Int,
+        size: Int,
+        sortBy: List<String>,
+        sortDirection: String
+    ): PaginatedResponse<UsuarioResponse>
+
+    fun softDelete(id: String)
+    fun restoreUser(id: String)
+    fun existsByEmail(email: String): Boolean
+    fun existsByUsername(username: String): Boolean
 }

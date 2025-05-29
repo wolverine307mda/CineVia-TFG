@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
 import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
 import org.wolve.geofilm.ubicaciones.models.Ubicacion
-import org.wolve.geofilm.utils.paginationUtils.PaginationUtils
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Component
 class UbicacionMapper {
