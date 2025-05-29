@@ -1,169 +1,202 @@
 package org.wolve.geofilm.producciones.produccion.service
 
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.*
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
+import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundException
 import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
+import org.wolve.geofilm.producciones.produccion.models.Categoria
+import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
+import org.wolve.geofilm.producciones.produccion.models.Produccion
+import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
+import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class ProduccionServiceImplTest {
 
  @Mock
- private lateinit var repository: ProduccionRepository
+ private lateinit var produccionRepository: ProduccionRepository
 
  @Mock
- private lateinit var mapper: ProduccionMapper
+ private lateinit var produccionMapper: ProduccionMapper
 
- @InjectMocks
  private lateinit var service: ProduccionServiceImpl
 
- /*@Test
- fun `getProduccionById should return produccion when found`() {
-  val id = "test-id"
-  val produccion = Produccion(id = id)
-  val response = ProduccionResponse(id = id)
+ @BeforeEach
+ fun setUp() {
+  service = ProduccionServiceImpl(produccionRepository, produccionMapper)
+ }
 
-  `when`(repository.findById(id)).thenReturn(Optional.of(produccion))
-  `when`(mapper.toProduccionResponse(produccion)).thenReturn(response)
+ @Test
+ fun `getProduccionById - existing id returns response`() {
+  val id = "id1"
+  val entity = mock(Produccion::class.java)
+  val response = mock(ProduccionResponse::class.java)
+  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(entity))
+  whenever(produccionMapper.toProduccionResponse(entity)).thenReturn(response)
 
   val result = service.getProduccionById(id)
 
-  assertNotNull(result)
-  assertEquals(id, result?.id)
- }*/
-
- @Test
- fun `getProduccionById should return null when not found`() {
-  val id = "non-existent"
-
-  `when`(repository.findById(id)).thenReturn(Optional.empty())
-
-  val result = service.getProduccionById(id)
-
-  assertNull(result)
- }
-
- /*@Test
- fun `createProduccion should save and return response`() {
-  val request = ProduccionRequest(titulo = "New Movie")
-  val produccion = Produccion(titulo = "New Movie")
-  val response = ProduccionResponse(id = "new-id", titulo = "New Movie")
-
-  `when`(mapper.toProduccionEntity(request)).thenReturn(produccion)
-  `when`(repository.save(produccion)).thenReturn(produccion)
-  `when`(mapper.toProduccionResponse(produccion)).thenReturn(response)
-
-  val result = service.createProduccion(request)
-
-  assertEquals("New Movie", result.titulo)
-  verify(repository).save(produccion)
+  assertEquals(response, result)
+  verify(produccionRepository).findById(id)
+  verify(produccionMapper).toProduccionResponse(entity)
  }
 
  @Test
- fun `updateProduccion should update existing produccion`() {
-  val id = "test-id"
-  val request = ProduccionRequest(titulo = "Updated Title")
-  val existing = Produccion(id = id, titulo = "Original Title")
-  val updated = Produccion(id = id, titulo = "Updated Title")
-  val response = ProduccionResponse(id = id, titulo = "Updated Title")
-
-  `when`(repository.findById(id)).thenReturn(Optional.of(existing))
-  `when`(repository.save(any())).thenReturn(updated)
-  `when`(mapper.toProduccionResponse(updated)).thenReturn(response)
-
-  val result = service.updateProduccion(id, request)
-
-  assertNotNull(result)
-  assertEquals("Updated Title", result?.titulo)
- }
-
- @Test
- fun `updateProduccion should return null for non-existent produccion`() {
-  val id = "non-existent"
-  val request = ProduccionRequest(titulo = "Updated Title")
-
-  `when`(repository.findById(id)).thenReturn(Optional.empty())
-
-  val result = service.updateProduccion(id, request)
-
-  assertNull(result)
- }*/
-
- @Test
- fun `deleteProduccion should delete existing produccion`() {
-  val id = "test-id"
-
-  service.deleteProduccion(id)
-
-  verify(repository).deleteById(id)
- }
-
-/* @Test
- fun `filtrarProducciones should apply filters correctly`() {
-  val produccion1 = Produccion(
-   titulo = "Action Movie",
-   tipo = TipoProduccion.PELICULA,
-   estreno = Date(),
-   duracion = 120,
-   categorias = mutableSetOf(Categoria.ACCION),
-   clasificacionEdad = ClasificacionEdad.MAYORES_12
-  )
-
-  val produccion2 = Produccion(
-   titulo = "Comedy Series",
-   tipo = TipoProduccion.SERIE,
-   estreno = Date(),
-   duracion = 30,
-   categorias = mutableSetOf(Categoria.COMEDIA),
-   clasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS
-  )
-
-  `when`(repository.findAll()).thenReturn(listOf(produccion1, produccion2))
-  `when`(mapper.toProduccionResponse(produccion1)).thenReturn(
-   ProduccionResponse(id = "1", titulo = "Action Movie")
-  )
-
-  val result = service.filtrarProducciones(
-   titulo = "action",
-   tipo = TipoProduccion.PELICULA,
-   estrenoDesde = null,
-   estrenoHasta = null,
-   categorias = setOf(Categoria.ACCION),
-   clasificacionEdad = ClasificacionEdad.MAYORES_12,
-   duracionMin = 100,
-   duracionMax = 150,
-   page = 0,
-   size = 10,
-   sortBy = listOf("titulo"),
-   sortDirection = "asc"
-  )
-
-  assertEquals(1, result.totalItems)
-  assertEquals("Action Movie", result.data[0].titulo)
- }*/
-
- @Test
- fun `findEntityById should throw exception when not found`() {
-  val id = "non-existent"
-
-  `when`(repository.findById(id)).thenReturn(Optional.empty())
+ fun `getProduccionById - missing id throws exception`() {
+  val id = "missing"
+  whenever(produccionRepository.findById(id)).thenReturn(Optional.empty())
 
   assertThrows(ProduccionNotFoundException::class.java) {
-   service.findEntityById(id)
+   service.getProduccionById(id)
   }
  }
 
  @Test
- fun `should return all enum values`() {
-  assertTrue(service.getClasificacionesEdad().isNotEmpty())
-  assertTrue(service.getCategoriasDisponibles().isNotEmpty())
-  assertTrue(service.getTiposProduccion().isNotEmpty())
+ fun `createProduccion - maps and saves correctly`() {
+  val request = mock(ProduccionRequest::class.java)
+  val entity = mock(Produccion::class.java)
+  val saved = mock(Produccion::class.java)
+  val response = mock(ProduccionResponse::class.java)
+  whenever(produccionMapper.toProduccionEntity(request)).thenReturn(entity)
+  whenever(produccionRepository.save(entity)).thenReturn(saved)
+  whenever(produccionMapper.toProduccionResponse(saved)).thenReturn(response)
+
+  val result = service.createProduccion(request)
+
+  assertEquals(response, result)
+  verify(produccionMapper).toProduccionEntity(request)
+  verify(produccionRepository).save(entity)
+  verify(produccionMapper).toProduccionResponse(saved)
+ }
+
+ @Test
+ fun `updateProduccion - updates when exists`() {
+  val id = "id2"
+  val request = mock(ProduccionRequest::class.java)
+  val existing = Produccion(
+   id = id,
+   titulo = "old",
+   tipo = TipoProduccion.PELICULA,
+   estreno = Date(),
+   duracion = 100,
+   sinopsis = "old",
+   imagen = null,
+   informacion = null,
+   puntuacion = 5.0,
+   categorias = mutableSetOf(Categoria.ACCION),
+   clasificacionEdad = ClasificacionEdad.MAYORES_7
+  )
+  val updated = existing.copy(
+   titulo = "new",
+   duracion = 120,
+   sinopsis = "new",
+   puntuacion = 8.0,
+   categorias = mutableSetOf(),
+   clasificacionEdad = ClasificacionEdad.MAYORES_12
+  )
+  val response = mock(ProduccionResponse::class.java)
+  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(existing))
+  whenever(produccionRepository.save(any<Produccion>())).thenReturn(updated)
+  whenever(produccionMapper.toProduccionResponse(updated)).thenReturn(response)
+
+  val result = service.updateProduccion(id, request)
+
+  assertEquals(response, result)
+  verify(produccionRepository).save(any<Produccion>())
+  verify(produccionMapper).toProduccionResponse(updated)
+ }
+
+ @Test
+ fun `deleteProduccion - deletes when exists`() {
+  val id = "id3"
+  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(mock(Produccion::class.java)))
+
+  service.deleteProduccion(id)
+
+  verify(produccionRepository).deleteById(id)
+ }
+
+ @Test
+ fun `filtrarProducciones - returns paginated with correct args`() {
+  val page = 0; val size = 5
+  val pageRequest: Pageable = PageRequest.of(page, size)
+  val entity = mock(Produccion::class.java)
+  val pageImpl = PageImpl(listOf(entity), pageRequest, 1)
+  val paginatedResp: PaginatedResponse<*>? = mock(PaginatedResponse::class.java)
+  whenever(produccionRepository.findAll(any(), eq(pageRequest))).thenReturn(pageImpl)
+
+  val result = service.filtrarProducciones(
+   titulo = null,
+   tipo = null,
+   estrenoDesde = null,
+   estrenoHasta = null,
+   categorias = null,
+   clasificacionEdad = null,
+   duracionMin = null,
+   duracionMax = null,
+   page = page,
+   size = size,
+   sortBy = listOf(),
+   sortDirection = ""
+  )
+
+  assertEquals(paginatedResp, result)
+  verify(produccionRepository).findAll(any(), eq(pageRequest))
+  verify(produccionMapper).toPaginatedResponse(pageImpl)
+ }
+
+ @Test
+ fun `getClasificacionesEdad returns all enums`() {
+  val enums = ClasificacionEdad.values().toList()
+  assertEquals(enums, service.getClasificacionesEdad())
+ }
+
+ @Test
+ fun `getCategoriasDisponibles returns all enums`() {
+  val enums = Categoria.values().toList()
+  assertEquals(enums, service.getCategoriasDisponibles())
+ }
+
+ @Test
+ fun `getTiposProduccion returns all enums`() {
+  val enums = TipoProduccion.values().toList()
+  assertEquals(enums, service.getTiposProduccion())
+ }
+
+ @Test
+ fun `findProduccionCompletaById - maps when exists`() {
+  val id = "full1"
+  val fullEntity = mock(Produccion::class.java)
+  val fullResponse = mock(ProduccionCompletaResponse::class.java)
+  whenever(produccionRepository.findCompletaById(id)).thenReturn(fullEntity)
+  whenever(produccionMapper.toCompletaResponse(fullEntity)).thenReturn(fullResponse)
+
+  val result = service.findProduccionCompletaById(id)
+
+  assertEquals(fullResponse, result)
+ }
+
+ @Test
+ fun `countParticipacionesByProduccionId returns count`() {
+  val id = "cnt1"
+  whenever(produccionRepository.countParticipacionesById(id)).thenReturn(3L)
+  assertEquals(3L, service.countParticipacionesByProduccionId(id))
  }
 }
