@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import Header from './components/principal/Header.vue'
-import Footer from './components/principal/Footer.vue'
+import toast from '@/utils/toast'
 
 const isDarkMode = ref(false)
 const authStore = useAuthStore()

@@ -7,7 +7,7 @@
           <div class="d-flex align-items-center mb-3">
             <!-- Logo SVG -->
             <img
-                src="../../assets/logo.svg"
+                src="../../assets/logo.png"
                 alt="Logo MovieTrip"
                 width="60"
                 height="60"
@@ -19,7 +19,8 @@
           </div>
 
           <p class="text-light">
-            Tu plataforma favorita para descubrir, compartir y disfrutar del mundo del cine.
+            Tu plataforma favorita para descubrir,
+            <br>compartir y disfrutar del mundo del cine.
           </p>
         </div>
 

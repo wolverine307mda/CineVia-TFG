@@ -21,7 +21,7 @@
 
         <!-- Tabla de profesionales con tamaños fijos -->
         <div class="table-container">
-          <table class="producciones-table">
+          <table class="producciones-table" translate="no">
             <thead>
             <tr>
               <th style="width: 40%;" @click="sortBy('nombre')">
@@ -36,25 +36,39 @@
               <th style="width: 20%; text-align: center;">
                 Lugar Nacimiento
               </th>
-              <th style="width: 10%; text-align: center;">Acciones</th>
+              <th style="width: 10%; text-align: left;">Acciones</th>
             </tr>
             </thead>
             <tbody>
             <tr v-for="profesional in profesionales" :key="profesional.id">
               <td style="width: 40%;">{{ profesional.nombre }}</td>
-              <td style="width: 15%; text-align: center;">{{ formatDate(profesional.fechaNacimiento) }}</td>
-              <td style="width: 15%; text-align: center;">{{ formatDate(profesional.fechaInicio) }}</td>
-              <td style="width: 20%; text-align: center;">{{ profesional.lugarNacimiento }}</td>
-              <td style="width: 10%; text-align: center;" class="actions">
-                <button @click="openModal(profesional)" class="btn-edit" title="Editar">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button @click="confirmDelete(profesional)" class="btn-delete" title="Eliminar">
-                  <i class="fas fa-trash"></i>
-                </button>
-                <button @click="viewDetails(profesional)" class="btn-view" title="Detalles">
-                  <i class="fas fa-info-circle"></i>
-                </button>
+              <td style="width: 15%; text-align: center;">
+                <span class="truncate-cell" :title="profesional.nombre">
+                  {{ formatDate(profesional.fechaNacimiento) }}
+                </span>
+              </td>
+              <td style="width: 15%; text-align: center;">
+                  <span class="truncate-cell" :title="profesional.nombre">
+                    {{ formatDate(profesional.fechaInicio) }}
+                  </span>
+              </td>
+              <td style="width: 20%; text-align: center;">
+                <span class="truncate-cell" :title="profesional.lugarNacimiento">
+                  {{ profesional.lugarNacimiento }}
+                </span>
+              </td>
+              <td style="width: 10%; text-align: center;">
+                  <div class="action-buttons">
+                    <button @click="openModal(profesional)" class="btn-edit" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button @click="confirmDelete(profesional)" class="btn-delete" title="Eliminar">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                    <button @click="$router.push(`/profesional/${profesional.id}`)" class="btn-view" title="Detalles">
+                      <i class="fas fa-info-circle"></i>
+                    </button>
+                  </div>
               </td>
             </tr>
             <tr v-if="profesionales.length === 0 && !loading">
@@ -104,27 +118,33 @@
     />
 
     <!-- Modal de confirmación para eliminar -->
-    <ConfirmModal
-        v-if="showConfirmModal"
-        :show="showConfirmModal"
-        title="Confirmar eliminación"
-        :message="confirmMessage"
-        @confirm="deleteProfesional"
-        @cancel="showConfirmModal = false"
-    />
+    <div v-if="showConfirmModal" class="modal-overlay">
+      <div class="delete-confirmation-modal">
+        <div class="modal-header">
+          <h3>Confirmar eliminación</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás completamente seguro de que deseas eliminar al profesional "{{ profesionalToDelete?.nombre }}"?</p>
+          <p>La acción no se podrá revertir y toda la información asociada se perderá permanentemente.</p>
+          <p>¿Deseas continuar?</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="showConfirmModal = false" class="cancel-btn">Cancelar</button>
+          <button @click="deleteProfesional" class="confirm-delete-btn">Eliminar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import ProfesionalModal from "@/components/modales/edicion/ProfesionalModal.vue";
 import ProfessionalsService from '@/services/profesional.service.js';
-import ConfirmModal from "@/components/cards/ConfirmModal.vue";
 
 export default {
   name: 'AdminProfesionales',
   components: {
-    ProfesionalModal,
-    ConfirmModal
+    ProfesionalModal
   },
   data() {
     return {
@@ -143,20 +163,13 @@ export default {
       profesionalToDelete: null
     };
   },
-  computed: {
-    confirmMessage() {
-      return this.profesionalToDelete
-          ? `¿Estás seguro de que deseas eliminar a ${this.profesionalToDelete.nombre}?`
-          : '';
-    }
-  },
   methods: {
     async fetchProfesionales() {
       this.loading = true;
       try {
-        const filters = this.searchQuery ? { nombre: this.searchQuery } : {};
+        const filters = this.searchQuery ? {nombre: this.searchQuery} : {};
 
-        const result = await ProfessionalsService.searchProfessionals(filters, {
+        const result = await ProfessionalsService.fetchProfessionals(filters, {
           page: this.currentPage - 1,
           size: this.itemsPerPage,
           sortBy: this.sortField,
@@ -204,7 +217,14 @@ export default {
     },
 
     openModal(profesional) {
-      this.selectedProfesional = profesional ? { ...profesional } : null;
+      this.selectedProfesional = profesional ? { ...profesional } : {
+        nombre: '',
+        fechaNacimiento: '',
+        fechaInicio: '',
+        lugarNacimiento: '',
+        biografia: '',
+        foto: ''
+      };
       this.showModal = true;
     },
 
@@ -229,10 +249,6 @@ export default {
         const errorMessage = ProfessionalsService.handleError(error, 'Error al guardar el profesional');
         this.$toast.error(errorMessage);
       }
-    },
-
-    viewDetails(profesional) {
-      this.$router.push({ name: 'ProfesionalDetalle', params: { id: profesional.id } });
     },
 
     confirmDelete(profesional) {
@@ -260,43 +276,23 @@ export default {
 };
 </script>
 
+
 <style scoped>
-
-.table-container thead{
-  background-color: #f8fafc;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.table-container th{
-  color: #1e293b;
-}
-
-.dark-mode .table-container th{
-  color: white;
-}
-
-.dark-mode .table-container thead{
-  background-color: #121212;
-  color: white;
-}
-
+/* Contenedor principal */
 .producciones-container {
-  margin-left: 50px;
-  margin-top: 26px;
-  width: calc(100% - 100px);
-  min-height: 50vh;
-  transition: background-color 0.3s ease;
-  color: var(--text-primary);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .main-content {
   display: flex;
-  gap: 2rem;
   height: calc(100vh - 180px);
 }
 
+/* Sección de la tabla */
 .table-section {
   width: 100%;
   min-width: 0;
@@ -304,263 +300,18 @@ export default {
   flex-direction: column;
 }
 
-.search-container {
-  display: flex;
-  margin-bottom: 1.5rem;
-}
-
-.search-box {
-  position: relative;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-}
-
-.search-box i.fa-search {
-  position: absolute;
-  left: 12px;
-  color: var(--text-secondary);
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(126, 91, 239, 0.2);
-}
-
-.btn-new-icon {
-  position: absolute;
-  right: 8px;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-new-icon:hover {
-  background: var(--primary-hover);
-  transform: scale(1.05);
-}
-
-.table-container {
-  background: var(--card-bg);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px var(--shadow-color);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.producciones-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.producciones-table th,
-.producciones-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.producciones-table th {
-  background: var(--card-header-bg-solid);
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.producciones-table th:hover {
-  background: rgba(126, 91, 239, 0.05);
-}
-
-.producciones-table tr:last-child td {
-  border-bottom: none;
-}
-
-.producciones-table tr:hover td {
-  background: rgba(126, 91, 239, 0.03);
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-edit, .btn-delete, .btn-view {
-  padding: 0.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.btn-edit {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--info-color);
-}
-
-.btn-edit:hover {
-  background: rgba(59, 130, 246, 0.2);
-}
-
-.btn-delete {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
-}
-
-.btn-delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-}
-
-.btn-view {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-}
-
-.btn-view:hover {
-  background: rgba(16, 185, 129, 0.2);
-}
-
-.no-results {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary);
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  margin-top: auto;
-}
-
-.pagination-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.page-info {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-/* Dark mode variables */
-:root {
-  --primary-color: #7e5bef;
-  --primary-hover: #6d46e8;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-  --card-header-bg-solid: #f1f5f9;
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --card-header-bg: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --shadow-color: rgba(0, 0, 0, 0.05);
-}
-
-.dark-mode {
-  --primary-color: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-  --card-header-bg-solid: #1e293b;
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --card-header-bg: #1e293b;
-  --border-color: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --shadow-color: rgba(0, 0, 0, 0.2);
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .main-content {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .table-section {
-    width: 100%;
-  }
-}
-
-@media (max-width: 768px) {
-  .producciones-table {
-    display: block;
-    overflow-x: auto;
-  }
-}
-
-/* Contenedor principal */
 .search-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 20px;
   width: 100%;
 }
 
-/* Barra de búsqueda contenedor */
 .search-bar {
   display: flex;
-  gap: 1rem;
+  gap: 16px;
   align-items: center;
   width: 100%;
 }
 
-/* Contenedor del input de búsqueda */
 .search-input-container {
   flex: 1;
   position: relative;
@@ -571,70 +322,75 @@ export default {
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  height: 3rem;
+  height: 44px;
   transition: all 0.3s ease;
 }
 
-/* Efecto al enfocar el input */
-.search-input-container:focus-within {
-  border-color: #7e5bef;
-  box-shadow: 0 0 0 3px rgba(126, 91, 239, 0.15);
+.dark-mode .search-input-container {
+  background: #2d3748;
+  border-color: #4a5568;
 }
 
-/* Icono de lupa */
+.search-input-container:focus-within {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
 .search-icon {
   position: absolute;
-  left: 1rem;
-  color: #64748b;
-  font-size: 1rem;
+  left: 14px;
+  color: #a0aec0;
+  font-size: 16px;
 }
 
-/* Campo de entrada */
 .search-input {
   flex: 1;
-  padding: 0 1rem 0 2.5rem;
+  padding: 0 14px 0 42px;
   border: none;
   background: transparent;
-  color: #1e293b;
-  font-size: 0.95rem;
+  color: #2d3748;
+  font-size: 14px;
   outline: none;
   height: 100%;
 }
 
-/* Botón de búsqueda */
+.dark-mode .search-input {
+  color: #e2e8f0;
+}
+
 .search-button {
-  padding: 0 1.5rem;
-  height: 100%;
-  background: #7e5bef;
+  padding: 0 20px;
+  height: 44px;
+  background: #4299e1;
   color: white;
   border: none;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 14px;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 8px;
 }
 
 .search-button:hover {
-  background: #6d46e8;
+  background: #3182ce;
 }
 
-/* Botón "Nueva Producción" */
 .new-button {
-  padding: 0 1.5rem;
-  height: 3rem;
+  padding: 0 20px;
+  height: 44px;
   background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 14px;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -649,25 +405,350 @@ export default {
   transform: translateY(0);
 }
 
-/* Modo oscuro */
-.dark-mode .search-input-container {
+/* Tabla de profesionales */
+.table-container {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.dark-mode .table-container {
   background: #1e293b;
   border-color: #334155;
 }
 
-.dark-mode .search-input {
-  color: #f8fafc;
+.producciones-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.dark-mode .search-icon {
-  color: #94a3b8;
+.producciones-table th,
+.producciones-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* Responsive para móviles */
+.dark-mode .producciones-table th,
+.dark-mode .producciones-table td {
+  border-bottom-color: #334155;
+}
+
+.producciones-table th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.dark-mode .producciones-table th {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+.producciones-table th:hover {
+  background: rgba(66, 153, 225, 0.05);
+  cursor: pointer;
+}
+
+.dark-mode .producciones-table th:hover {
+  background: rgba(66, 153, 225, 0.1);
+}
+
+.producciones-table tr:last-child td {
+  border-bottom: none;
+}
+
+.producciones-table tr:hover td {
+  background: rgba(66, 153, 225, 0.03);
+}
+
+.dark-mode .producciones-table tr:hover td {
+  background: rgba(66, 153, 225, 0.05);
+}
+
+/* Columnas específicas */
+.producciones-table td:nth-child(2), /* Fecha Nacimiento */
+.producciones-table td:nth-child(3), /* Fecha Inicio */
+.producciones-table td:nth-child(4), /* Lugar Nacimiento */
+.producciones-table td:nth-child(5) { /* Acciones */
+  text-align: center;
+}
+
+/* Botones de acción */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-edit, .btn-delete, .btn-view {
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-view {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.btn-view:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.no-results, .loading-row {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+
+.dark-mode .no-results,
+.dark-mode .loading-row {
+  color: #a0aec0;
+}
+
+.loading-row i {
+  margin-right: 8px;
+  color: #4299e1;
+}
+
+/* Paginación */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  margin-top: auto;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #4a5568;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .pagination-btn {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #cbd5e0;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #718096;
+  min-width: 120px;
+  text-align: center;
+}
+
+.dark-mode .page-info {
+  color: #a0aec0;
+}
+
+/* Modal de confirmación */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-modal {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px solid #ef4444;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease;
+}
+
+.dark-mode .delete-confirmation-modal {
+  background: #1e293b;
+  border-color: #ef4444;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  background: #ef4444;
+  color: white;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #2d3748;
+  background: white;
+}
+
+.dark-mode .modal-body {
+  color: #e2e8f0;
+  background: #1e293b;
+}
+
+.modal-body p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f7fafc;
+}
+
+.dark-mode .modal-footer {
+  background: #1e293b;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: #ffffff;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.dark-mode .cancel-btn {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.cancel-btn:hover {
+  background: #f1f5f9;
+}
+
+.dark-mode .cancel-btn:hover {
+  background: #475569;
+}
+
+.confirm-delete-btn {
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.confirm-delete-btn:hover {
+  background: #dc2626;
+}
+
+/* Animaciones */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilo para fechas */
+.date-cell {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.dark-mode .date-cell {
+  color: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .main-content {
+    flex-direction: column;
+    height: auto;
+  }
+}
+
 @media (max-width: 768px) {
+  .producciones-container {
+    padding: 16px;
+  }
+
   .search-bar {
     flex-direction: column;
-    gap: 0.75rem;
   }
 
   .search-input-container,
@@ -675,10 +756,33 @@ export default {
     width: 100%;
   }
 
-  .search-button {
-    padding: 0.75rem;
-    border-left: none;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  .producciones-table th,
+  .producciones-table td {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
+.producciones-table tr {
+  display: table-row;
+}
+
+.producciones-table td {
+  vertical-align: middle !important;
+  height: 100%;
+}
+
+.producciones-table td span,
+.producciones-table td div,
+.producciones-table td font {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+
 </style>

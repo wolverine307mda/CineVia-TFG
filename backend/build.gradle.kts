@@ -78,6 +78,14 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("io.lettuce:lettuce-core")
 
+    // 📌 Envio de emails
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+
+    // 📌 Firebase
+    implementation("com.google.firebase:firebase-admin:9.2.0")
+    implementation("com.google.cloud:google-cloud-storage:2.27.0")
+
     // 📌 Test y Contenedores
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")

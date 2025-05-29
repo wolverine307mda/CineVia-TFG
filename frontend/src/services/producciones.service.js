@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+﻿import api from './api';
 
 class ProduccionesService {
 
@@ -24,7 +24,7 @@ class ProduccionesService {
                 params.sortDirection = pagination.sortDirection || 'asc';
             }
 
-            const response = await axios.get('/api/producciones/filtrar', {
+            const response = await api.get('/api/producciones/filtrar', {
                 params,
                 paramsSerializer: params => {
                     const parts = [];
@@ -76,9 +76,9 @@ class ProduccionesService {
     async fetchFilterOptions() {
         try {
             const [tiposRes, categoriasRes, clasificacionesRes] = await Promise.all([
-                axios.get('/api/producciones/tipos'),
-                axios.get('/api/producciones/categorias'),
-                axios.get('/api/producciones/clasificaciones-edad')
+                api.get('/api/producciones/tipos'),
+                api.get('/api/producciones/categorias'),
+                api.get('/api/producciones/clasificaciones-edad')
             ]);
 
             return {
@@ -94,7 +94,7 @@ class ProduccionesService {
 
     async createProduccion(produccionData) {
         try {
-            const response = await axios.post('/api/producciones', produccionData);
+            const response = await api.post('/api/producciones', produccionData);
             return this.formatProduccion(response.data);
         } catch (error) {
             console.error('Error creating produccion:', error);
@@ -104,7 +104,7 @@ class ProduccionesService {
 
     async updateProduccion(id, produccionData) {
         try {
-            const response = await axios.put(`/api/producciones/${id}`, produccionData);
+            const response = await api.put(`/api/producciones/${id}`, produccionData);
             return this.formatProduccion(response.data);
         } catch (error) {
             console.error('Error updating produccion:', error);
@@ -114,7 +114,7 @@ class ProduccionesService {
 
     async deleteProduccion(id) {
         try {
-            await axios.delete(`/api/producciones/${id}`);
+            await api.delete(`/api/producciones/${id}`);
             return true;
         } catch (error) {
             console.error('Error deleting produccion:', error);
@@ -182,9 +182,18 @@ class ProduccionesService {
         return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
     }
 
+    async uploadProduccionImage(id, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post(`/api/producciones/${id}/upload-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    }
+
     async fetchPeliculaCompleta(idProduccion) {
         try {
-            const produccionResponse = await axios.get(`/api/producciones/completa/${idProduccion}`);
+            const produccionResponse = await api.get(`/api/producciones/completa/${idProduccion}`);
             const produccionData = produccionResponse.data;
 
             const peliculaCompleta = {
@@ -198,7 +207,7 @@ class ProduccionesService {
 
             if (produccionData.saga?.id) {
                 secondaryRequests.push(
-                    axios.get(`/api/sagas/${produccionData.saga.id}`)
+                    api.get(`/api/sagas/${produccionData.saga.id}`)
                         .then(response => {
                             peliculaCompleta.sagaCompleta = response.data;
                         })
@@ -212,7 +221,7 @@ class ProduccionesService {
             if (produccionData.participaciones?.length > 0) {
                 produccionData.participaciones.forEach(participacion => {
                     secondaryRequests.push(
-                        axios.get(`/api/participaciones/${participacion.id}`)
+                        api.get(`/api/participaciones/${participacion.id}`)
                             .then(response => {
                                 peliculaCompleta.participacionesCompletas.push(response.data);
                             })
@@ -226,7 +235,7 @@ class ProduccionesService {
             if (produccionData.rodajes?.length > 0) {
                 produccionData.rodajes.forEach(rodaje => {
                     secondaryRequests.push(
-                        axios.get(`/api/rodajes/${rodaje.id}`)
+                        api.get(`/api/rodajes/${rodaje.id}`)
                             .then(response => {
                                 peliculaCompleta.rodajesCompletos.push(response.data);
                             })

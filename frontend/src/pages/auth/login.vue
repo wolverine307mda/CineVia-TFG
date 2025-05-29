@@ -20,6 +20,11 @@
           <p>Gestiona tus películas y listas favoritas</p>
         </div>
 
+        <!-- Error message -->
+        <div v-if="loginError" class="error-message">
+          <i class="fas fa-exclamation-circle"></i> {{ loginError }}
+        </div>
+
         <!-- Login form -->
         <form @submit.prevent="handleLogin" class="login-form">
           <!-- Email field -->
@@ -28,11 +33,13 @@
             <div class="input-group">
               <input
                   id="email"
-                  v-model="email"
+                  v-model.trim="email"
                   type="email"
                   placeholder="tu@email.com"
                   required
                   autocomplete="username"
+                  :class="{ 'invalid': loginError }"
+                  @input="clearError"
               >
               <i class="fas fa-envelope input-icon" />
             </div>
@@ -47,11 +54,13 @@
             <div class="input-group">
               <input
                   id="password"
-                  v-model="password"
+                  v-model.trim="password"
                   :type="showPassword ? 'text' : 'password'"
                   placeholder="••••••••"
                   required
                   autocomplete="current-password"
+                  :class="{ 'invalid': loginError }"
+                  @input="clearError"
               >
               <button
                   type="button"
@@ -83,10 +92,10 @@
 
           <!-- Social login -->
           <div class="social-login">
-            <button type="button" class="social-button google">
+            <button type="button" class="social-button google" @click="socialLogin('google')">
               <i class="fab fa-google" /> Google
             </button>
-            <button type="button" class="social-button facebook">
+            <button type="button" class="social-button facebook" @click="socialLogin('facebook')">
               <i class="fab fa-facebook-f" /> Facebook
             </button>
           </div>
@@ -102,16 +111,17 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
-import { useRouter } from 'vue-router';
 import { ref } from 'vue';
-import {jwtDecode} from 'jwt-decode';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import AuthLayout from "@/layouts/AuthLayout.vue";
+import { useDeviceStore } from '@/stores/device';
 
 export default {
-  components: {AuthLayout},
+  components: { AuthLayout },
   setup() {
     const authStore = useAuthStore();
+    const deviceStore = useDeviceStore();
     const router = useRouter();
 
     const email = ref('');
@@ -119,28 +129,80 @@ export default {
     const showPassword = ref(false);
     const rememberMe = ref(false);
     const loading = ref(false);
+    const loginError = ref('');
+
+    const clearError = () => {
+      loginError.value = '';
+    };
+
+    const detectDeviceInfo = () => {
+      const userAgent = navigator.userAgent;
+      let deviceType = 'Desktop';
+
+      if (/Mobile|Android|iPhone|iPad|iPod/i.test(userAgent)) {
+        deviceType = /Tablet|iPad/i.test(userAgent) ? 'Tablet' : 'Mobile';
+      }
+
+      return {
+        type: deviceType,
+        os: /Windows/i.test(userAgent) ? 'Windows' :
+            /Mac/i.test(userAgent) ? 'MacOS' :
+                /Linux/i.test(userAgent) ? 'Linux' :
+                    /Android/i.test(userAgent) ? 'Android' :
+                        /iOS|iPhone|iPad|iPod/i.test(userAgent) ? 'iOS' : 'Unknown',
+        browser: /Chrome/i.test(userAgent) ? 'Chrome' :
+            /Firefox/i.test(userAgent) ? 'Firefox' :
+                /Safari/i.test(userAgent) ? 'Safari' :
+                    /Edge/i.test(userAgent) ? 'Edge' :
+                        /Opera/i.test(userAgent) ? 'Opera' : 'Unknown'
+      };
+    };
 
     const handleLogin = async () => {
       try {
         loading.value = true;
+        loginError.value = '';
+
+        // Validación básica del frontend
+        if (!email.value || !password.value) {
+          throw new Error('Por favor completa todos los campos');
+        }
+
+        // Detectar información del dispositivo
+        const deviceInfo = detectDeviceInfo();
+        deviceStore.setDeviceInfo(deviceInfo);
+
+        // Llamar al servicio de autenticación
         await authStore.login(email.value, password.value);
 
-        // Verifica que el token esté en localStorage
-        console.log('Token almacenado:', localStorage.getItem('token'));
+        // Redirigir según el rol
+        const targetRoute = authStore.isAdmin ? '/admin' : '/dashboard';
+        await router.push(targetRoute);
 
-        // Redirige según el rol
-        if (authStore.isAuthenticated) {
-          if (authStore.isAdmin) {
-            await router.push('/admin');
-          } else {
-            await router.push('/myprofile');
-          }
-        }
       } catch (error) {
-        alert(error.message || 'Error en el inicio de sesión');
+        console.error('Error en el login:', error);
+
+        // Manejar diferentes tipos de errores
+        if (error.response) {
+          if (error.response.status === 401) {
+            loginError.value = 'Correo electrónico o contraseña incorrectos';
+          } else if (error.response.status === 403) {
+            loginError.value = 'Cuenta desactivada o no verificada';
+          } else {
+            loginError.value = 'Error en el servidor. Por favor intenta más tarde.';
+          }
+        } else if (error.message) {
+          loginError.value = error.message;
+        } else {
+          loginError.value = 'Error desconocido. Por favor intenta nuevamente.';
+        }
       } finally {
         loading.value = false;
       }
+    };
+
+    const socialLogin = (provider) => {
+      window.location.href = `/api/v1/auth/${provider}`;
     };
 
     return {
@@ -149,10 +211,13 @@ export default {
       showPassword,
       rememberMe,
       loading,
-      handleLogin
+      loginError,
+      handleLogin,
+      socialLogin,
+      clearError
     };
   }
-}
+};
 </script>
 
 <style scoped>
@@ -162,6 +227,7 @@ export default {
   align-items: center;
   width: 100%;
   padding: 2rem;
+  min-height: 100vh;
 }
 
 .login-card {
@@ -321,6 +387,14 @@ export default {
   box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
 }
 
+.input-group input.invalid {
+  border-color: #ef4444 !important;
+}
+
+.dark-mode .input-group input.invalid {
+  border-color: #dc2626 !important;
+}
+
 .input-icon {
   position: absolute;
   right: 1rem;
@@ -427,6 +501,22 @@ export default {
 
 .dark-mode .login-button:disabled {
   background-color: #475569;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.dark-mode .error-message {
+  background-color: rgba(220, 38, 38, 0.2);
 }
 
 .divider {

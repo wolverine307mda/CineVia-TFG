@@ -88,7 +88,6 @@
                       <i class="fas fa-shield-alt me-2" /> Panel de Administración
                     </router-link>
                   </li>
-                  <li><hr class="dropdown-divider"></li>
                   <li>
                     <button class="dropdown-item" @click="handleLogout">
                       <i class="fas fa-sign-out-alt me-2" /> Cerrar sesión
@@ -138,7 +137,7 @@ const toggleDarkMode = () => {
 const handleLogout = async () => {
   try {
     await authStore.logout()
-    router.push('/auth/login')
+    router.push('/')
   } catch (error) {
     console.error('Error al cerrar sesión:', error)
   }

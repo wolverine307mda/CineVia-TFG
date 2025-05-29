@@ -88,7 +88,7 @@
                   placeholder="Ej: juanpg"
                   required
                   autocomplete="username"
-                  :class="{ 'invalid': errors.username }"
+                  :class="{ 'invalid': errors.username || usernameAvailable === false }"
                   @blur="validateUsername"
                   @input="debouncedCheckUsername"
               >
@@ -126,7 +126,7 @@
                   placeholder="tu@email.com"
                   required
                   autocomplete="email"
-                  :class="{ 'invalid': errors.email }"
+                  :class="{ 'invalid': errors.email || emailAvailable === false }"
                   @blur="validateEmail"
                   @input="debouncedCheckEmail"
               >
@@ -258,297 +258,329 @@
 </template>
 
 <script>
-import AuthLayout from '@/layouts/AuthLayout.vue'
-import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
-import { debounce } from 'lodash'
+import AuthLayout from '@/layouts/AuthLayout.vue';
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import { debounce } from 'lodash';
+import authService from '@/services/auth.service.js';
 
 export default {
   components: {
     AuthLayout
   },
-  data() {
-    return {
-      currentStep: 0,
-      steps: [
-        { label: 'Información personal' },
-        { label: 'Contacto' },
-        { label: 'Seguridad' }
-      ],
-      formData: {
-        firstName: '',
-        lastName: '',
-        username: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: false
-      },
-      errors: {
-        firstName: '',
-        lastName: '',
-        username: '',
-        email: '',
-        phone: '',
-        password: '',
-        confirmPassword: '',
-        termsAccepted: ''
-      },
-      showPassword: false,
-      loading: false,
-      errorMessage: '',
-      checkingUsername: false,
-      usernameAvailable: null,
-      checkingEmail: false,
-      emailAvailable: null
-    }
-  },
-  computed: {
-    passwordMismatch() {
-      return this.formData.password && this.formData.confirmPassword &&
-          this.formData.password !== this.formData.confirmPassword
-    },
-    passwordStrength() {
-      if (!this.formData.password) return 'Débil'
-      if (this.formData.password.length < 6) return 'Débil'
-      if (this.formData.password.length < 8) return 'Media'
-      if (!/[A-Z]/.test(this.formData.password)) return 'Media'
-      if (!/[0-9]/.test(this.formData.password)) return 'Media'
-      if (!/[^A-Za-z0-9]/.test(this.formData.password)) return 'Fuerte'
-      return 'Muy fuerte'
-    },
-    passwordStrengthClass() {
-      return {
-        'weak': this.passwordStrength === 'Débil',
-        'medium': this.passwordStrength === 'Media',
-        'strong': this.passwordStrength === 'Fuerte',
-        'very-strong': this.passwordStrength === 'Muy fuerte'
-      }
-    },
-    hasStep1Errors() {
-      return !!this.errors.firstName || !!this.errors.lastName || !!this.errors.username ||
-          !this.formData.firstName || !this.formData.lastName || !this.formData.username ||
-          this.usernameAvailable === false
-    },
-    hasStep2Errors() {
-      return !!this.errors.email || !!this.errors.phone ||
-          !this.formData.email || this.emailAvailable === false
-    },
-    hasStep3Errors() {
-      return !!this.errors.password || !!this.errors.confirmPassword ||
-          !this.formData.password || !this.formData.confirmPassword
-    }
-  },
-  created() {
-    this.debouncedCheckUsername = debounce(this.checkUsernameAvailability, 500)
-    this.debouncedCheckEmail = debounce(this.checkEmailAvailability, 500)
-  },
-  methods: {
-    nextStep() {
-      if (this.currentStep < this.steps.length - 1) {
-        this.currentStep++
-      }
-    },
-    prevStep() {
-      if (this.currentStep > 0) {
-        this.currentStep--
-      }
-    },
+  setup() {
+    const router = useRouter();
+    const authStore = useAuthStore();
 
-    // Validación del paso 1
-    validateStep1() {
-      this.validateFirstName()
-      this.validateLastName()
-      this.validateUsername()
+    const currentStep = ref(0);
+    const steps = [
+      { label: 'Información personal' },
+      { label: 'Contacto' },
+      { label: 'Seguridad' }
+    ];
 
-      if (!this.hasStep1Errors) {
-        this.nextStep()
-      }
-    },
+    const formData = ref({
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      termsAccepted: false
+    });
 
-    // Validación del paso 2
-    validateStep2() {
-      this.validateEmail()
-      this.validatePhone()
+    const errors = ref({
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      termsAccepted: ''
+    });
 
-      if (!this.hasStep2Errors) {
-        this.nextStep()
-      }
-    },
+    const showPassword = ref(false);
+    const loading = ref(false);
+    const errorMessage = ref('');
+    const checkingUsername = ref(false);
+    const usernameAvailable = ref(null);
+    const checkingEmail = ref(false);
+    const emailAvailable = ref(null);
+    const lastUsernameCheck = ref('');
+    const lastEmailCheck = ref('');
 
-    // Validaciones individuales
-    validateFirstName() {
-      if (!this.formData.firstName) {
-        this.errors.firstName = 'El nombre es obligatorio'
-      } else if (this.formData.firstName.length < 2) {
-        this.errors.firstName = 'El nombre debe tener al menos 2 caracteres'
-      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(this.formData.firstName)) {
-        this.errors.firstName = 'El nombre solo puede contener letras'
+    const passwordMismatch = computed(() => {
+      return formData.value.password && formData.value.confirmPassword &&
+          formData.value.password !== formData.value.confirmPassword;
+    });
+
+    const passwordStrength = computed(() => {
+      if (!formData.value.password) return 'Débil';
+      if (formData.value.password.length < 6) return 'Débil';
+      if (formData.value.password.length < 8) return 'Media';
+      if (!/[A-Z]/.test(formData.value.password)) return 'Media';
+      if (!/[0-9]/.test(formData.value.password)) return 'Media';
+      if (!/[^A-Za-z0-9]/.test(formData.value.password)) return 'Fuerte';
+      return 'Muy fuerte';
+    });
+
+    const passwordStrengthClass = computed(() => ({
+      'weak': passwordStrength.value === 'Débil',
+      'medium': passwordStrength.value === 'Media',
+      'strong': passwordStrength.value === 'Fuerte',
+      'very-strong': passwordStrength.value === 'Muy fuerte'
+    }));
+
+    const hasStep1Errors = computed(() => {
+      return !!errors.value.firstName || !!errors.value.lastName || !!errors.value.username ||
+          !formData.value.firstName || !formData.value.lastName || !formData.value.username ||
+          usernameAvailable.value === false;
+    });
+
+    const hasStep2Errors = computed(() => {
+      return !!errors.value.email || !!errors.value.phone ||
+          !formData.value.email || emailAvailable.value === false;
+    });
+
+    const hasStep3Errors = computed(() => {
+      return !!errors.value.password || !!errors.value.confirmPassword ||
+          !formData.value.password || !formData.value.confirmPassword;
+    });
+
+    const validateFirstName = () => {
+      if (!formData.value.firstName) {
+        errors.value.firstName = 'El nombre es obligatorio';
+      } else if (formData.value.firstName.length < 2) {
+        errors.value.firstName = 'El nombre debe tener al menos 2 caracteres';
+      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.value.firstName)) {
+        errors.value.firstName = 'El nombre solo puede contener letras';
       } else {
-        this.errors.firstName = ''
+        errors.value.firstName = '';
       }
-    },
+    };
 
-    validateLastName() {
-      if (!this.formData.lastName) {
-        this.errors.lastName = 'Los apellidos son obligatorios'
-      } else if (this.formData.lastName.length < 2) {
-        this.errors.lastName = 'Los apellidos deben tener al menos 2 caracteres'
-      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(this.formData.lastName)) {
-        this.errors.lastName = 'Los apellidos solo pueden contener letras'
+    const validateLastName = () => {
+      if (!formData.value.lastName) {
+        errors.value.lastName = 'Los apellidos son obligatorios';
+      } else if (formData.value.lastName.length < 2) {
+        errors.value.lastName = 'Los apellidos deben tener al menos 2 caracteres';
+      } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(formData.value.lastName)) {
+        errors.value.lastName = 'Los apellidos solo pueden contener letras';
       } else {
-        this.errors.lastName = ''
+        errors.value.lastName = '';
       }
-    },
+    };
 
-    validateUsername() {
-      if (!this.formData.username) {
-        this.errors.username = 'El nombre de usuario es obligatorio'
-      } else if (this.formData.username.length < 4) {
-        this.errors.username = 'El usuario debe tener al menos 4 caracteres'
-      } else if (!/^[a-zA-Z0-9_]+$/.test(this.formData.username)) {
-        this.errors.username = 'Solo se permiten letras, números y guiones bajos'
+    const validateUsername = () => {
+      if (!formData.value.username) {
+        errors.value.username = 'El nombre de usuario es obligatorio';
+      } else if (formData.value.username.length < 4) {
+        errors.value.username = 'El usuario debe tener al menos 4 caracteres';
+      } else if (!/^[a-zA-Z0-9_]+$/.test(formData.value.username)) {
+        errors.value.username = 'Solo se permiten letras, números y guiones bajos';
+      } else if (usernameAvailable.value === false) {
+        errors.value.username = 'Este nombre de usuario ya está en uso';
       } else {
-        this.errors.username = ''
+        errors.value.username = '';
       }
-    },
+    };
 
-    validateEmail() {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      if (!this.formData.email) {
-        this.errors.email = 'El correo electrónico es obligatorio'
-      } else if (!emailRegex.test(this.formData.email)) {
-        this.errors.email = 'Por favor ingresa un correo electrónico válido'
+    const validateEmail = () => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!formData.value.email) {
+        errors.value.email = 'El correo electrónico es obligatorio';
+      } else if (!emailRegex.test(formData.value.email)) {
+        errors.value.email = 'Por favor ingresa un correo electrónico válido';
+      } else if (emailAvailable.value === false) {
+        errors.value.email = 'Este correo electrónico ya está registrado';
       } else {
-        this.errors.email = ''
+        errors.value.email = '';
       }
-    },
+    };
 
-    validatePhone() {
-      if (this.formData.phone && !/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(this.formData.phone)) {
-        this.errors.phone = 'Por favor ingresa un número de teléfono válido'
+    const validatePhone = () => {
+      if (formData.value.phone && !/^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/.test(formData.value.phone)) {
+        errors.value.phone = 'Por favor ingresa un número de teléfono válido';
       } else {
-        this.errors.phone = ''
+        errors.value.phone = '';
       }
-    },
+    };
 
-    validatePassword() {
-      if (!this.formData.password) {
-        this.errors.password = 'La contraseña es obligatoria'
-      } else if (this.formData.password.length < 6) {
-        this.errors.password = 'La contraseña debe tener al menos 6 caracteres'
+    const validatePassword = () => {
+      if (!formData.value.password) {
+        errors.value.password = 'La contraseña es obligatoria';
+      } else if (formData.value.password.length < 6) {
+        errors.value.password = 'La contraseña debe tener al menos 6 caracteres';
       } else {
-        this.errors.password = ''
+        errors.value.password = '';
       }
-      this.validateConfirmPassword()
-    },
+      validateConfirmPassword();
+    };
 
-    validateConfirmPassword() {
-      if (!this.formData.confirmPassword) {
-        this.errors.confirmPassword = 'Por favor confirma tu contraseña'
-      } else if (this.formData.password !== this.formData.confirmPassword) {
-        this.errors.confirmPassword = 'Las contraseñas no coinciden'
+    const validateConfirmPassword = () => {
+      if (!formData.value.confirmPassword) {
+        errors.value.confirmPassword = 'Por favor confirma tu contraseña';
+      } else if (formData.value.password !== formData.value.confirmPassword) {
+        errors.value.confirmPassword = 'Las contraseñas no coinciden';
       } else {
-        this.errors.confirmPassword = ''
+        errors.value.confirmPassword = '';
       }
-    },
+    };
 
-    // Verificación de disponibilidad
-    async checkUsernameAvailability() {
-      if (this.errors.username || !this.formData.username) return
+    const checkUsernameAvailability = debounce(async () => {
+      if (errors.value.username || !formData.value.username || formData.value.username === lastUsernameCheck.value) {
+        return;
+      }
 
-      this.checkingUsername = true
+      checkingUsername.value = true;
+      usernameAvailable.value = null;
+      lastUsernameCheck.value = formData.value.username;
+
       try {
-        // Aquí deberías hacer una llamada a tu API para verificar el username
-        // Ejemplo:
-        // const response = await axios.get(`/api/check-username?username=${this.formData.username}`)
-        // this.usernameAvailable = response.data.available
+        const isAvailable = await authService.checkUsernameAvailability(formData.value.username);
+        usernameAvailable.value = isAvailable;
 
-        // Simulación:
-        await new Promise(resolve => setTimeout(resolve, 800))
-        this.usernameAvailable = Math.random() > 0.5 // Simula disponibilidad aleatoria
+        if (formData.value.username !== lastUsernameCheck.value) {
+          await checkUsernameAvailability();
+        }
       } catch (error) {
-        console.error('Error al verificar username:', error)
+        console.error('Error al verificar username:', error);
+        usernameAvailable.value = null;
+        errorMessage.value = error.message;
       } finally {
-        this.checkingUsername = false
+        checkingUsername.value = false;
       }
-    },
+    }, 500);
 
-    async checkEmailAvailability() {
-      if (this.errors.email || !this.formData.email) return
+    const checkEmailAvailability = debounce(async () => {
+      if (errors.value.email || !formData.value.email || formData.value.email === lastEmailCheck.value) {
+        return;
+      }
 
-      this.checkingEmail = true
+      checkingEmail.value = true;
+      emailAvailable.value = null;
+      lastEmailCheck.value = formData.value.email;
+
       try {
-        // Aquí deberías hacer una llamada a tu API para verificar el email
-        // Ejemplo:
-        // const response = await axios.get(`/api/check-email?email=${this.formData.email}`)
-        // this.emailAvailable = response.data.available
+        const isAvailable = await authService.checkEmailAvailability(formData.value.email);
+        emailAvailable.value = isAvailable;
 
-        // Simulación:
-        await new Promise(resolve => setTimeout(resolve, 800))
-        this.emailAvailable = Math.random() > 0.5 // Simula disponibilidad aleatoria
+        if (formData.value.email !== lastEmailCheck.value) {
+          await checkEmailAvailability();
+        }
       } catch (error) {
-        console.error('Error al verificar email:', error)
+        console.error('Error al verificar email:', error);
+        emailAvailable.value = null;
+        errorMessage.value = error.message;
       } finally {
-        this.checkingEmail = false
+        checkingEmail.value = false;
       }
-    },
+    }, 500);
 
-    // Registro final
-    async handleRegister() {
-      // Validar todos los campos antes de enviar
-      this.validatePassword()
-      this.validateConfirmPassword()
+    const nextStep = () => {
+      if (currentStep.value < steps.length - 1) {
+        currentStep.value++;
+      }
+    };
 
-      if (!this.formData.termsAccepted) {
-        this.errors.termsAccepted = 'Debes aceptar los términos y condiciones'
-        return
+    const prevStep = () => {
+      if (currentStep.value > 0) {
+        currentStep.value--;
+      }
+    };
+
+    const validateStep1 = () => {
+      validateFirstName();
+      validateLastName();
+      validateUsername();
+
+      if (!hasStep1Errors.value) {
+        nextStep();
+      }
+    };
+
+    const validateStep2 = () => {
+      validateEmail();
+      validatePhone();
+
+      if (!hasStep2Errors.value) {
+        nextStep();
+      }
+    };
+
+    const handleRegister = async () => {
+      validatePassword();
+      validateConfirmPassword();
+
+      if (!formData.value.termsAccepted) {
+        errors.value.termsAccepted = 'Debes aceptar los términos y condiciones';
+        return;
       } else {
-        this.errors.termsAccepted = ''
+        errors.value.termsAccepted = '';
       }
 
-      if (this.hasStep3Errors || this.passwordMismatch || !this.formData.termsAccepted) {
-        return
+      if (hasStep3Errors.value || passwordMismatch.value || !formData.value.termsAccepted) {
+        return;
       }
 
-      this.loading = true
-      this.errorMessage = ''
+      loading.value = true;
+      errorMessage.value = '';
 
       try {
-        const authStore = useAuthStore()
-        const router = useRouter()
-
-        // Preparar los datos para el endpoint (eliminar confirmPassword y termsAccepted)
-        const { confirmPassword, termsAccepted, ...registrationData } = this.formData
-
-        // Llamar al método de registro del store
-        await authStore.register(registrationData)
-
-        // Redirigir después del registro exitoso
-        router.push('/dashboard')
+        await authService.signup(formData.value);
+        await router.push('/dashboard');
       } catch (error) {
-        console.error('Error en el registro:', error)
-        this.errorMessage = error.response?.data?.message ||
-            error.message ||
-            'Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.'
+        console.error('Error en el registro:', error);
+        errorMessage.value = error.message || 'Ocurrió un error durante el registro. Por favor, inténtalo de nuevo.';
 
-        // Desplazar al usuario al paso correspondiente si hay errores de campo
-        if (error.response?.data?.errors) {
-          const { errors } = error.response.data
-
-          if (errors.email || errors.username) {
-            this.currentStep = 1
-          } else if (errors.password) {
-            this.currentStep = 2
-          }
+        if (error.message.includes('nombre de usuario')) {
+          currentStep.value = 0;
+        } else if (error.message.includes('correo electrónico')) {
+          currentStep.value = 1;
         }
       } finally {
-        this.loading = false
+        loading.value = false;
       }
-    }
+    };
+
+    return {
+      currentStep,
+      steps,
+      formData,
+      errors,
+      showPassword,
+      loading,
+      errorMessage,
+      checkingUsername,
+      usernameAvailable,
+      checkingEmail,
+      emailAvailable,
+      passwordMismatch,
+      passwordStrength,
+      passwordStrengthClass,
+      hasStep1Errors,
+      hasStep2Errors,
+      hasStep3Errors,
+      validateFirstName,
+      validateLastName,
+      validateUsername,
+      validateEmail,
+      validatePhone,
+      validatePassword,
+      validateConfirmPassword,
+      checkUsernameAvailability,
+      checkEmailAvailability,
+      nextStep,
+      prevStep,
+      validateStep1,
+      validateStep2,
+      handleRegister
+    };
   }
-}
+};
 </script>
 
 <style scoped>

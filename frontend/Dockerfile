@@ -1,16 +1,11 @@
-# Etapa de construcción
-FROM node:18 AS build-stage
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
+# Copia el frontend ya compilado (Vue → dist/)
+COPY dist/ .
 
-# Etapa de producción (servidor estático con nginx)
-FROM nginx:alpine AS production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
+# Configuración personalizada de nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
 
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

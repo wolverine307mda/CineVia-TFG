@@ -1,3 +1,6 @@
+ALTER TABLE usuarios
+    ALTER COLUMN is_delete SET DEFAULT false;
+
 -- Insertar sagas
 INSERT INTO sagas (id, nombre, descripcion, fecha_inicio, fecha_fin, is_acabada, imagen) VALUES
 ('s001', 'El Señor de los Anillos', 'La trilogía cinematográfica de El Señor de los Anillos, basada en la novela homónima del escritor británico J. R. R. Tolkien, comprende tres películas épicas de fantasía, acción y aventuras: El Señor de los Anillos: la Comunidad del Anillo (2001), El Señor de los Anillos: las dos torres (2002) y El Señor de los Anillos: el retorno del Rey (2003).
@@ -281,7 +284,7 @@ INSERT INTO profesionales (id, nombre, fecha_nacimiento, lugar_nacimiento, biogr
 ('p230', 'Letitia Wright', '1993-10-31', 'Georgetown, Guyana', 'Actriz conocida por interpretar a Shuri en el MCU.', 'https://encrypted-tbn3.gstatic.com/licensed-image?q=tbn:ANd9GcQRKCnHqFnXuqdh-c2-2pjeuCNak4FyEuXi88Vn7ZEDYwco_w_i6F-ZCw1Sis5JF9YQfDGrqAe_uUou0yI', '2011-01-01'),
 ('p231', 'Winston Duke', '1986-11-15', 'Argyle, Trinidad and Tobago', 'Actor conocido por interpretar a MBaku en el MCU.', 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTHFTMtDFuDWd2F0ZP53Z6r_lJpBpq7ku-YmUTHtnbfGQn3o9OhWS1m1Im6VWPs74LBZ_3xJ_fsxNjkaNlUbH4lLw', '2014-01-01'),
 ('p232', 'Danai Gurira', '1978-02-14', 'Grinnell, Iowa, USA', 'Actriz conocida por interpretar a Okoye en el MCU.', 'https://m.media-amazon.com/images/M/MV5BNjYyNjg1OTU1M15BMl5BanBnXkFtZTgwNzYyNTkzMDI@._V1_FMjpg_UX1000_.jpg', '2004-01-01'),
-('p233', 'Angela Bassett', '1958-08-16', 'New York City, USA', 'Actriz conocida por interpretar a Ramonda en el MCU.', 'https://m.media-amazon.com/images/M/MV5BMTg0MDc3ODUwOV5BMl5BanBnXkFtZTcwMTk2NjY4Nw@@._V1_.jpg', '1985-01-01'),
+('p233', 'Angela Bassett', '1958-08-16', 'New York City, USA', 'Actriz conocida por interpretar a Ramonda en el MCU.', 'https://static.wikia.nocookie.net/doblaje/images/e/ef/Angela-bassett-2016.jpg/revision/latest?cb=20161122163426&path-prefix=es', '1985-01-01'),
 ('p234', 'Florence Kasumba', '1976-10-26', 'Kampala, Uganda', 'Actriz conocida por interpretar a Ayo en el MCU.', 'https://www.shutterstock.com/editorial/image-editorial/M6T8M837M0jbUe23MjUyMjU=/florence-kasumba-440nw-13606191ns.jpg', '1997-01-01'),
 ('p235', 'Michael B. Jordan', '1987-02-09', 'Santa Ana, California, USA', 'Actor conocido por interpretar a Erik Killmonger en el MCU.', 'https://m.media-amazon.com/images/M/MV5BMjExOTY3NzExM15BMl5BanBnXkFtZTgwOTg1OTAzMTE@._V1_.jpg', '1999-01-01'),
 ('p236', 'Lupita Nyong''o', '1983-03-01', 'Mexico City, Mexico', 'Actriz conocida por interpretar a Nakia en el MCU.', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtygz8Eq74TpAsqcDR5jlIpRgd_zEBXH_AhA&s', '2008-01-01'),
@@ -1231,12 +1234,102 @@ INSERT INTO rodaje_imagenes (rodaje_id, imagen_url) VALUES
 ('r031', 'https://upload.wikimedia.org/wikipedia/commons/4/4d/Los_Angeles_Street.jpg'),
 
 -- The Matrix en Australia
-('r034', 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Sydney_Skyline.jpg');
+('r034', 'https://upload.wikimedia.org/wikipedia/commons/0/0b/Sydney_Skyline.jpg'),
+
+-- Juego de Tronos
+
+-- r200 – Estudios Titanic en Belfast (Irlanda del Norte)
+('r200', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/bc/05/ac/titanic-belfast.jpg?w=800&h=500&s=1'),
+('r200', 'https://www.screenbie.com/wp-content/uploads/2022/08/studio-tour-juego-de-tronos.jpg'),
+('r200', 'https://lossietereinos.com/wp-content/uploads/2018/03/Paint-Hall-Kings-Landing-Gate-Front-7-696x401.jpeg'),
+('r200', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVCeGsvF05Gi95eSiixnr5p9u6qlDIZ-UZ9Q&s'),
+
+-- r201 – Dubrovnik como Desembarco del Rey (Croacia)
+('r201', 'https://img.remediosdigitales.com/97d3f9/revive-desembarco-del-rey-y-juego-de-tronos-paseando-por-las-calles-de-dubrovnik/1366_2000.jpg'),
+('r201', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6T4atMM07JZYvVfhapHkYwCadJtC1Lj3NCg&s'),
+('r201', 'https://www.marijobarcelona.com/wp-content/uploads/2016/09/6-01-copia.jpg'),
+('r201', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvjJ2VinjJUelQNYan-qABovc_NuI0H9dbFA&s'),
+
+-- r202 – Alcázar de Sevilla como los jardines de Dorne (España)
+('r202', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8H5uv61VvAa_nv8iu2d9lvPzvtH8SoJTi5g&s'),
+('r202', 'https://www.alcazarsevilla.info/img/Juego%20de%20Tronos/dorne-got.jpg'),
+('r202', 'https://www.alcazarsevilla.info/img/Juego%20de%20Tronos/dorne3-got.jpg'),
+('r202', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRya9oFInM7PPMrWDTcnQ6ewlvE2T9ZdbLFjw&s'),
+
+-- r203 – Islandia como más allá del Muro
+('r203', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQROiWmZTD32HxgCOx1xRi-ccDfRpNbNDuTsQ&s'),
+('r203', 'https://static.emol.cl/emol50/Fotos/2017/07/17/file_20170717171148.jpg'),
+('r203', 'https://media.tacdn.com/media/attractions-splice-spp-674x446/07/98/bb/ea.jpg'),
+('r203', 'https://i0.wp.com/www.callejeandoporelplaneta.com/wp-content/uploads/CASCADA-SVARTIFOSS.jpg?ssl=1'),
+
+-- r204 – Marruecos como Pentos y Yunkai
+('r204', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoD6g0-BAjdO4d9oHIcm0vNAtxZFzeDuAkWw&s'),
+('r204', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtzROpkpmGtjmOBEOfz-hYd5qhl_HaujD_PQ&s'),
+('r204', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpuaU9cUqrPHxv27kmUPu5gFKebMzFq8023qGw3t1JB05EA0Z7pR_WajtUYMqrAREfK0Q&usqp=CAU'),
+('r204', 'https://www.screenbie.com/wp-content/uploads/2022/08/Ai%CC%88t-Ben-Haddou-marruecos.png'),
+
+-- r205 – Malta como escenas iniciales de Desembarco del Rey
+('r205', 'https://visitarmalta.com/wp-content/uploads/2019/11/Azure-Window-1.jpg'),
+('r205', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ4gJM6a44u1GU2gHW-6AGHb9-Xxr_qTzC6VQ&s'),
+('r205', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRQWUO-owreh4TOAQ-bXipU71P6PcW7uiSLaQ&s'),
+('r205', 'https://visitarmalta.com/wp-content/uploads/2019/11/Game-of-Thrones-Malte-2-1.jpg'),
+
+-- La Casa del Dragón
+
+-- r206 – Estudios Titanic en Belfast (Irlanda del Norte)
+('r206', 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/bc/05/ac/titanic-belfast.jpg?w=800&h=500&s=1'),
+('r206', 'https://www.screenbie.com/wp-content/uploads/2022/08/studio-tour-juego-de-tronos.jpg'),
+('r206', 'https://lossietereinos.com/wp-content/uploads/2018/03/Paint-Hall-Kings-Landing-Gate-Front-7-696x401.jpeg'),
+('r206', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVCeGsvF05Gi95eSiixnr5p9u6qlDIZ-UZ9Q&s'),
+
+-- r207 – Cornwall como Rocadragón (Reino Unido)
+('r207', 'https://lossietereinos.com/wp-content/uploads/2021/04/2_Image-from-iOS-50.jpeg'),
+('r207', 'https://media-cdn.tripadvisor.com/media/photo-s/14/72/6c/bf/emozione-e-anche-un-po.jpg'),
+('r207', 'https://www.talesofawanderer.com/blog/wp-content/uploads/2016/02/downhill_strand_00-1024x683.jpg'),
+('r207', 'https://estaticosgn-cdn.deia.eus/clip/9dc7c505-4913-4eb3-90e7-b2a61efeb399_16-9-aspect-ratio_default_0.jpg'),
+
+-- r208 – Derbyshire como escenas de bosques (Reino Unido)
+('r208', 'https://a.travel-assets.com/findyours-php/viewfinder/images/res40/488000/488368-peak-district.jpg'),
+('r208', 'https://previews.123rf.com/images/khrizmo/khrizmo1310/khrizmo131000015/23859663-vista-del-r%C3%ADo-derwent-bordeada-por-%C3%A1rboles-en-matlock-bath-en-derbyshire-inglaterra.jpg'),
+('r208', 'https://media.revistaad.es/photos/668b966728ce022297600028/master/w_1600%2Cc_limit/milly-alcock-matt-smith.jpg'),
+('r208', 'https://imagenes.20minutos.es/files/image_640_auto/uploads/imagenes/2024/07/29/olivia-cooke-como-alicent-en-la-casa-del-drago-n-temporada-2-episodio-7.jpeg'),
+
+-- r209 – Cáceres como Desembarco del Rey (España)
+('r209', 'https://planvex.es/web/wp-content/uploads/2022/10/house-of-the-dragon-plaza-de-san-jorge-caceres-episodio-9.jpg'),
+('r209', 'https://lossietereinos.com/wp-content/uploads/2021/10/caballosrodaje1-RsOj2xWhOm5zQEiDTyrm7yK-984x608@Hoy.jpeg'),
+('r209', 'https://estaticos-cdn.prensaiberica.es/clip/269e7db5-fc53-498f-8298-a09224f0ec91_source-aspect-ratio_default_0.jpg'),
+('r209', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQTwtCM1IHLznkgrbnoAzmyVogbeI6xh3k7kQ&s'),
+
+-- r210 – Trujillo como escenas de exteriores (España)
+('r210', 'https://visitasguiadastrujillo.es/wp-content/uploads/2023/03/Casa-del-Dragon-1024x633.jpg'),
+('r210', 'https://hips.hearstapps.com/hmg-prod/images/trujillo-1633528946.jpg'),
+('r210', 'https://www.hola.com/horizon/landscape/8999c7abc57f-ayy-t4fmya-t.jpg'),
+('r210', 'https://media.traveler.es/photos/6137719a86b46eac7cf5a737/master/w_1600%2Cc_limit/126599.jpg'),
+
+-- r211 – Portugal como localizaciones costeras
+('r211', 'https://www.cataloniahotels.com/es/blog/wp-content/uploads/2023/08/oporto-portugal.jpg'),
+('r211', 'https://img.salamancartvaldia.es/simg/2023-12/image005_231226183441.jpg'),
+('r211', 'https://e00-marca.uecdn.es/assets/multimedia/imagenes/2024/07/24/17218225660088.jpg'),
+('r211', 'https://phantom-marca.unidadeditorial.es/2eca16afdb3a3f514812a1845f8b565d/resize/828/f/jpg/assets/multimedia/imagenes/2024/07/24/17218225655670.jpg');
 
 -- Insertar usuarios
 INSERT INTO usuarios (id, nombre, apellido, email, username, password, rol, telefono, fecha_nacimiento, created_at, avatar) VALUES
-('t4fr2yj444', 'Admin', 'Admin', 'admin@geofilm.com', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'ADMINISTRADOR', '600000000', '1980-01-01', NOW(), 'admin_avatar.jpg'),
-('vjvfjshvd2', 'Usuario', 'Normal', 'user@geofilm.com', 'user', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '611111111', '1990-05-15', NOW(), 'user_avatar.jpg'),
-('kbek34fgjb', 'María', 'García', 'maria@geofilm.com', 'maria', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', 'USUARIO', '622222222', '1995-08-20', NOW(), 'maria_avatar.jpg'),
-( 'kvsbfjvbjr', 'Mario', 'de Domingo Álvarez', 'wolverine@admin.com', 'wolverineAdmin', '$2a$12$hdb/kuYrrChi4PtOP2AFh.zx9hC7AmduUv4EBELRMWzGz63d/viUm', 'ADMINISTRADOR', '600000000', '1980-01-01', NOW(), 'https://sm.ign.com/t/ign_latam/screenshot/default/wolver_9stu.1280.jpg'),
-('jrwbj3bn4nv', 'Mario', 'de Domingo Álvarez', 'wolverine@user.com', 'wolverineUser', '$2a$12$hdb/kuYrrChi4PtOP2AFh.zx9hC7AmduUv4EBELRMWzGz63d/viUm', 'USUARIO', '681013487', '1980-01-01', NOW(), 'https://sm.ign.com/t/ign_latam/screenshot/default/wolver_9stu.1280.jpg');
+('kvsbfjvbjr', 'Mario', 'de Domingo Álvarez', 'wolverine.mda.307@gmail.com', 'wolverineAdmin', '$2a$12$hdb/kuYrrChi4PtOP2AFh.zx9hC7AmduUv4EBELRMWzGz63d/viUm', 'ADMINISTRADOR', '681013487', '2004-07-30', NOW(), 'https://sm.ign.com/t/ign_latam/screenshot/default/wolver_9stu.1280.jpg'),
+('t4fr2yj444', 'Eva', 'Rodrígez Rodrígez', 'evarosa2rr08@gmail.com', 'evanyways_', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'ADMINISTRADOR', '626749341', '2004-10-26', NOW(), 'https://media.licdn.com/dms/image/v2/D4E03AQGz-7Rm3kuq0A/profile-displayphoto-shrink_100_100/B4EZYFUfTYHkAY-/0/1743845980367?e=2147483647&v=beta&t=6VsNpThupphWmwiZpgvE4gQJTxAGYOakLn_oW9WL77Q'),
+('vjvfjshvd2', 'Andrea', 'Isabel de la Torre', 'Andrealokiloveyou@gmail.com', '_andrea.it_', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'ADMINISTRADOR', '676168344', '2003-07-31', NOW(), 'https://media.licdn.com/dms/image/v2/D4E03AQGz-7Rm3kuq0A/profile-displayphoto-shrink_400_400/B4EZYFUfTYHkAk-/0/1743845980350?e=1753315200&v=beta&t=JjODtntY9MU1i6ikUwwbjTjDpVzT3jB74Yy1KLM5t68'),
+('usr00001', 'Germán', 'Fernández', 'gfernandez@gmail.com', 'germanfdez', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000001', '1995-04-12', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00002', 'Raúl', 'Seisdedos', 'rseisdedos@gmail.com', 'raul6d2', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000002', '1998-09-23', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00003', 'Víctor', 'Pérez', 'vperez@gmail.com', 'vic_perez', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000003', '2000-01-15', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00004', 'Laura', 'Gómez', 'lgomez@gmail.com', 'laurag', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000004', '1999-05-21', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00005', 'Alejandro', 'Martínez', 'amartinez@gmail.com', 'alexmtz', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000005', '2001-03-30', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00006', 'María', 'López', 'mlopez@gmail.com', 'marialpz', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000006', '1997-11-10', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00007', 'Carlos', 'Ruiz', 'cruiz@gmail.com', 'carlosruiz7', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000007', '1994-02-18', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00008', 'Lucía', 'Sánchez', 'lsanchez@gmail.com', 'luciasz', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000008', '2002-08-05', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00009', 'David', 'Moreno', 'dmoreno@gmail.com', 'davidmoreno', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000009', '1993-12-27', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00010', 'Sandra', 'Jiménez', 'sjimenez@gmail.com', 'sandrita_j', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000010', '1996-06-06', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00011', 'Daniel', 'Ortega', 'dortega@gmail.com', 'danielort', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000011', '2000-07-14', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00012', 'Patricia', 'Navarro', 'pnavarro@gmail.com', 'patri_nava', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000012', '1998-01-09', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00013', 'Jorge', 'Castro', 'jcastro@gmail.com', 'jorgecast', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000013', '1995-10-01', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00014', 'Sofía', 'Domínguez', 'sdominguez@gmail.com', 'sofiadom', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000014', '2003-03-04', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00015', 'Álvaro', 'Iglesias', 'aliglesias@gmail.com', 'alvaroi', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000015', '1999-09-12', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg'),
+('usr00016', 'Elena', 'Cano', 'ecano@gmail.com', 'elenac', '$2a$12$wPceCOw9JTCZEcUyia64SePvT1RSvKj.dkYFVyKXmhNl.MKDQ0IzG', 'USUARIO', '600000016', '2001-02-19', NOW(), 'https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg');

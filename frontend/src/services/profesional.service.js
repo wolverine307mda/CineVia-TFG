@@ -1,11 +1,13 @@
-﻿import axios from 'axios';
+﻿import api from './api';
 import qs from 'qs';
 
 class ProfesionalesService {
     constructor() {
-        this.api = axios.create({
-            baseURL: '/api/profesionales'
-        });
+        this.api = api;
+        this.basePath = '/api/profesionales';
+        this.participacionesPath = '/api/participaciones';
+        this.basePath = '/api/profesionales';
+        this.participacionesPath = '/api/participaciones';
 
         // Asegurar que 'this' se mantenga en el contexto correcto
         this.mapProfessionalToCard = this.mapProfessionalToCard.bind(this);
@@ -26,7 +28,7 @@ class ProfesionalesService {
                 Object.entries(params).filter(([_, v]) => v !== null && v !== '')
             );
 
-            const response = await this.api.get('/filtrar', {
+            const response = await this.api.get(`${this.basePath}/filtrar`, {
                 params: cleanParams,
                 paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat', skipNulls: true })
             });
@@ -48,7 +50,7 @@ class ProfesionalesService {
 
     async getProfessionalById(id) {
         try {
-            const response = await this.api.get(`/${id}`);
+            const response = await this.api.get(`${this.basePath}/${id}`);
             return this.mapProfessionalToCard(response.data);
         } catch (error) {
             console.error('Error getting professional:', error);
@@ -56,9 +58,18 @@ class ProfesionalesService {
         }
     }
 
+    async uploadProfesionalImage(id, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post(`/api/profesionales/${id}/upload-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    }
+
     async createProfessional(professionalData) {
         try {
-            const response = await this.api.post('', professionalData);
+            const response = await this.api.post(`${this.basePath}`, professionalData);
             return this.mapProfessionalToCard(response.data);
         } catch (error) {
             console.error('Error creating professional:', error);
@@ -68,7 +79,7 @@ class ProfesionalesService {
 
     async updateProfessional(id, professionalData) {
         try {
-            const response = await this.api.put(`/${id}`, professionalData);
+            const response = await this.api.put(`${this.basePath}/${id}`, professionalData);
             return this.mapProfessionalToCard(response.data);
         } catch (error) {
             console.error('Error updating professional:', error);
@@ -78,7 +89,7 @@ class ProfesionalesService {
 
     async deleteProfessional(id) {
         try {
-            await this.api.delete(`/${id}`);
+            await this.api.delete(`${this.basePath}/${id}`);
             return true;
         } catch (error) {
             console.error('Error deleting professional:', error);
@@ -88,7 +99,7 @@ class ProfesionalesService {
 
     async getParticipacionesByProfesional(profesionalId) {
         try {
-            const response = await axios.get(`/api/participaciones/profesional/${profesionalId}`);
+            const response = await this.api.get(`${this.participacionesPath}/profesional/${profesionalId}`);
             return response.data.map(part => ({
                 ...part.produccion,
                 rol: part.rol,

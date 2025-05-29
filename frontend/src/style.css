@@ -94,3 +94,37 @@ button:focus-visible {
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
 }
+
+/* Estilos para toasts */
+/* App.vue o main.css */
+.vue-toast {
+  border-radius: 12px !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  padding: 1rem 1.5rem !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.vue-toast--success {
+  background: #e0f8f1 !important;
+  color: #05603a !important;
+  border-left: 6px solid #10b981 !important;
+}
+
+.vue-toast--error {
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+  border-left: 6px solid #ef4444 !important;
+}
+
+.vue-toast--info {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+  border-left: 6px solid #3b82f6 !important;
+}
+
+.vue-toast--warning {
+  background: #fffbea !important;
+  color: #92400e !important;
+  border-left: 6px solid #f59e0b !important;
+}

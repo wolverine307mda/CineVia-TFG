@@ -22,6 +22,7 @@ import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue"
 import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue"
 import NotFound from "@/pages/NotFound.vue"
 import SagasAdminPages from "@/pages/admin/SagasAdminPages.vue"
+import UsuariosAdminPages from "@/pages/admin/UsuariosAdmin.vue"
 import ProfesionalesAdminPage from "@/pages/admin/ProfesionalesAdminPage.vue"
 
 const routes = [
@@ -112,31 +113,37 @@ const routes = [
                 path: '',
                 name: 'AdminDashboardDefault',
                 component: Dashboard,
-                meta: { title: 'Dashboard de Administración' }
+                meta: { title: 'Dashboard' }
             },
             {
                 path: 'ubicaciones',
                 name: 'AdminUbicaciones',
                 component: UbicacionesAdminPage,
-                meta: { title: 'Administración de Lugares' }
+                meta: { title: 'Gestión de Ubicaciones' }
             },
             {
                 path: 'producciones',
                 name: 'AdminProducciones',
                 component: ProduccionesAdminPage,
-                meta: { title: 'Administración de Producciones' }
+                meta: { title: 'Gestión de Producciones' }
             },
             {
                 path: 'sagas',
                 name: 'AdminSagas',
                 component: SagasAdminPages,
-                meta: { title: 'Administración de Sagas' }
+                meta: { title: 'Gestión de Sagas' }
+            },
+            {
+                path: 'usuarios',
+                name: 'AdminUsuarios',
+                component: UsuariosAdminPages,
+                meta: { title: 'Gestión de Usuarios' }
             },
             {
                 path: 'profesionales',
                 name: 'AdminProfesionales',
                 component: ProfesionalesAdminPage,
-                meta: { title: 'Administración de Profesionales' }
+                meta: { title: 'Gestión de Profesionales' }
             }
         ]
     },

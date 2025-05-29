@@ -1,20 +1,24 @@
 ﻿<template>
-  <div class="dashboard-container">
+  <div class="dashboard-container" :class="{ 'dark-mode': darkMode }">
     <div class="dashboard-content">
       <!-- Estadísticas -->
       <div class="stats-grid">
-        <div class="stat-card" v-for="stat in stats" :key="stat.title" :class="stat.trend">
-          <div class="stat-icon">
-            <i :class="stat.icon"></i>
+        <div class="stat-card" v-for="stat in stats" :key="stat.title">
+          <div class="stat-content">
+            <div class="stat-icon">
+              <i :class="stat.icon"></i>
+            </div>
+            <div class="stat-info">
+              <h3>{{ stat.loading ? '...' : stat.value }}</h3>
+              <p>{{ stat.title }}</p>
+            </div>
           </div>
-          <div class="stat-info">
-            <h3>{{ stat.value.toLocaleString() }}</h3>
-            <p>{{ stat.title }}</p>
+          <div class="stat-progress" v-if="!stat.loading">
+            <div class="progress-bar" :style="{ width: stat.progress + '%' }"></div>
           </div>
-          <div class="stat-trend">
-            <i :class="stat.trendIcon"></i> {{ stat.trendValue }}
+          <div class="stat-loading" v-else>
+            <div class="loading-bar"></div>
           </div>
-          <div class="stat-wave"></div>
         </div>
       </div>
 
@@ -23,10 +27,8 @@
         <!-- Mapa y Producciones -->
         <div class="content-section">
           <div class="map-card">
-            <div class="card-header">
-            </div>
             <div class="map-container">
-              <div ref="map" class="google-map" v-show="!loadingLocations && locations.length > 0"></div>
+              <div ref="mapContainer" class="google-map" v-show="!loadingLocations && locations.length > 0"></div>
               <div v-if="loadingLocations" class="loading-overlay">
                 <div class="spinner"></div>
                 <p>Cargando ubicaciones...</p>
@@ -34,163 +36,322 @@
               <div v-if="!loadingLocations && locations.length === 0" class="empty-state">
                 <i class="fas fa-map-marked-alt"></i>
                 <p>No hay ubicaciones disponibles</p>
-                <button @click="fetchLocations" class="btn-primary">Intentar de nuevo</button>
+                <button @click="fetchLocations" class="btn-primary">Recargar</button>
               </div>
             </div>
           </div>
 
-          <div class="productions-card">
+          <div class="users-card">
             <div class="card-header">
-              <h3><i class="fas fa-video"></i> Últimas Producciones</h3>
-              <router-link to="/admin/producciones" class="view-all">
-                Ver todo <i class="fas fa-chevron-right"></i>
+              <h3><i class="fas fa-users"></i> Usuarios Recientes</h3>
+              <router-link style="text-decoration: none" to="/admin/usuarios" class="btn-primary" v-if="isAdmin">
+                <i class="fas fa-plus"></i> Gestionar usuarios
               </router-link>
             </div>
-            <div class="productions-list">
-              <div v-for="(production, index) in recentProductions" :key="index" class="production-item">
-                <img :src="production.image" :alt="production.title" class="production-image">
-                <div class="production-info">
-                  <h4>{{ production.title }}</h4>
-                  <div class="production-meta">
-                    <span class="badge" :class="production.type">{{ production.type }}</span>
-                    <span class="date">{{ production.date }}</span>
-                  </div>
+            <div class="users-list">
+              <div v-if="loadingUsers" class="loading-users">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Cargando usuarios...</span>
+              </div>
+              <div v-else-if="recentUsers.length === 0" class="empty-users">
+                <i class="fas fa-user-slash"></i>
+                <span>No se encontraron usuarios</span>
+              </div>
+              <div v-for="user in recentUsers" :key="user.id" class="user-item">
+                <div class="user-avatar">
+                  <img :src="user.avatar" :alt="user.nombre" @error="handleAvatarError">
                 </div>
-                <div class="production-status" :class="production.status">
-                  <i :class="statusIcons[production.status]"></i>
+                <div class="user-info">
+                  <h4>{{ user.nombre }} {{ user.apellido }}</h4>
+                  <p>{{ user.email }}</p>
+                  <span class="user-role" :class="user.rol.toLowerCase()">{{ formatRole(user.rol) }}</span>
+                </div>
+                <div class="user-actions">
+                  <button v-if="isAdmin && !user.isDeleted" @click="confirmAction('softDelete', user.id, 'Desactivar usuario', '¿Estás seguro de que quieres desactivar este usuario?')" class="icon-button deactivate-button" title="Desactivar">
+                    <i class="fas fa-user-slash"></i>
+                  </button>
+                  <button v-if="isAdmin && user.isDeleted" @click="confirmAction('restore', user.id, 'Activar usuario', '¿Estás seguro de que quieres activar este usuario?')" class="icon-button activate-button" title="Activar">
+                    <i class="fas fa-user-check"></i>
+                  </button>
+                  <button v-if="isAdmin && user.rol !== 'ADMINISTRADOR'" @click="confirmAction('delete', user.id, 'Eliminar usuario', '¿Estás seguro de que quieres eliminar permanentemente este usuario?')" class="icon-button delete-button" title="Eliminar">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Acciones rápidas y actividad -->
+        <!-- Sección de Usuarios y Estadísticas -->
         <div class="content-section">
-          <div class="actions-card">
+          <div class="productions-card">
             <div class="card-header">
-              <h3><i class="fas fa-bolt"></i> Acciones Rápidas</h3>
+              <h3><i class="fas fa-film"></i> Últimas Producciones</h3>
+              <router-link to="/admin/producciones" class="view-all">
+                Ver todo <i class="fas fa-chevron-right"></i>
+              </router-link>
             </div>
-            <div class="actions-grid">
-              <button v-for="action in quickActions" :key="action.path" @click="navigateTo(action.path)" class="action-btn">
-                <div class="action-icon">
-                  <i :class="action.icon"></i>
+            <div class="productions-list">
+              <div v-for="production in recentProductions" :key="production.id" class="production-item">
+                <div class="production-poster">
+                  <img :src="production.imagen" :alt="production.titulo" class="production-image" @error="handleImageError">
                 </div>
-                <span>{{ action.label }}</span>
-              </button>
+                <div class="production-details">
+                  <h4>{{ production.titulo }}</h4>
+                  <div class="production-meta">
+                    <span class="badge" :class="production.tipo.toLowerCase()">{{ formatTipoProduccion(production.tipo) }}</span>
+                    <span class="year">{{ production.estreno ? new Date(production.estreno).getFullYear() : 'N/A' }}</span>
+                    <span class="duration" v-if="production.duracion"><i class="far fa-clock"></i> {{ production.duracion }} min</span>
+                  </div>
+                  <div class="production-rating">
+                    <i class="fas fa-star"></i> {{ production.puntuacion?.toFixed(1) || 'N/A' }}
+                  </div>
+                  <div class="production-categories">
+                    <span v-for="(category, index) in production.categorias" :key="index" class="category-tag">
+                      {{ formatCategoria(category) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="production-actions">
+                  <router-link :to="`/admin/producciones/editar/${production.id}`" class="action-btn">
+                    <i class="fas fa-edit"></i> Editar
+                  </router-link>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="activity-card">
+          <div class="stats-card">
             <div class="card-header">
-              <h3><i class="fas fa-chart-line"></i> Actividad Reciente</h3>
-              <select v-model="timeRange" class="time-select">
-                <option value="7">7 días</option>
-                <option value="30">30 días</option>
-                <option value="90">90 días</option>
-              </select>
+              <h3><i class="fas fa-chart-pie"></i> Resumen</h3>
             </div>
-            <div class="chart-container">
-              <canvas ref="activityChart"></canvas>
+            <div class="stats-summary">
+              <div class="summary-item">
+                <div class="summary-icon">
+                  <i class="fas fa-layer-group"></i>
+                </div>
+                <div class="summary-info">
+                  <h4>{{ sagasCount }}</h4>
+                  <p>Sagas registradas</p>
+                </div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-icon">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="summary-info">
+                  <h4>{{ profesionalesCount }}</h4>
+                  <p>Profesionales</p>
+                </div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-icon">
+                  <i class="fas fa-film"></i>
+                </div>
+                <div class="summary-info">
+                  <h4>{{ produccionesCount }}</h4>
+                  <p>Producciones</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <ConfirmationModal
+      v-if="showConfirmationModal"
+      :show="showConfirmationModal"
+      :title="confirmationTitle"
+      :message="confirmationMessage"
+      :is-loading="isProcessingAction"
+      @confirm="executeAction"
+      @cancel="showConfirmationModal = false"
+  />
 </template>
 
 <script>
 import { Loader } from '@googlemaps/js-api-loader';
-import Chart from 'chart.js/auto';
+import ProduccionesService from '@/services/producciones.service.js';
+import ProfesionalesService from '@/services/profesional.service.js';
+import SagasService from '@/services/sagas.service.js';
+import UsersService from '@/services/users.service';
+import { useAuthStore } from '@/stores/auth';
+import ConfirmationModal from "@/components/modales/edicion/ConfirmModal.vue";
 
 export default {
   name: 'Dashboard',
+  components: {ConfirmationModal},
   data() {
     return {
+      darkMode: false,
       stats: [
-        { title: 'Producciones', icon: 'fas fa-film', value: 1245, trend: 'up', trendValue: '12%', trendIcon: 'fas fa-arrow-up' },
-        { title: 'Ubicaciones', icon: 'fas fa-map-marker-alt', value: 856, trend: 'up', trendValue: '8%', trendIcon: 'fas fa-arrow-up' },
-        { title: 'Profesionales', icon: 'fas fa-user-tie', value: 542, trend: 'up', trendValue: '5%', trendIcon: 'fas fa-arrow-up' },
-        { title: 'Sagas', icon: 'fas fa-layer-group', value: 89, trend: 'down', trendValue: '2%', trendIcon: 'fas fa-arrow-down' }
+        { title: 'Producciones', icon: 'fas fa-film', value: 0, loading: true, progress: 0 },
+        { title: 'Profesionales', icon: 'fas fa-users', value: 0, loading: true, progress: 0 },
+        { title: 'Sagas', icon: 'fas fa-eye', value: 0, loading: true, progress: 0 },
+        { title: 'Ubicaciones', icon: 'fas fa-map-marker-alt', value: 0, loading: true, progress: 0 }
       ],
-      recentProductions: [
-        {
-          title: 'Dune: Parte Dos',
-          type: 'Película',
-          date: '2023-11-17',
-          status: 'active',
-          image: 'https://via.placeholder.com/50'
-        },
-        {
-          title: 'The Last of Us',
-          type: 'Serie',
-          date: '2023-01-15',
-          status: 'active',
-          image: 'https://via.placeholder.com/50'
-        },
-        {
-          title: 'Oppenheimer',
-          type: 'Película',
-          date: '2023-07-21',
-          status: 'pending',
-          image: 'https://via.placeholder.com/50'
-        },
-        {
-          title: 'Stranger Things 4',
-          type: 'Serie',
-          date: '2022-05-27',
-          status: 'active',
-          image: 'https://via.placeholder.com/50'
-        }
-      ],
-      quickActions: [
-        { label: 'Nueva Producción', icon: 'fas fa-plus', path: '/admin/producciones/nueva' },
-        { label: 'Nuevo Lugar', icon: 'fas fa-map-marker-alt', path: '/admin/lugares/nuevo' },
-        { label: 'Nuevo Profesional', icon: 'fas fa-user-tie', path: '/admin/profesionales/nuevo' },
-        { label: 'Nueva Saga', icon: 'fas fa-layer-group', path: '/admin/sagas/nueva' },
-        { label: 'Nuevo Usuario', icon: 'fas fa-user-plus', path: '/admin/usuarios/nuevo' },
-        { label: 'Configuración', icon: 'fas fa-cog', path: '/admin/configuracion' }
-      ],
-      statusIcons: {
-        active: 'fas fa-check-circle',
-        pending: 'fas fa-clock',
-        inactive: 'fas fa-times-circle'
-      },
+      recentProductions: [],
       locations: [],
       loadingLocations: false,
+      loadingUsers: false,
+      recentUsers: [],
       map: null,
       markers: [],
-      timeRange: '7',
-      activityChart: null,
-      darkMode: false,
-      darkMapStyle: [
-        { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-        { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-        { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#1a1a1a" }] },
-        { featureType: "administrative.land_parcel", elementType: "geometry.stroke", stylers: [{ color: "#1a1a1a" }] },
-        { featureType: "poi", stylers: [{ visibility: "off" }] },
-        { featureType: "road", elementType: "geometry.fill", stylers: [{ color: "#2c2c2c" }] },
-        { featureType: "road", elementType: "labels.text.fill", stylers: [{ color: "#9ca5b3" }] },
-        { featureType: "road.highway", elementType: "geometry.fill", stylers: [{ color: "#3d3d3d" }] },
-        { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#1a1a1a" }] },
-        { featureType: "transit", stylers: [{ visibility: "off" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#1e1e1e" }] },
-        { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#515c6d" }] }
-      ]
+      showUserModal: false,
+      showConfirmationModal: false,
+      selectedUser: null,
+      actionToConfirm: null,
+      actionParams: null,
+      confirmationTitle: '',
+      confirmationMessage: '',
+      produccionesCount: 0,
+      profesionalesCount: 0,
+      sagasCount: 0,
+      newAdmin: {
+        name: '',
+        email: '',
+        password: ''
+      },
+    }
+  },
+  computed: {
+    authStore() {
+      return useAuthStore();
+    },
+    isAdmin() {
+      return this.authStore.isAdmin;
     }
   },
   methods: {
-    navigateTo(path) {
-      this.$router.push(path);
+    toggleDarkMode() {
+      this.darkMode = !this.darkMode;
+      if (this.map) {
+        this.map.setOptions({
+          styles: this.darkMode
+        });
+      }
     },
+    confirmAction(action, id, title, message) {
+      this.actionToConfirm = action;
+      this.actionParams = id;
+      this.confirmationTitle = title;
+      this.confirmationMessage = message;
+      this.showConfirmationModal = true;
+    },
+    async executeAction() {
+      this.isProcessingAction = true;
+      try {
+        let success = false;
+        let message = '';
+
+        switch (this.actionToConfirm) {
+          case 'delete':
+            success = await UsersService.deleteUser(this.actionParams);
+            message = 'Usuario eliminado permanentemente';
+            break;
+          case 'softDelete':
+            success = await UsersService.softDeleteUser(this.actionParams);
+            message = 'Usuario desactivado correctamente';
+            break;
+          case 'restore':
+            success = await UsersService.restoreUser(this.actionParams);
+            message = 'Usuario activado correctamente';
+            break;
+        }
+
+        if (success) {
+          this.$toast.success(message);
+          this.fetchUsers();
+        }
+      } catch (error) {
+        console.error('Error performing action:', error);
+        this.$toast.error(error.message || 'Error al realizar la acción');
+      } finally {
+        this.isProcessingAction = false;
+        this.showConfirmationModal = false;
+        this.actionToConfirm = null;
+        this.actionParams = null;
+      }
+    },
+    async fetchStats() {
+      try {
+        // Obtener conteo de producciones
+        const produccionesRes = await ProduccionesService.fetchProducciones({}, { page: 0, size: 1 });
+        this.stats[0].value = produccionesRes.totalItems;
+        this.stats[0].loading = false;
+        this.stats[0].progress = Math.min(100, produccionesRes.totalItems / 20 * 100);
+        this.produccionesCount = produccionesRes.totalItems;
+
+        // Obtener conteo de profesionales
+        const profesionalesRes = await ProfesionalesService.fetchProfessionals({}, { page: 0, size: 1 });
+        this.stats[1].value = profesionalesRes.totalItems;
+        this.stats[1].loading = false;
+        this.stats[1].progress = Math.min(100, profesionalesRes.totalItems / 20 * 100);
+        this.profesionalesCount = profesionalesRes.totalItems;
+
+        // Obtener conteo de sagas
+        const sagasRes = await SagasService.fetchSagas({}, { currentPage: 1, itemsPerPage: 1 });
+        this.stats[2].value = sagasRes.totalItems;
+        this.stats[2].loading = false;
+        this.stats[2].progress = Math.min(100, sagasRes.totalItems / 20 * 100);
+        this.sagasCount = sagasRes.totalItems || 0;
+
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        this.stats.forEach(stat => {
+          stat.loading = false;
+          stat.value = 0;
+          stat.progress = 0;
+        });
+      }
+    },
+
+    async fetchRecentProductions() {
+      try {
+        const res = await ProduccionesService.fetchProducciones(
+            {},
+            { page: 0, size: 4, sortBy: 'estreno', sortDirection: 'desc' }
+        );
+        this.recentProductions = res.data;
+      } catch (error) {
+        console.error('Error fetching recent productions:', error);
+        this.recentProductions = [];
+      }
+    },
+
+    async fetchRecentUsers() {
+      this.loadingUsers = true;
+      try {
+        const response = await UsersService.fetchUsers(
+            { isDeleted: false }, // Solo usuarios activos
+            { currentPage: 1, itemsPerPage: 6 }, // Solo 6 usuarios
+            { field: 'createdAt', direction: 'desc' } // Ordenados por fecha de creación
+        );
+
+        this.recentUsers = response.content;
+        // Actualizar el contador de usuarios
+        this.stats[3].value = response.totalElements;
+        this.stats[3].loading = false;
+        this.stats[3].progress = Math.min(100, response.totalElements / 50 * 100);
+      } catch (error) {
+        console.error('Error fetching recent users:', error);
+        this.recentUsers = [];
+        this.stats[3].loading = false;
+        this.stats[3].value = 0;
+        this.stats[3].progress = 0;
+      } finally {
+        this.loadingUsers = false;
+      }
+    },
+
     async fetchLocations() {
       this.loadingLocations = true;
       this.locations = [];
 
       try {
-        const response = await fetch('http://localhost:8080/api/ubicaciones/all');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ubicaciones/all`);
 
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
@@ -211,40 +372,21 @@ export default {
 
         if (this.locations.length > 0) {
           await this.initMap();
-        } else {
-          console.warn('No se encontraron ubicaciones válidas');
         }
 
       } catch (error) {
         console.error('Error al cargar ubicaciones:', error);
-
-        if (process.env.NODE_ENV !== 'production') {
-          this.locations = [
-            {
-              id: "u007",
-              nombre: "Chicago, USA",
-              latitud: 41.8781,
-              longitud: -87.6298,
-              createdAt: null,
-              updatedAt: null
-            },
-            {
-              id: "u008",
-              nombre: "Torre Eiffel, París",
-              latitud: 48.8584,
-              longitud: 2.2945,
-              createdAt: null,
-              updatedAt: null
-            }
-          ];
-          await this.initMap();
-        }
       } finally {
         this.loadingLocations = false;
       }
     },
+
     async initMap() {
       try {
+        if (!this.$refs.mapContainer) {
+          throw new Error('El contenedor del mapa no está disponible');
+        }
+
         const loader = new Loader({
           apiKey: "AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc",
           version: "weekly",
@@ -257,25 +399,10 @@ export default {
           center: { lat: 20, lng: 0 },
           zoom: 2,
           mapTypeControl: true,
-          mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-            position: google.maps.ControlPosition.TOP_RIGHT,
-            mapTypeIds: ['roadmap', 'satellite', 'hybrid']
-          },
-          streetViewControl: false,
-          zoomControl: true,
-          zoomControlOptions: {
-            position: google.maps.ControlPosition.RIGHT_BOTTOM
-          },
-          fullscreenControl: true,
-          fullscreenControlOptions: {
-            position: google.maps.ControlPosition.RIGHT_BOTTOM
-          },
           styles: this.darkMode ? this.darkMapStyle : []
         };
 
-        this.map = new google.maps.Map(this.$refs.map, mapOptions);
-
+        this.map = new google.maps.Map(this.$refs.mapContainer, mapOptions);
         this.clearMarkers();
 
         this.locations.forEach(location => {
@@ -285,21 +412,6 @@ export default {
             title: location.nombre
           });
 
-          const infoWindow = new google.maps.InfoWindow({
-            content: `
-              <div class="map-info-window">
-                <h4>${location.nombre}</h4>
-                <p><strong>ID:</strong> ${location.id}</p>
-                <p><strong>Producción ID:</strong> ${location.produccionId}</p>
-                <p><strong>Coordenadas:</strong> ${location.latitud.toFixed(4)}, ${location.longitud.toFixed(4)}</p>
-              </div>
-            `
-          });
-
-          marker.addListener('click', () => {
-            infoWindow.open(this.map, marker);
-          });
-
           this.markers.push(marker);
         });
 
@@ -307,107 +419,173 @@ export default {
           const bounds = new google.maps.LatLngBounds();
           this.markers.forEach(marker => bounds.extend(marker.getPosition()));
           this.map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+
+          // Ajustar centro ligeramente hacia abajo para evitar el vacío superior
+          google.maps.event.addListenerOnce(this.map, 'bounds_changed', () => {
+            const currentZoom = this.map.getZoom();
+            const maxZoom = 3.5;
+            if (currentZoom > maxZoom) {
+              this.map.setZoom(maxZoom);
+            }
+
+            const currentCenter = this.map.getCenter();
+            this.map.setCenter({
+              lat: currentCenter.lat() - 10, // Desplaza hacia abajo el centro
+              lng: currentCenter.lng()
+            });
+          });
         }
 
       } catch (error) {
         console.error('Error al inicializar Google Maps:', error);
       }
     },
+
+    zoomIn() {
+      if (this.map) this.map.setZoom(this.map.getZoom() + 1);
+    },
+
+    zoomOut() {
+      if (this.map) this.map.setZoom(this.map.getZoom() - 1);
+    },
+
+    resetView() {
+      if (this.map && this.markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        this.markers.forEach(marker => bounds.extend(marker.getPosition()));
+        this.map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+      } else if (this.map) {
+        this.map.setCenter({ lat: 0, lng: 0 });
+        this.map.setZoom(3);
+      }
+    },
+
     clearMarkers() {
-      this.markers.forEach(marker => marker.setMap(null));
-      this.markers = [];
-    },
-    initActivityChart() {
-      const ctx = this.$refs.activityChart.getContext('2d');
-
-      if (this.activityChart) {
-        this.activityChart.destroy();
+      if (this.markers) {
+        this.markers.forEach(marker => marker.setMap(null));
+        this.markers = [];
       }
-
-      this.activityChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: Array.from({ length: this.timeRange }, (_, i) => `Día ${i + 1}`),
-          datasets: [{
-            label: 'Actividad',
-            data: Array.from({ length: this.timeRange }, () => Math.floor(Math.random() * 100)),
-            borderColor: '#7e5bef',
-            backgroundColor: 'rgba(126, 91, 239, 0.1)',
-            borderWidth: 2,
-            tension: 0.3,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: this.darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-              },
-              ticks: {
-                color: this.darkMode ? '#e2e8f0' : '#4a5568'
-              }
-            },
-            x: {
-              grid: {
-                color: this.darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
-              },
-              ticks: {
-                color: this.darkMode ? '#e2e8f0' : '#4a5568'
-              }
-            }
-          }
-        }
-      });
     },
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode;
-      if (this.map) {
-        this.map.setOptions({
-          styles: this.darkMode ? this.darkMapStyle : []
-        });
-      }
-      this.initActivityChart();
+
+    handleImageError(event) {
+      event.target.src = 'https://via.placeholder.com/150x225?text=Poster+No+Disponible';
+    },
+
+    handleAvatarError(event) {
+      event.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+    },
+
+    formatTipoProduccion(tipo) {
+      const tipos = {
+        'PELICULA': 'Película',
+        'SERIE': 'Serie',
+        'DOCUMENTAL': 'Documental',
+        'CORTOMETRAJE': 'Cortometraje'
+      };
+      return tipos[tipo] || tipo;
+    },
+
+    formatCategoria(categoria) {
+      const categorias = {
+        'ACCION': 'Acción',
+        'AVENTURA': 'Aventura',
+        'COMEDIA': 'Comedia',
+        'DRAMA': 'Drama',
+        'TERROR': 'Terror',
+        'CIENCIA_FICCION': 'Ciencia Ficción',
+        'ANIMACION': 'Animación',
+        'SUSPENSE': 'Suspense',
+        'ROMANCE': 'Romance',
+        'FANTASIA': 'Fantasía',
+        'DOCUMENTAL': 'Documental',
+        'INFANTIL': 'Infantil'
+      };
+      return categorias[categoria] || categoria;
+    },
+
+    formatRole(role) {
+      const rolesMap = {
+        'USUARIO': 'Usuario',
+        'ADMINISTRADOR': 'Administrador'
+      };
+      return rolesMap[role] || role;
+    },
+
+    viewUser(userId) {
+      console.log('Ver usuario:', userId);
+      // Aquí podrías redirigir a la página de edición del usuario
+      // this.$router.push(`/admin/usuarios/editar/${userId}`);
+    },
+
+    addNewAdmin() {
+      console.log('Añadir nuevo admin:', this.newAdmin);
+      this.showAddAdminModal = false;
+      this.newAdmin = { name: '', email: '', password: '' };
+      alert(`Administrador ${this.newAdmin.name} añadido correctamente`);
     }
   },
   async mounted() {
+    await this.fetchStats();
+    await this.fetchRecentProductions();
+    await this.fetchRecentUsers();
     await this.fetchLocations();
-    this.initActivityChart();
   },
   beforeUnmount() {
-    if (this.activityChart) {
-      this.activityChart.destroy();
-    }
     this.clearMarkers();
-  },
-  watch: {
-    timeRange() {
-      this.initActivityChart();
-    }
   }
 }
 </script>
 
 <style scoped>
-.dashboard-container {
-  margin-left: 30px;
-  width: calc(100% - 30px);
-  min-height: 100vh;
-  transition: background-color 0.3s ease;
+:root {
+  /* Colores base */
+  --primary-color: #7e5bef;
+  --primary-hover: #6d46e8;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+
+  /* Colores modo claro */
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --card-header-bg: #f8fafc;
+  --border-color: #e2e8f0;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --shadow-color: rgba(0, 0, 0, 0.05);
+  --hover-shadow-color: rgba(126, 91, 239, 0.1);
+  --overlay-bg: rgba(0, 0, 0, 0.7);
+  --production-item-bg: rgba(126, 91, 239, 0.03);
+  --stat-icon-bg: rgba(126, 91, 239, 0.1);
+  --progress-bg: rgba(126, 91, 239, 0.1);
+}
+
+.dark-mode {
+  /* Colores modo oscuro */
+  --primary-color: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --success-color: #10b981;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+
+  --bg-color: #0f172a;
+  --card-bg: #1e293b;
+  --card-header-bg: #1e293b;
+  --border-color: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --hover-shadow-color: rgba(139, 92, 246, 0.2);
+  --overlay-bg: rgba(15, 23, 42, 0.9);
+  --production-item-bg: rgba(139, 92, 246, 0.08);
+  --stat-icon-bg: rgba(139, 92, 246, 0.2);
+  --progress-bg: rgba(139, 92, 246, 0.2);
 }
 
 .dashboard-content {
   padding: 20px;
-  height: 100%;
-  margin: 0;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Stats Grid */
@@ -421,38 +599,25 @@ export default {
 .stat-card {
   background: var(--card-bg);
   border-radius: 12px;
-  padding: 25px;
-  display: flex;
-  flex-direction: column;
+  padding: 20px;
   box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-  border: 1px solid var(--border-color);
-  z-index: 1;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--stat-gradient);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
 }
 
 .stat-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px var(--hover-shadow-color);
-  border-color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 15px var(--hover-shadow-color);
 }
 
-.stat-card:hover::before {
-  opacity: 0.1;
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  z-index: 2;
 }
 
 .stat-icon {
@@ -465,60 +630,57 @@ export default {
   justify-content: center;
   color: var(--primary-color);
   font-size: 1.2rem;
-  margin-bottom: 20px;
-  transition: all 0.3s ease;
-}
-
-.stat-card:hover .stat-icon {
-  background: rgba(126, 91, 239, 0.2);
-  transform: scale(1.1);
+  flex-shrink: 0;
 }
 
 .stat-info h3 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
+  margin: 0;
   color: var(--text-primary);
-  margin-bottom: 5px;
-  transition: color 0.3s ease;
 }
 
 .stat-info p {
+  margin: 5px 0 0;
   color: var(--text-secondary);
-  font-size: 0.95rem;
-  transition: color 0.3s ease;
-}
-
-.stat-trend {
-  display: flex;
-  align-items: center;
-  gap: 5px;
   font-size: 0.9rem;
-  font-weight: 600;
-  margin-top: 10px;
 }
 
-.stat-trend.up {
-  color: var(--success-color);
-}
-
-.stat-trend.down {
-  color: var(--danger-color);
-}
-
-.stat-wave {
+.stat-progress {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary-color), transparent);
-  opacity: 0.5;
-  transition: all 0.3s ease;
+  background: rgba(126, 91, 239, 0.1);
 }
 
-.stat-card:hover .stat-wave {
-  height: 6px;
-  opacity: 0.8;
+.progress-bar {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.5s ease;
+}
+
+.stat-loading {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: rgba(126, 91, 239, 0.1);
+  overflow: hidden;
+}
+
+.loading-bar {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(126, 91, 239, 0.5), transparent);
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Main Content Layout */
@@ -526,7 +688,6 @@ export default {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 25px;
-  transition: all 0.3s ease;
 }
 
 @media (max-width: 1200px) {
@@ -544,7 +705,7 @@ export default {
 /* Map Card */
 .map-card {
   background: var(--card-bg);
-  border-radius: 2px !important;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px var(--shadow-color);
   border: 1px solid var(--border-color);
@@ -556,40 +717,61 @@ export default {
 }
 
 .card-header {
-  padding: 18px 20px;
+  padding: 15px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border-color);
   background: var(--card-header-bg);
-  transition: all 0.3s ease;
 }
 
 .card-header h3 {
   font-size: 1.1rem;
-  color: var(--text-primary);
+  font-weight: 600;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: color 0.3s ease;
 }
 
 .card-header h3 i {
   color: var(--primary-color);
 }
 
+.map-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.map-control-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.map-control-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
 .map-container {
   position: relative;
   height: 450px;
   overflow: hidden;
-  border-radius: 5px;
 }
 
 .google-map {
   width: 100%;
   height: 100%;
-  border-radius: 5px;
-  transition: all 0.3s ease;
 }
 
 .loading-overlay {
@@ -605,7 +787,6 @@ export default {
   justify-content: center;
   color: white;
   z-index: 10;
-  border-radius: 0 0 16px 16px;
 }
 
 .spinner {
@@ -632,7 +813,6 @@ export default {
   text-align: center;
   padding: 20px;
   background: var(--card-bg);
-  border-radius: 0 0 16px 16px;
 }
 
 .empty-state i {
@@ -643,7 +823,7 @@ export default {
 }
 
 .btn-primary {
-  padding: 10px 20px;
+  padding: 8px 16px;
   background: var(--primary-color);
   color: white;
   border: none;
@@ -652,134 +832,15 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 500;
-  box-shadow: 0 2px 5px rgba(126, 91, 239, 0.3);
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(126, 91, 239, 0.4);
-}
-
-/* Productions Card */
-.productions-card {
-  background: var(--card-bg);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px var(--shadow-color);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-}
-
-.productions-card:hover {
-  box-shadow: 0 8px 15px var(--hover-shadow-color);
-}
-
-.productions-list {
-  padding: 15px;
-}
-
-.production-item {
-  display: flex;
-  align-items: center;
-  padding: 15px;
-  border-radius: 12px;
-  margin-bottom: 12px;
-  background: var(--production-item-bg);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  cursor: pointer;
-}
-
-.production-item:last-child {
-  margin-bottom: 0;
-}
-
-.production-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 5px 10px var(--hover-shadow-color);
-  border-color: var(--primary-color);
-}
-
-.production-image {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
-  object-fit: cover;
-  margin-right: 15px;
-  transition: all 0.3s ease;
-}
-
-.production-item:hover .production-image {
-  transform: scale(1.05);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-}
-
-.production-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.production-info h4 {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  margin-bottom: 5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.3s ease;
-}
-
-.production-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.badge {
-  font-size: 0.7rem;
-  padding: 3px 8px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.badge.Película {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-}
-
-.badge.Serie {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--info-color);
-}
-
-.date {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  transition: color 0.3s ease;
-}
-
-.production-status {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  margin-left: 10px;
-  flex-shrink: 0;
-  transition: all 0.3s ease;
-}
-
-.production-status.active {
-  color: var(--success-color);
-  background: rgba(16, 185, 129, 0.1);
-}
-
-.production-status.pending {
-  color: var(--warning-color);
-  background: rgba(245, 158, 11, 0.1);
 }
 
 .view-all {
@@ -798,125 +859,411 @@ export default {
   transform: translateX(3px);
 }
 
-/* Actions Card */
-.actions-card {
+/* Productions Card */
+.productions-card {
   background: var(--card-bg);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
+}
+
+.productions-list {
+  padding: 15px;
+}
+
+.production-item {
+  display: flex;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  background: var(--production-item-bg);
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
 }
 
-.actions-card:hover {
-  box-shadow: 0 8px 15px var(--hover-shadow-color);
+.production-item:last-child {
+  margin-bottom: 0;
 }
 
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  padding: 20px;
+.production-item:hover {
+  transform: translateX(5px);
+  border-color: var(--primary-color);
+  box-shadow: 0 5px 10px var(--hover-shadow-color);
 }
 
-@media (max-width: 768px) {
-  .actions-grid {
-    grid-template-columns: 1fr;
-  }
+.production-poster {
+  position: relative;
+  flex-shrink: 0;
 }
 
-.action-btn {
-  padding: 20px 15px;
-  background: var(--action-btn-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+.production-image {
+  width: 120px;
+  height: 180px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.production-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.production-details h4 {
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.production-meta {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.badge.película {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.badge.serie {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--info-color);
+}
+
+.badge.documental {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--primary-color);
+}
+
+.badge.cortometraje {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color);
+}
+
+.year, .duration {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.duration i {
+  margin-right: 3px;
+}
+
+.production-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.9rem;
+  color: var(--warning-color);
+  margin-bottom: 8px;
+}
+
+.production-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.category-tag {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  background: rgba(126, 91, 239, 0.1);
+  color: var(--primary-color);
+  border-radius: 20px;
+}
+
+.production-actions {
+  display: flex;
+  align-items: flex-start;
+}
+
+.production-actions .action-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+}
+
+/* Users Card */
+.users-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
+}
+
+.users-list {
+  padding: 15px;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: var(--production-item-bg);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.user-item:hover {
+  transform: translateX(3px);
+  border-color: var(--primary-color);
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-info h4 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.user-info p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.user-role.administrador {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.user-role.editor {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--info-color);
+}
+
+.user-role.moderador {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color);
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(126, 91, 239, 0.1);
+  border: none;
+  color: var(--primary-color);
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.3s ease;
 }
 
-.action-btn:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 15px var(--hover-shadow-color);
-  border-color: var(--primary-color);
-  background: var(--action-btn-hover);
+.btn-icon:hover {
+  background: var(--primary-color);
+  color: white;
 }
 
-.action-icon {
-  width: 44px;
-  height: 44px;
+/* Stats Card */
+.stats-card {
+  background: var(--card-bg);
   border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  border: 1px solid var(--border-color);
+}
+
+.stats-summary {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  background: rgba(126, 91, 239, 0.05);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-3px);
+}
+
+.summary-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   background: rgba(126, 91, 239, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--primary-color);
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
+  font-size: 1.1rem;
 }
 
-.action-btn:hover .action-icon {
-  background: rgba(126, 91, 239, 0.2);
-  transform: scale(1.1);
-}
-
-.action-btn span {
-  font-size: 0.9rem;
+.summary-info h4 {
+  font-size: 1.5rem;
+  margin: 0;
   color: var(--text-primary);
-  font-weight: 500;
-  text-align: center;
-  transition: color 0.3s ease;
 }
 
-.actions-grid span{
-  color: black;
-}
-.dark-mode span {
-  color: white;
+.summary-info p {
+  margin: 5px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-/* Activity Card */
-.activity-card {
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
   background: var(--card-bg);
-  border-radius: 16px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   overflow: hidden;
-  box-shadow: 0 4px 6px var(--shadow-color);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
 }
 
-.activity-card:hover {
-  box-shadow: 0 8px 15px var(--hover-shadow-color);
-}
-
-.chart-container {
+.modal-header {
   padding: 20px;
-  height: 250px;
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.time-select {
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font-size: 0.85rem;
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.time-select:hover {
-  border-color: var(--primary-color);
+.modal-close:hover {
+  color: var(--primary-color);
+  transform: rotate(90deg);
 }
 
-.time-select:focus {
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus {
   outline: none;
+  border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(126, 91, 239, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--border-color);
 }
 
 /* Animations */
@@ -924,100 +1271,14 @@ export default {
   to { transform: rotate(360deg); }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Dark Mode Variables */
-:root {
-  --primary-color: #7e5bef;
-  --primary-hover: #6d46e8;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --card-header-bg: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --shadow-color: rgba(0, 0, 0, 0.05);
-  --hover-shadow-color: rgba(126, 91, 239, 0.1);
-  --overlay-bg: rgba(0, 0, 0, 0.7);
-  --production-item-bg: rgba(126, 91, 239, 0.03);
-  --action-btn-bg: #ffffff;
-  --action-btn-hover: #f8fafc;
-  --stat-gradient: linear-gradient(135deg, #7e5bef 0%, #a78bfa 100%);
-}
-
-.dark-mode {
-  --primary-color: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --card-header-bg: #1e293b;
-  --border-color: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --shadow-color: rgba(0, 0, 0, 0.2);
-  --hover-shadow-color: rgba(139, 92, 246, 0.2);
-  --overlay-bg: rgba(15, 23, 42, 0.9);
-  --production-item-bg: rgba(139, 92, 246, 0.08);
-  --action-btn-bg: #1e293b;
-  --action-btn-hover: #334155;
-  --stat-gradient: linear-gradient(135deg, #8b5cf6 0%, #c4b5fd 100%);
-}
-
-/* Apply dark mode to body */
-body.dark-mode {
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-}
-
-/* Smooth transitions for dark mode */
-body, .dashboard-container, .stat-card, .map-card,
-.productions-card, .actions-card, .activity-card {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Map info window styles */
-.map-info-window {
-  color: #1e293b;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  padding: 10px;
-  min-width: 200px;
-}
-
-.map-info-window h4 {
-  margin: 0 0 8px 0;
-  color: #7e5bef;
-  font-size: 1rem;
-}
-
-.map-info-window p {
-  margin: 4px 0;
-  font-size: 0.85rem;
-  color: #475569;
-}
-
-/* Responsive adjustments */
+/* Responsive */
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .dashboard-container {
-    margin-left: 0;
-    width: 100%;
-    padding: 15px;
+  .main-content {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1027,13 +1288,79 @@ body, .dashboard-container, .stat-card, .map-card,
   }
 
   .production-item {
-    padding: 12px;
+    flex-direction: column;
   }
 
   .production-image {
-    width: 40px;
-    height: 40px;
-    margin-right: 12px;
+    width: 100%;
+    height: auto;
+    max-height: 200px;
   }
+
+  .stats-summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  background-color: transparent;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.deactivate-button {
+  color: #ed8936;
+}
+
+.deactivate-button:hover {
+  background-color: #fffaf0;
+}
+
+.activate-button {
+  color: #48bb78;
+}
+
+.activate-button:hover {
+  background-color: #f0fff4;
+}
+
+.delete-button {
+  color: #f56565;
+}
+
+.delete-button:hover {
+  background-color: #fff5f5;
+}
+
+.dark-mode .icon-button.edit-button:hover,
+.dark .icon-button.edit-button:hover {
+  background-color: rgba(66, 153, 225, 0.1);
+}
+
+.dark-mode .icon-button.deactivate-button:hover,
+.dark .icon-button.deactivate-button:hover {
+  background-color: rgba(237, 137, 54, 0.1);
+}
+
+.dark-mode .icon-button.activate-button:hover,
+.dark .icon-button.activate-button:hover {
+  background-color: rgba(72, 187, 120, 0.1);
+}
+
+.dark-mode .icon-button.delete-button:hover,
+.dark .icon-button.delete-button:hover {
+  background-color: rgba(245, 101, 101, 0.1);
 }
 </style>

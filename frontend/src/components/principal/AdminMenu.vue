@@ -1,10 +1,10 @@
 ﻿<template>
   <aside class="sidebar" :class="{ 'sidebar-collapsed': isCollapsed, 'dark-mode': darkMode }">
     <div class="sidebar-header">
-        <span class="logo-icon" @click="$emit('toggle-sidebar')" style="cursor: pointer;">
-          <i class="fas fa-rocket"></i>
-        </span>
-        <span class="logo-text" v-if="!isCollapsed">Administración</span>
+      <span class="logo-icon" @click="$emit('toggle-sidebar')" style="cursor: pointer;">
+        <i class="fas fa-rocket" :class="{ 'centered-icon': isCollapsed }"></i>
+      </span>
+      <span class="logo-text" v-if="!isCollapsed">Administración</span>
     </div>
 
     <nav class="sidebar-nav">
@@ -22,7 +22,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button class="logout-btn" @click="$emit('logout')">
+      <button class="logout-btn" @click="logout">
         <span class="logout-icon">
           <i class="fas fa-sign-out-alt"></i>
         </span>
@@ -33,6 +33,8 @@
 </template>
 
 <script>
+import { logout } from '@/services/auth.service';
+
 export default {
   name: 'AdminMenu',
   props: {
@@ -48,6 +50,12 @@ export default {
         { path: '/admin/ubicaciones', icon: 'fas fa-map-marked-alt', text: 'Ubicaciones', badge: '' },
         { path: '/admin/usuarios', icon: 'fas fa-users', text: 'Usuarios', badge: '' },
       ]
+    }
+  },
+  methods: {
+    logout() {
+      logout();
+      this.$router.push('/');
     }
   }
 }
@@ -73,84 +81,62 @@ export default {
   color: white;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s;
-  z-index: 100;
+  transition: all 0.3s ease;
+  z-index: 1000;
   box-shadow: 3px 0 15px rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
-.sidebar-collapsed .sidebar {
-  width: 80px;
+.sidebar-collapsed {
+  width: 70px;
 }
 
 .sidebar-header {
-  padding: 1.5rem 1.5rem;
+  padding: 1.09rem 1.7rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background-color: rgba(0, 0, 0, 0.1);
-  transition: all 0.3s;
-}
-
-.logo-link {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: white;
-  overflow: hidden;
 }
 
 .logo-icon {
-  font-size: 1.8rem;
-  margin-right: 0.75rem;
+  padding: 0.38rem 0.38rem;
+  margin-left: -0.3rem;
+
+  font-size: 1.5rem;
   color: var(--color-primary-light);
   min-width: 24px;
-  transition: all 0.3s;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+
+.centered-icon {
+  margin: 0 auto;
 }
 
 .logo-text {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   white-space: nowrap;
-  transition: all 0.3s;
-  opacity: 1;
+  transition: all 0.3s ease;
 }
 
 .sidebar-collapsed .logo-text {
-  opacity: 0;
-  width: 0;
-  margin-right: 0;
-}
-
-.collapse-btn {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.3s;
-  flex-shrink: 0;
-}
-
-.collapse-btn:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
+  display: none;
 }
 
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary-light) transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
@@ -165,19 +151,17 @@ export default {
 }
 
 .sidebar-nav li {
-  margin: 0.25rem 0;
-  position: relative;
+  margin: 0.15rem 0;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  padding: 0.9rem 1.35rem;
+  color: rgba(255, 255, 255, 0.85);
   text-decoration: none;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
   position: relative;
-  overflow: hidden;
 }
 
 .nav-link:hover {
@@ -203,37 +187,33 @@ export default {
 }
 
 .nav-icon {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   width: 24px;
   text-align: center;
-  margin-right: 1rem;
+  margin-right: 12px;
   flex-shrink: 0;
-  transition: all 0.3s;
 }
 
 .nav-text {
-  flex: 1;
+  font-size: 0.95rem;
   white-space: nowrap;
-  transition: all 0.3s;
-  opacity: 1;
+  transition: all 0.3s ease;
 }
 
 .sidebar-collapsed .nav-text {
-  opacity: 0;
-  width: 0;
-  margin-right: 0;
+  display: none;
 }
 
 .nav-badge {
   background: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.4rem;
   border-radius: 50px;
-  font-size: 0.75rem;
-  transition: all 0.3s;
+  font-size: 0.7rem;
+  margin-left: auto;
 }
 
 .sidebar-footer {
-  padding: 1rem;
+  padding: 0.8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background-color: rgba(0, 0, 0, 0.1);
 }
@@ -241,59 +221,76 @@ export default {
 .logout-btn {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 0.7rem;
+  background: rgba(255, 69, 69, 0.15);
   border: none;
   border-radius: 6px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
 }
 
 .logout-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 69, 69, 0.25);
   color: white;
-  transform: translateX(5px);
 }
 
 .logout-icon {
-  font-size: 1.1rem;
+  font-size: 1rem;
   width: 24px;
   text-align: center;
-  margin-right: 1rem;
-  flex-shrink: 0;
 }
 
 .logout-text {
-  transition: all 0.3s;
-  opacity: 1;
-  white-space: nowrap;
+  margin-left: 10px;
 }
 
 .sidebar-collapsed .logout-text {
-  opacity: 0;
-  width: 0;
-  margin-right: 0;
+  display: none;
 }
 
 .dark-mode .sidebar {
   background-color: var(--color-primary-darkest);
 }
 
-@media (max-width: 992px) {
+/* Responsive para móviles */
+@media (max-width: 768px) {
   .sidebar {
-    transform: translateX(-100%);
-    z-index: 1000;
-  }
-
-  .sidebar-collapsed .sidebar {
-    transform: translateX(0);
     width: 260px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1100;
   }
 
-  .collapse-btn {
-    display: none;
+  .sidebar:not(.sidebar-collapsed) {
+    transform: translateX(0);
+  }
+
+  .sidebar-collapsed {
+    width: 0;
+    overflow: hidden;
+  }
+
+  .nav-link {
+    padding: 0.8rem 1rem;
+  }
+
+  .logo-text, .nav-text {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 240px;
+  }
+
+  .nav-icon, .logout-icon {
+    font-size: 1rem;
+    margin-right: 8px;
   }
 }
 </style>

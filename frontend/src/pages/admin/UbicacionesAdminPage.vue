@@ -20,17 +20,23 @@
       <!-- Sección de tabla a la derecha -->
       <div class="table-section">
         <!-- Búsqueda -->
-        <div class="search-container">
-          <div class="search-box">
-            <i class="fas fa-search"></i>
-            <input
-                v-model="searchQuery"
-                @input="debouncedSearch"
-                placeholder="Buscar ubicaciones..."
-                type="search"
-            >
-            <button @click="openModal(null)" class="btn-new-icon" title="Nueva Ubicación">
+        <div class="search-header">
+          <div class="search-bar">
+            <div class="search-input-container">
+              <i class="fas fa-search search-icon"></i>
+              <input
+                  v-model="searchQuery"
+                  placeholder="Buscar ubicaciones..."
+                  type="search"
+                  class="search-input"
+              >
+              <button @click="fetchUbicaciones" class="search-button">
+                Buscar
+              </button>
+            </div>
+            <button @click="openModal(null)" class="new-button">
               <i class="fas fa-plus"></i>
+              <span>Nueva Ubicación</span>
             </button>
           </div>
         </div>
@@ -49,7 +55,7 @@
               <th @click="sortBy('longitud')">
                 Longitud
               </th>
-              <th>Acciones</th>
+              <th style="text-align: center;">Acciones</th>
             </tr>
             </thead>
             <tbody>
@@ -60,21 +66,28 @@
               <td>{{ ubicacion.nombre }}</td>
               <td>{{ ubicacion.latitud.toFixed(4) }}</td>
               <td>{{ ubicacion.longitud.toFixed(4) }}</td>
-              <td class="actions">
-                <button @click="openModal(ubicacion)" class="btn-edit" title="Editar">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button @click="confirmDelete(ubicacion)" class="btn-delete" title="Eliminar">
-                  <i class="fas fa-trash"></i>
-                </button>
-                <button @click="centerMap(ubicacion)" class="btn-view" title="Centrar en mapa">
-                  <i class="fas fa-map-marker-alt"></i>
-                </button>
+              <td>
+                <div class="action-buttons">
+                  <button @click="openModal(ubicacion)" class="btn-edit" title="Editar">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="confirmDelete(ubicacion)" class="btn-delete" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                  <button @click="centerMap(ubicacion)" class="btn-view" title="Centrar en mapa">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </button>
+                </div>
               </td>
             </tr>
-            <tr v-if="ubicaciones.length === 0">
+            <tr v-if="ubicaciones.length === 0 && !loading">
               <td colspan="5" class="no-results">
                 No se encontraron ubicaciones
+              </td>
+            </tr>
+            <tr v-if="loading">
+              <td colspan="5" class="loading-row">
+                <i class="fas fa-spinner fa-spin"></i> Cargando...
               </td>
             </tr>
             </tbody>
@@ -85,7 +98,7 @@
         <div class="pagination-container">
           <button
               @click="prevPage"
-              :disabled="currentPage === 1"
+              :disabled="currentPage === 1 || loading"
               class="pagination-btn"
               title="Página anterior"
           >
@@ -96,7 +109,7 @@
           </span>
           <button
               @click="nextPage"
-              :disabled="currentPage >= totalPages"
+              :disabled="currentPage >= totalPages || loading"
               class="pagination-btn"
               title="Página siguiente"
           >
@@ -114,13 +127,32 @@
         @close="closeModal"
         @save="handleSave"
     />
+
+    <!-- Modal de confirmación para eliminar -->
+    <div v-if="showConfirmModal" class="modal-overlay">
+      <div class="delete-confirmation-modal">
+        <div class="modal-header">
+          <h3>Confirmar eliminación</h3>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás completamente seguro de que deseas eliminar la ubicación "{{ ubicacionToDelete?.nombre }}"?</p>
+          <p>La acción no se podrá revertir, y todas las referencias a esta ubicación se perderán.</p>
+          <p>¿Deseas continuar?</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="showConfirmModal = false" class="cancel-btn">Cancelar</button>
+          <button @click="deleteUbicacion" class="confirm-delete-btn">Eliminar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { Loader } from '@googlemaps/js-api-loader';
-import { debounce } from 'lodash';
 import UbicacionModal from "@/components/modales/edicion/UbicacionModal.vue";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default {
   name: 'AdministracionUbicaciones',
@@ -139,7 +171,9 @@ export default {
       sortField: 'nombre',
       sortDirection: 'asc',
       showModal: false,
+      showConfirmModal: false,
       selectedUbicacion: null,
+      ubicacionToDelete: null,
       map: null,
       markers: [],
       infoWindow: null,
@@ -243,7 +277,6 @@ export default {
     }
   },
   created() {
-    this.debouncedSearch = debounce(this.fetchUbicaciones, 500);
     this.fetchUbicaciones();
   },
   mounted() {
@@ -254,7 +287,17 @@ export default {
       this.loading = true;
       try {
         const response = await fetch(
-            `http://localhost:8080/api/ubicaciones?page=${this.currentPage - 1}&size=${this.itemsPerPage}&sortBy=${this.sortField}&sortDirection=${this.sortDirection}&search=${this.searchQuery}`
+            `${API_BASE_URL}/api/ubicaciones/filter?page=${this.currentPage - 1}&size=${this.itemsPerPage}&sortBy=nombre&sortDirection=${this.sortDirection}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${localStorage.getItem('token')}` // si usas autenticación
+              },
+              body: JSON.stringify({
+                nombre: this.searchQuery || null
+              })
+            }
         );
 
         if (!response.ok) {
@@ -265,17 +308,14 @@ export default {
         this.ubicaciones = data.data;
         this.totalItems = data.totalItems;
         this.totalPages = data.totalPages;
-
-        this.updateMapMarkers();
+        this.currentPage = data.currentPage + 1 || 1;
       } catch (error) {
         console.error('Error:', error);
+        this.$toast.error('Error al cargar las ubicaciones');
       } finally {
         this.loading = false;
       }
-    },
-    loadMockData() {
-      this.totalItems = 4;
-      this.totalPages = 1;
+      this.updateMapMarkers();
     },
     async initMap() {
       try {
@@ -288,7 +328,7 @@ export default {
         await loader.load();
 
         this.map = new google.maps.Map(this.$refs.map, {
-          center: { lat: 20, lng: 0 },
+          center: {lat: 20, lng: 0},
           zoom: 2,
           styles: this.darkMode ? this.darkMapStyle : [],
           mapTypeControl: true,
@@ -322,7 +362,7 @@ export default {
 
       this.ubicaciones.forEach(ubicacion => {
         const marker = new google.maps.Marker({
-          position: { lat: ubicacion.latitud, lng: ubicacion.longitud },
+          position: {lat: ubicacion.latitud, lng: ubicacion.longitud},
           map: this.map,
           title: ubicacion.nombre
         });
@@ -346,7 +386,7 @@ export default {
 
       // Solo ajustar los límites si no hay un zoom o centro específico
       if (!this.currentZoom || !this.currentCenter) {
-        this.map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 50 });
+        this.map.fitBounds(bounds, {top: 50, right: 50, bottom: 50, left: 50});
       }
     },
     centerMap(ubicacion) {
@@ -369,22 +409,19 @@ export default {
         this.sortField = field;
         this.sortDirection = 'asc';
       }
+      this.currentPage = 1;
       this.fetchUbicaciones();
-    },
-    sortIcon(field) {
-      if (this.sortField !== field) return 'fas fa-sort';
-      return this.sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
     },
     prevPage() {
       if (this.currentPage > 1) {
         this.currentPage--;
-        this.fetchUbicaciones(false); // No reiniciar el mapa
+        this.fetchUbicaciones();
       }
     },
     nextPage() {
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        this.fetchUbicaciones(false); // No reiniciar el mapa
+        this.fetchUbicaciones();
       }
     },
     showInfoWindow(ubicacion) {
@@ -421,7 +458,7 @@ export default {
       }
     },
     openModal(ubicacion) {
-      this.selectedUbicacion = ubicacion ? { ...ubicacion } : null;
+      this.selectedUbicacion = ubicacion ? {...ubicacion} : null;
       this.showModal = true;
     },
     closeModal() {
@@ -430,10 +467,12 @@ export default {
     },
     async handleSave(ubicacionData) {
       try {
-        const method = ubicacionData.id ? 'PUT' : 'POST';
-        const url = ubicacionData.id
-            ? `http://localhost:8080/api/ubicaciones/${ubicacionData.id}`
-            : 'http://localhost:8080/api/ubicaciones';
+        const isEdit = !!ubicacionData.id;
+        const url = isEdit
+            ? `${API_BASE_URL}/api/ubicaciones/${ubicacionData.id}`
+            : `${API_BASE_URL}/api/ubicaciones`;
+
+        const method = isEdit ? 'PUT' : 'POST';
 
         const response = await fetch(url, {
           method,
@@ -447,21 +486,21 @@ export default {
           throw new Error('Error al guardar la ubicación');
         }
 
+        this.$toast.success('Ubicación guardada correctamente');
         this.fetchUbicaciones();
         this.closeModal();
       } catch (error) {
         console.error('Error:', error);
-        alert('Error al guardar la ubicación');
+        this.$toast.error('Error al guardar la ubicación');
       }
     },
     confirmDelete(ubicacion) {
-      if (confirm(`¿Estás seguro de que quieres eliminar "${ubicacion.nombre}"?`)) {
-        this.deleteUbicacion(ubicacion.id);
-      }
+      this.ubicacionToDelete = ubicacion;
+      this.showConfirmModal = true;
     },
-    async deleteUbicacion(id) {
+    async deleteUbicacion() {
       try {
-        const response = await fetch(`http://localhost:8080/api/ubicaciones/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/ubicaciones/${this.ubicacionToDelete.id}`, {
           method: 'DELETE'
         });
 
@@ -469,10 +508,14 @@ export default {
           throw new Error('Error al eliminar la ubicación');
         }
 
+        this.$toast.success('Ubicación eliminada correctamente');
         this.fetchUbicaciones();
       } catch (error) {
         console.error('Error:', error);
-        alert('Error al eliminar la ubicación');
+        this.$toast.error('Error al eliminar la ubicación');
+      } finally {
+        this.showConfirmModal = false;
+        this.ubicacionToDelete = null;
       }
     }
   }
@@ -480,25 +523,25 @@ export default {
 </script>
 
 <style scoped>
+/* Contenedor principal */
 .ubicaciones-container {
-  margin-left: 50px;
-  margin-top: 26px;
-  width: calc(100% - 100px);
-  min-height: 50vh;
-  transition: background-color 0.3s ease;
-  color: var(--text-primary);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .main-content {
   display: flex;
-  gap: 2rem;
+  gap: 24px;
   height: calc(100vh - 180px);
 }
 
+/* Sección del mapa */
 .map-section {
   flex: 1;
   min-width: 0;
-  margin-right: 20px;
 }
 
 .map-container {
@@ -506,220 +549,12 @@ export default {
   height: 100%;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px var(--shadow-color);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
 }
 
-.table-section {
-  width: 43%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.search-container {
-  display: flex;
-  margin-bottom: 1.5rem;
-}
-
-.search-box {
-  position: relative;
-  flex-grow: 1;
-  display: flex;
-  align-items: center;
-}
-
-.search-box i.fa-search {
-  position: absolute;
-  left: 12px;
-  color: var(--text-secondary);
-}
-
-.search-box input {
-  width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(126, 91, 239, 0.2);
-}
-
-.btn-new-icon {
-  position: absolute;
-  right: 8px;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-new-icon:hover {
-  background: var(--primary-hover);
-  transform: scale(1.05);
-}
-
-.table-container {
-  background: var(--card-bg);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px var(--shadow-color);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border-color);
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.ubicaciones-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.ubicaciones-table th,
-.ubicaciones-table td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.ubicaciones-table th {
-  background: var(--table-header-bg);
-  font-weight: 600;
-  color: var(--text-primary);
-  padding: 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid var(--border-color);
-}
-
-.ubicaciones-table th:hover {
-  background: var(--table-header-hover);
-  cursor: pointer;
-}
-
-.ubicaciones-table tr:last-child td {
-  border-bottom: none;
-}
-
-.ubicaciones-table tr:hover td {
-  background: var(--table-row-hover);
-}
-
-.ubicaciones-table .even-row td {
-  background: var(--table-row-even);
-}
-
-.ubicaciones-table .even-row:hover td {
-  background: var(--table-row-even-hover);
-}
-
-.ubicaciones-table .odd-row td {
-  background: var(--card-bg);
-}
-
-.ubicaciones-table .odd-row:hover td {
-  background: var(--table-row-hover);
-}
-
-.actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.btn-edit, .btn-delete, .btn-view {
-  padding: 0.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-}
-
-.btn-edit {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--info-color);
-}
-
-.btn-edit:hover {
-  background: rgba(59, 130, 246, 0.2);
-}
-
-.btn-delete {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger-color);
-}
-
-.btn-delete:hover {
-  background: rgba(239, 68, 68, 0.2);
-}
-
-.btn-view {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
-}
-
-.btn-view:hover {
-  background: rgba(16, 185, 129, 0.2);
-}
-
-.no-results {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-secondary);
-}
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  margin-top: auto;
-}
-
-.pagination-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
-.page-info {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+.dark-mode .map-container {
+  border-color: #334155;
 }
 
 .google-map {
@@ -737,92 +572,515 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--card-bg);
+  background: #ffffff;
+}
+
+.dark-mode .loading-overlay,
+.dark-mode .empty-state {
+  background: #1e293b;
 }
 
 .loading-overlay {
-  color: var(--text-primary);
+  color: #2d3748;
   z-index: 10;
 }
 
+.dark-mode .loading-overlay {
+  color: #e2e8f0;
+}
+
 .empty-state {
-  color: var(--text-secondary);
+  color: #718096;
 }
 
 .empty-state i {
   font-size: 3rem;
   margin-bottom: 1rem;
-  color: var(--text-secondary);
+  color: #a0aec0;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(126, 91, 239, 0.2);
+  border: 4px solid rgba(66, 153, 225, 0.2);
   border-radius: 50%;
-  border-top-color: var(--primary-color);
+  border-top-color: #4299e1;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
 }
 
+/* Sección de la tabla */
+.table-section {
+  width: 45%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-header {
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.search-bar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+}
+
+.search-input-container {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  height: 44px;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .search-input-container {
+  background: #2d3748;
+  border-color: #4a5568;
+}
+
+.search-input-container:focus-within {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 14px;
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0 14px 0 42px;
+  border: none;
+  background: transparent;
+  color: #2d3748;
+  font-size: 14px;
+  outline: none;
+  height: 100%;
+}
+
+.dark-mode .search-input {
+  color: #e2e8f0;
+}
+
+.search-button {
+  padding: 0 20px;
+  height: 44px;
+  background: #4299e1;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.search-button:hover {
+  background: #3182ce;
+}
+
+.new-button {
+  padding: 0 20px;
+  height: 44px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.new-button:hover {
+  background: #0d9f6e;
+  transform: translateY(-1px);
+}
+
+.new-button:active {
+  transform: translateY(0);
+}
+
+/* Tabla de ubicaciones */
+.table-container {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.dark-mode .table-container {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.ubicaciones-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ubicaciones-table th,
+.ubicaciones-table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dark-mode .ubicaciones-table th,
+.dark-mode .ubicaciones-table td {
+  border-bottom-color: #334155;
+}
+
+.ubicaciones-table th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+  padding: 14px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.dark-mode .ubicaciones-table th {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-bottom-color: #334155;
+}
+
+.ubicaciones-table th:hover {
+  background: rgba(66, 153, 225, 0.05);
+  cursor: pointer;
+}
+
+.dark-mode .ubicaciones-table th:hover {
+  background: rgba(66, 153, 225, 0.1);
+}
+
+.ubicaciones-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ubicaciones-table tr:hover td {
+  background: rgba(66, 153, 225, 0.03);
+}
+
+.dark-mode .ubicaciones-table tr:hover td {
+  background: rgba(66, 153, 225, 0.05);
+}
+
+.ubicaciones-table .even-row td {
+  background: #f8fafc;
+}
+
+.dark-mode .ubicaciones-table .even-row td {
+  background: #1e293b;
+}
+
+.ubicaciones-table .even-row:hover td {
+  background: rgba(66, 153, 225, 0.03);
+}
+
+.dark-mode .ubicaciones-table .even-row:hover td {
+  background: rgba(66, 153, 225, 0.07);
+}
+
+.ubicaciones-table .odd-row td {
+  background: #ffffff;
+}
+
+.dark-mode .ubicaciones-table .odd-row td {
+  background: #1e293b;
+}
+
+.ubicaciones-table .odd-row:hover td {
+  background: rgba(66, 153, 225, 0.03);
+}
+
+.dark-mode .ubicaciones-table .odd-row:hover td {
+  background: rgba(66, 153, 225, 0.07);
+}
+
+/* Botones de acción */
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-edit, .btn-delete, .btn-view {
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-view {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.btn-view:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.no-results, .loading-row {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+
+.dark-mode .no-results,
+.dark-mode .loading-row {
+  color: #a0aec0;
+}
+
+.loading-row i {
+  margin-right: 8px;
+  color: #4299e1;
+}
+
+/* Paginación */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  margin-top: auto;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #4a5568;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .pagination-btn {
+  background: #2d3748;
+  border-color: #4a5568;
+  color: #cbd5e0;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #4299e1;
+  color: white;
+  border-color: #4299e1;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #718096;
+  min-width: 120px;
+  text-align: center;
+}
+
+.dark-mode .page-info {
+  color: #a0aec0;
+}
+
+/* Modal de confirmación */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-confirmation-modal {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 2px solid #ef4444;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease;
+}
+
+.dark-mode .delete-confirmation-modal {
+  background: #1e293b;
+  border-color: #ef4444;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  background: #ef4444;
+  color: white;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #2d3748;
+}
+
+.dark-mode .modal-body {
+  color: #e2e8f0;
+}
+
+.modal-body p {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.modal-footer {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background: #f7fafc;
+}
+
+.dark-mode .modal-footer {
+  background: #1e293b;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background: #ffffff;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.dark-mode .cancel-btn {
+  background: #334155;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+
+.cancel-btn:hover {
+  background: #f1f5f9;
+}
+
+.dark-mode .cancel-btn:hover {
+  background: #475569;
+}
+
+.confirm-delete-btn {
+  padding: 8px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.confirm-delete-btn:hover {
+  background: #dc2626;
+}
+
+/* Animaciones */
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Dark mode variables */
-:root {
-  --primary-color: #7e5bef;
-  --primary-hover: #6d46e8;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-  --table-header-bg: #f1f5f9;
-  --table-header-hover: rgba(126, 91, 239, 0.05);
-  --table-row-even: #f8fafc;
-  --table-row-even-hover: rgba(126, 91, 239, 0.03);
-  --table-row-hover: rgba(126, 91, 239, 0.03);
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --border-color: #e2e8f0;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --shadow-color: rgba(0, 0, 0, 0.05);
-}
-
-.dark-mode {
-  --primary-color: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --success-color: #10b981;
-  --danger-color: #ef4444;
-  --warning-color: #f59e0b;
-  --info-color: #3b82f6;
-  --table-header-bg: #1e293b;
-  --table-header-hover: rgba(126, 91, 239, 0.1);
-  --table-row-even: #1e293b;
-  --table-row-even-hover: rgba(126, 91, 239, 0.05);
-  --table-row-hover: rgba(126, 91, 239, 0.05);
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --border-color: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --shadow-color: rgba(0, 0, 0, 0.2);
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estilos para la ventana de información del mapa */
 .map-info-window {
   padding: 12px;
-  color: #1e293b;
+  color: #2d3748;
   font-family: Arial, sans-serif;
   min-width: 200px;
   background-color: white;
   border-radius: 8px;
 }
 
-.map-info-window.dark {
+.dark-mode .map-info-window {
   background-color: #1e293b;
-  color: #f8fafc;
+  color: #e2e8f0;
 }
 
 .map-info-window h4 {
@@ -838,12 +1096,8 @@ export default {
   color: inherit;
 }
 
-.map-info-window.dark p strong {
-  color: #94a3b8;
-}
-
 /* Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 1200px) {
   .main-content {
     flex-direction: column;
     height: auto;
@@ -852,7 +1106,6 @@ export default {
   .map-section {
     width: 100%;
     height: 400px;
-    margin-right: 0;
     margin-bottom: 20px;
   }
 
@@ -863,18 +1116,31 @@ export default {
 
 @media (max-width: 768px) {
   .ubicaciones-container {
-    margin-left: 20px;
-    margin-right: 20px;
-    width: calc(100% - 40px);
+    padding: 16px;
   }
 
-  .ubicaciones-table {
-    display: block;
-    overflow-x: auto;
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-input-container,
+  .new-button {
+    width: 100%;
+  }
+
+  .ubicaciones-table th,
+  .ubicaciones-table td {
+    padding: 12px;
+    font-size: 14px;
   }
 }
 
-.ubicaciones-table tbody tr {
-  cursor: pointer;
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
 }
+
 </style>

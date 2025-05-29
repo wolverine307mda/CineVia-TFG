@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+﻿import api from './api';
 
 export default {
     async fetchSagas(filters, pagination, sortOptions) {
@@ -11,12 +11,17 @@ export default {
                 ...this.cleanFilters(filters)
             };
 
-            const response = await axios.get('/api/sagas/filter', {
+            const response = await api.get('/api/sagas/filter', {
                 params,
                 paramsSerializer: params => {
                     return Object.entries(params)
-                        .filter(([_, value]) => value !== null && value !== undefined)
-                        .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+                        .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+                        .map(([key, value]) => {
+                            if (Array.isArray(value)) {
+                                return value.map(v => `${key}=${encodeURIComponent(v)}`).join('&');
+                            }
+                            return `${key}=${encodeURIComponent(value)}`;
+                        })
                         .join('&');
                 }
             });
@@ -28,46 +33,66 @@ export default {
             };
         } catch (error) {
             console.error('Error fetching sagas:', error);
-            throw error;
+            throw this.handleApiError(error);
         }
     },
 
     async getSagaById(id) {
         try {
-            const response = await axios.get(`/api/sagas/${id}`);
+            const response = await api.get(`/api/sagas/${id}`);
             return this.mapSagaResponse(response.data);
         } catch (error) {
             console.error('Error fetching saga:', error);
-            throw error;
+            throw this.handleApiError(error);
         }
     },
 
     async createSaga(sagaData) {
         try {
-            const response = await axios.post('/api/sagas', this.prepareSagaRequest(sagaData));
-            return this.mapSagaResponse(response.data);
+            const response = await api.post('/api/sagas', this.prepareSagaRequest(sagaData));
+            return { success: true, data: this.mapSagaResponse(response.data) };
         } catch (error) {
             console.error('Error creating saga:', error);
-            throw error;
+            throw this.handleApiError(error);
         }
     },
 
     async updateSaga(id, sagaData) {
         try {
-            const response = await axios.put(`/api/sagas/${id}`, this.prepareSagaRequest(sagaData));
-            return this.mapSagaResponse(response.data);
+            const response = await api.put(`/api/sagas/${id}`, this.prepareSagaRequest(sagaData));
+            return { success: true, data: this.mapSagaResponse(response.data) };
         } catch (error) {
             console.error('Error updating saga:', error);
-            throw error;
+            throw this.handleApiError(error);
         }
     },
 
     async deleteSaga(id) {
         try {
-            await axios.delete(`/api/sagas/${id}`);
+            await api.delete(`/api/sagas/${id}`);
         } catch (error) {
             console.error('Error deleting saga:', error);
-            throw error;
+            throw this.handleApiError(error);
+        }
+    },
+
+    async addProduccionToSaga(sagaId, produccionId) {
+        try {
+            await api.post(`/api/sagas/${sagaId}/producciones/${produccionId}`);
+            return { success: true };
+        } catch (error) {
+            console.error('Error adding produccion to saga:', error);
+            throw this.handleApiError(error);
+        }
+    },
+
+    async removeProduccionFromSaga(sagaId, produccionId) {
+        try {
+            await api.delete(`/api/sagas/${sagaId}/producciones/${produccionId}`);
+            return { success: true };
+        } catch (error) {
+            console.error('Error removing produccion from saga:', error);
+            throw this.handleApiError(error);
         }
     },
 
@@ -87,7 +112,7 @@ export default {
             descripcion: sagaData.descripcion || '',
             isAcabada: sagaData.isAcabada || false,
             fechaInicio: sagaData.fechaInicio || null,
-            fechaFin: sagaData.fechaFin || null,
+            fechaFin: sagaData.isAcabada ? sagaData.fechaFin : null,
             imagen: sagaData.imagen || ''
         };
     },
@@ -124,5 +149,35 @@ export default {
 
     formatStatus(isFinished) {
         return isFinished ? 'Finalizada' : 'En curso';
-    }
+    },
+
+    handleApiError(error) {
+        if (error.response) {
+            // Error de servidor con respuesta
+            const message = error.response.data?.message || 'Error en el servidor';
+            const status = error.response.status;
+
+            if (status === 400) {
+                return new Error(`Datos inválidos: ${message}`);
+            } else if (status === 404) {
+                return new Error('Recurso no encontrado');
+            } else if (status === 500) {
+                return new Error('Error interno del servidor');
+            }
+            return new Error(`Error ${status}: ${message}`);
+        } else if (error.request) {
+            return new Error('No se recibió respuesta del servidor');
+        } else {
+            return new Error('Error al configurar la solicitud');
+        }
+    },
+
+    async uploadSagaImage(id, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await api.post(`/api/sagas/${id}/upload-image`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
 };

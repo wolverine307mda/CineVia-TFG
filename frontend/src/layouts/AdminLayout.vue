@@ -10,68 +10,150 @@
           <h1 class="page-title">{{ currentRouteName }}</h1>
         </div>
         <div class="topbar-right">
-          <div class="user-profile">
-            <img :src="userAvatar" alt="User" class="avatar">
-            <span class="user-name">{{ userName }}</span>
-            <i class="fas fa-chevron-down"></i>
+          <div class="user-profile" @click="toggleDropdown" ref="userProfile">
+            <img :src="user.avatar || defaultAvatar" alt="User" class="avatar">
+            <span class="user-name">{{ user.nombre }}</span>
+            <i class="fas fa-chevron-down dropdown-icon" :class="{ 'rotate': showDropdown }"></i>
+
+            <transition name="dropdown">
+              <div class="dropdown-menu" v-show="showDropdown">
+                <ul>
+                  <li @click="goToHome">
+                    <i class="fas fa-home"></i> Ir a Inicio
+                  </li>
+                  <li @click="goToProfile">
+                    <i class="fas fa-user"></i> Ver Perfil
+                  </li>
+                  <li @click="logout">
+                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                  </li>
+                </ul>
+              </div>
+            </transition>
           </div>
           <button class="theme-toggle" @click="toggleDarkMode">
             <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>
           </button>
         </div>
       </header>
-          <router-view :dark-mode="darkMode" />
--    </main>
+      <router-view :dark-mode="darkMode" />
+    </main>
   </div>
 </template>
 
 <script>
+import { computed, onMounted, ref, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import AdminMenu from '@/components/principal/AdminMenu.vue'
 
 export default {
   name: 'AdminLayout',
   components: { AdminMenu },
-  data() {
+  setup() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+    const isCollapsed = ref(false)
+    const darkMode = ref(false)
+    const showDropdown = ref(false)
+    const userProfile = ref(null)
+    const defaultAvatar = 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff'
+
+    // Obtener datos del usuario desde el store
+    const user = computed(() => authStore.user || {})
+
+    const currentRouteName = computed(() => {
+      return router.currentRoute.value.meta.title || 'Admin'
+    })
+
+    const toggleSidebar = () => {
+      isCollapsed.value = !isCollapsed.value
+      localStorage.setItem('sidebarCollapsed', isCollapsed.value)
+    }
+
+    const toggleDarkMode = () => {
+      darkMode.value = !darkMode.value
+      document.body.classList.toggle('dark-mode', darkMode.value)
+      localStorage.setItem('darkMode', darkMode.value)
+    }
+
+    const toggleDropdown = () => {
+      showDropdown.value = !showDropdown.value
+    }
+
+    const goToHome = () => {
+      router.push('/')
+      showDropdown.value = false
+    }
+
+    const goToProfile = () => {
+      router.push('/myprofile')
+      showDropdown.value = false
+    }
+
+    const logout = () => {
+      authStore.logout()
+      router.push('/auth/login')
+      showDropdown.value = false
+    }
+
+    const closeDropdown = (event) => {
+      if (userProfile.value && !userProfile.value.contains(event.target)) {
+        showDropdown.value = false
+      }
+    }
+
+    const loadDarkModePreference = () => {
+      const savedMode = localStorage.getItem('darkMode')
+      const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      darkMode.value = savedMode !== null ? savedMode === 'true' : systemPrefersDark
+      document.body.classList.toggle('dark-mode', darkMode.value)
+    }
+
+    const loadSidebarPreference = () => {
+      const savedSidebarState = localStorage.getItem('sidebarCollapsed')
+      if (savedSidebarState !== null) {
+        isCollapsed.value = savedSidebarState === 'true'
+      }
+    }
+
+    onMounted(async () => {
+      try {
+        if (!authStore.isAuthenticated) {
+          await authStore.checkAuth()
+        }
+
+        if (!authStore.user) {
+          await authStore.fetchCurrentUser()
+        }
+
+        loadSidebarPreference()
+        loadDarkModePreference()
+        document.addEventListener('click', closeDropdown)
+      } catch (error) {
+        console.error('Error loading user:', error)
+        router.push('/auth/login')
+      }
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('click', closeDropdown)
+    })
+
     return {
-      isCollapsed: false,
-      darkMode: false,
-      userName: 'Mario de Domingo Alvarez',
-      userAvatar: 'https://w7.pngwing.com/pngs/927/935/png-transparent-deadpool-logo-marvel-heroes-2016-deadpool-wolverine-logo-superhero-icon-deadpool-free-angle-face-movies.png'
-    }
-  },
-  computed: {
-    currentRouteName() {
-      return this.$route.meta.title || 'Admin'
-    }
-  },
-  methods: {
-    toggleSidebar() {
-      this.isCollapsed = !this.isCollapsed
-      localStorage.setItem('sidebarCollapsed', this.isCollapsed)
-    },
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode
-      document.body.classList.toggle('dark-mode', this.darkMode)
-      localStorage.setItem('darkMode', this.darkMode)
-    },
-    logout() {
-      this.$router.push('/login')
-    }
-  },
-  mounted() {
-    const savedSidebarState = localStorage.getItem('sidebarCollapsed')
-    const savedDarkMode = localStorage.getItem('darkMode')
-
-    if (savedSidebarState !== null) {
-      this.isCollapsed = savedSidebarState === 'true'
-    }
-
-    if (savedDarkMode !== null) {
-      this.darkMode = savedDarkMode === 'true'
-      document.body.classList.toggle('dark-mode', this.darkMode)
-    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      this.darkMode = true
-      document.body.classList.add('dark-mode')
+      isCollapsed,
+      darkMode,
+      showDropdown,
+      userProfile,
+      defaultAvatar,
+      user,
+      currentRouteName,
+      toggleSidebar,
+      toggleDarkMode,
+      toggleDropdown,
+      goToHome,
+      goToProfile,
+      logout
     }
   }
 }
@@ -94,7 +176,7 @@ export default {
   --color-topbar: #ffffff;
   --color-topbar-dark: var(--color-primary-darkest);
   --sidebar-width: 260px;
-  --sidebar-collapsed-width: 80px;
+  --sidebar-collapsed-width: 70px;
   --topbar-height: 70px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -136,7 +218,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 0 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 3px 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 90;
   position: sticky;
   top: 0;
@@ -187,7 +269,7 @@ export default {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.8rem;
 }
 
 .theme-toggle {
@@ -209,6 +291,7 @@ export default {
 }
 
 .user-profile {
+  position: relative;
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -248,6 +331,80 @@ export default {
 
 .dark-mode .user-name {
   color: white;
+}
+
+.dropdown-icon {
+  transition: transform 0.3s ease;
+  font-size: 0.8rem;
+  margin-left: 0.3rem;
+}
+
+.dropdown-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--color-card);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  margin-top: 5px;
+  overflow: hidden;
+  transform-origin: top right;
+}
+
+.dark-mode .dropdown-menu {
+  background-color: var(--color-card-dark);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown-menu li {
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.dropdown-menu li:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .dropdown-menu li:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dropdown-menu li i {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+  color: var(--color-primary);
+}
+
+.dark-mode .dropdown-menu li i {
+  color: var(--color-primary-light);
+}
+
+/* Animaciones */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.3s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
 .content-wrapper {

@@ -4,7 +4,7 @@
     <section class="hero-section dark-hero">
       <div class="hero-content">
         <h1 class="hero-title">
-          Bienvenido a <span class="text-gradient">GeoFilm</span>
+          Bienvenido a <span class="text-gradient">MovieTrip</span>
         </h1>
         <p class="hero-subtitle">
           Descubre los lugares donde se filmaron tus películas y series favoritas. ¡Explora el cine en todo el mundo!
@@ -14,7 +14,7 @@
             <i class="fas fa-film"></i> Explorar Producciones
           </router-link>
           <router-link to="/auth/login" class="btn btn-secondary">
-            <i class="fas fa-ghost"></i> Mis Cuenta
+            <i class="fas fa-ghost"></i> Mi Cuenta
           </router-link>
         </div>
       </div>
@@ -65,10 +65,10 @@
         </div>
         <div class="feature-card">
           <div class="feature-icon">
-            <i class="fas fa-heart"></i>
+            <i class="fas fa-user-tie"></i>
           </div>
-          <h3>Reseñas y Favoritos</h3>
-          <p>Guarda tus lugares favoritos y comparte tus experiencias con otros usuarios.</p>
+          <h3>Conoce a los Profesionales</h3>
+          <p>Descubre directores, actores y técnicos detrás de tus películas favoritas.</p>
         </div>
       </div>
     </section>
@@ -83,7 +83,7 @@
             <p>La herramienta perfecta para los cinéfilos. Puedo ver exactamente dónde se filmaron mis películas favoritas. ¡Es increíble!</p>
           </div>
           <div class="testimonial-author">
-            <img src="https://media.licdn.com/dms/image/v2/D4E35AQGLSAQ4duIqlg/profile-framedphoto-shrink_800_800/profile-framedphoto-shrink_800_800/0/1731593963573?e=1747605600&v=beta&t=xvwr-tnB-qKb4NOHxtFXuzFoLg2uBTKII1bYERZ_qc4" alt="Laura">
+            <img src="https://media.licdn.com/dms/image/v2/D4E03AQFsmRNjOhDd0g/profile-displayphoto-shrink_100_100/profile-displayphoto-shrink_100_100/0/1731593961716?e=2147483647&v=beta&t=-Nxy8gfE570J-DUIQwizU5vWMSiVmLl5rkFGUC2_3Xs" alt="Eva">
             <div>
               <h4>Eva</h4>
               <p>Estudiante y Cinéfila</p>
@@ -96,7 +96,7 @@
             <p>¡Una app espectacular! Me encanta ver los lugares que aparecen en las películas. Definitivamente la recomiendo.</p>
           </div>
           <div class="testimonial-author">
-            <img src="https://media.licdn.com/dms/image/v2/D4E03AQGz-7Rm3kuq0A/profile-displayphoto-shrink_800_800/B4EZYFUfTYHkAg-/0/1743845980367?e=1752710400&v=beta&t=BlxjPpEivXduNMzDg7H2A1jXs3GLgEl2fW53qrL5FNU" alt="Andrés">
+            <img src="https://media.licdn.com/dms/image/v2/D4E03AQGz-7Rm3kuq0A/profile-displayphoto-shrink_800_800/B4EZYFUfTYHkAg-/0/1743845980367?e=1752710400&v=beta&t=BlxjPpEivXduNMzDg7H2A1jXs3GLgEl2fW53qrL5FNU" alt="Andrea">
             <div>
               <h4>Andrea</h4>
               <p>Viajera y amante del cine</p>
