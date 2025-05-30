@@ -24,179 +24,286 @@ import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
 import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
+import org.wolve.geofilm.producciones.produccion.service.ProduccionServiceImpl
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class ProduccionServiceImplTest {
 
- @Mock
- private lateinit var produccionRepository: ProduccionRepository
+    @Mock
+    private lateinit var produccionRepository: ProduccionRepository
 
- @Mock
- private lateinit var produccionMapper: ProduccionMapper
+    @Mock
+    private lateinit var produccionMapper: ProduccionMapper
 
- private lateinit var service: ProduccionServiceImpl
+    private lateinit var service: ProduccionServiceImpl
 
- @BeforeEach
- fun setUp() {
-  service = ProduccionServiceImpl(produccionRepository, produccionMapper)
- }
+    @BeforeEach
+    fun setUp() {
+        service = ProduccionServiceImpl(produccionRepository, produccionMapper)
+    }
 
- @Test
- fun `getProduccionById - existing id returns response`() {
-  val id = "id1"
-  val entity = mock(Produccion::class.java)
-  val response = mock(ProduccionResponse::class.java)
-  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(entity))
-  whenever(produccionMapper.toProduccionResponse(entity)).thenReturn(response)
+    @Test
+    fun getProduccionById() {
+        val id = "id1"
+        val entity = mock(Produccion::class.java)
+        val response = mock(ProduccionResponse::class.java)
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(entity))
+        whenever(produccionMapper.toProduccionResponse(entity)).thenReturn(response)
 
-  val result = service.getProduccionById(id)
+        val result = service.getProduccionById(id)
 
-  assertEquals(response, result)
-  verify(produccionRepository).findById(id)
-  verify(produccionMapper).toProduccionResponse(entity)
- }
+        assertEquals(response, result)
+        verify(produccionRepository).findById(id)
+        verify(produccionMapper).toProduccionResponse(entity)
+    }
 
- @Test
- fun `getProduccionById - missing id throws exception`() {
-  val id = "missing"
-  whenever(produccionRepository.findById(id)).thenReturn(Optional.empty())
+    @Test
+    fun getProduccionById() {
+        val id = "missing"
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.empty())
 
-  assertThrows(ProduccionNotFoundException::class.java) {
-   service.getProduccionById(id)
-  }
- }
+        assertThrows(ProduccionNotFoundException::class.java) {
+            service.getProduccionById(id)
+        }
+    }
 
- @Test
- fun `createProduccion - maps and saves correctly`() {
-  val request = mock(ProduccionRequest::class.java)
-  val entity = mock(Produccion::class.java)
-  val saved = mock(Produccion::class.java)
-  val response = mock(ProduccionResponse::class.java)
-  whenever(produccionMapper.toProduccionEntity(request)).thenReturn(entity)
-  whenever(produccionRepository.save(entity)).thenReturn(saved)
-  whenever(produccionMapper.toProduccionResponse(saved)).thenReturn(response)
+    @Test
+    fun createProduccion() {
+        val request = mock(ProduccionRequest::class.java)
+        val entity = mock(Produccion::class.java)
+        val saved = mock(Produccion::class.java)
+        val response = mock(ProduccionResponse::class.java)
+        whenever(produccionMapper.toProduccionEntity(request)).thenReturn(entity)
+        whenever(produccionRepository.save(entity)).thenReturn(saved)
+        whenever(produccionMapper.toProduccionResponse(saved)).thenReturn(response)
 
-  val result = service.createProduccion(request)
+        val result = service.createProduccion(request)
 
-  assertEquals(response, result)
-  verify(produccionMapper).toProduccionEntity(request)
-  verify(produccionRepository).save(entity)
-  verify(produccionMapper).toProduccionResponse(saved)
- }
+        assertEquals(response, result)
+        verify(produccionMapper).toProduccionEntity(request)
+        verify(produccionRepository).save(entity)
+        verify(produccionMapper).toProduccionResponse(saved)
+    }
 
- @Test
- fun `updateProduccion - updates when exists`() {
-  val id = "id2"
-  val request = mock(ProduccionRequest::class.java)
-  val existing = Produccion(
-   id = id,
-   titulo = "old",
-   tipo = TipoProduccion.PELICULA,
-   estreno = Date(),
-   duracion = 100,
-   sinopsis = "old",
-   imagen = null,
-   informacion = null,
-   puntuacion = 5.0,
-   categorias = mutableSetOf(Categoria.ACCION),
-   clasificacionEdad = ClasificacionEdad.MAYORES_7
-  )
-  val updated = existing.copy(
-   titulo = "new",
-   duracion = 120,
-   sinopsis = "new",
-   puntuacion = 8.0,
-   categorias = mutableSetOf(),
-   clasificacionEdad = ClasificacionEdad.MAYORES_12
-  )
-  val response = mock(ProduccionResponse::class.java)
-  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(existing))
-  whenever(produccionRepository.save(any<Produccion>())).thenReturn(updated)
-  whenever(produccionMapper.toProduccionResponse(updated)).thenReturn(response)
+    @Test
+    fun updateProduccion() {
+        val id = "id2"
+        val request = mock(ProduccionRequest::class.java)
+        val existing = Produccion(
+            id = id,
+            titulo = "old",
+            tipo = TipoProduccion.PELICULA,
+            estreno = Date(),
+            duracion = 100,
+            sinopsis = "old",
+            imagen = null,
+            informacion = null,
+            puntuacion = 5.0,
+            categorias = mutableSetOf(Categoria.ACCION),
+            clasificacionEdad = ClasificacionEdad.MAYORES_7
+        )
+        val updated = existing.copy(
+            titulo = "new",
+            duracion = 120,
+            sinopsis = "new",
+            puntuacion = 8.0,
+            categorias = mutableSetOf(),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12
+        )
+        val response = mock(ProduccionResponse::class.java)
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(existing))
+        whenever(produccionRepository.save(any<Produccion>())).thenReturn(updated)
+        whenever(produccionMapper.toProduccionResponse(updated)).thenReturn(response)
 
-  val result = service.updateProduccion(id, request)
+        val result = service.updateProduccion(id, request)
 
-  assertEquals(response, result)
-  verify(produccionRepository).save(any<Produccion>())
-  verify(produccionMapper).toProduccionResponse(updated)
- }
+        assertEquals(response, result)
+        verify(produccionRepository).save(any<Produccion>())
+        verify(produccionMapper).toProduccionResponse(updated)
+    }
 
- @Test
- fun `deleteProduccion - deletes when exists`() {
-  val id = "id3"
-  whenever(produccionRepository.findById(id)).thenReturn(Optional.of(mock(Produccion::class.java)))
+    @Test
+    fun updateProduccionNotFoundException() {
+        val id = "none"
+        val request = mock(ProduccionRequest::class.java)
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.empty())
 
-  service.deleteProduccion(id)
+        assertThrows(ProduccionNotFoundException::class.java) {
+            service.updateProduccion(id, request)
+        }
+    }
 
-  verify(produccionRepository).deleteById(id)
- }
+    @Test
+    fun deleteProduccion() {
+        val id = "id3"
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(mock(Produccion::class.java)))
 
- @Test
- fun `filtrarProducciones - returns paginated with correct args`() {
-  val page = 0; val size = 5
-  val pageRequest: Pageable = PageRequest.of(page, size)
-  val entity = mock(Produccion::class.java)
-  val pageImpl = PageImpl(listOf(entity), pageRequest, 1)
-  val paginatedResp: PaginatedResponse<*>? = mock(PaginatedResponse::class.java)
-  whenever(produccionRepository.findAll(any(), eq(pageRequest))).thenReturn(pageImpl)
+        service.deleteProduccion(id)
 
-  val result = service.filtrarProducciones(
-   titulo = null,
-   tipo = null,
-   estrenoDesde = null,
-   estrenoHasta = null,
-   categorias = null,
-   clasificacionEdad = null,
-   duracionMin = null,
-   duracionMax = null,
-   page = page,
-   size = size,
-   sortBy = listOf(),
-   sortDirection = ""
-  )
+        verify(produccionRepository).deleteById(id)
+    }
 
-  assertEquals(paginatedResp, result)
-  verify(produccionRepository).findAll(any(), eq(pageRequest))
-  verify(produccionMapper).toPaginatedResponse(pageImpl)
- }
+    @Test
+    fun deleteProduccion() {
+        val id = "nope"
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.empty())
 
- @Test
- fun `getClasificacionesEdad returns all enums`() {
-  val enums = ClasificacionEdad.values().toList()
-  assertEquals(enums, service.getClasificacionesEdad())
- }
+        assertThrows(ProduccionNotFoundException::class.java) {
+            service.deleteProduccion(id)
+        }
+    }
 
- @Test
- fun `getCategoriasDisponibles returns all enums`() {
-  val enums = Categoria.values().toList()
-  assertEquals(enums, service.getCategoriasDisponibles())
- }
+    @Test
+    fun filtrarProduccionesNullParams() {
+        val page = 0; val size = 5
+        val pageRequest: Pageable = PageRequest.of(page, size)
+        val entity = mock(Produccion::class.java)
+        val pageImpl = PageImpl(listOf(entity), pageRequest, 1)
+        val paginatedResp: PaginatedResponse<ProduccionResponse> = mock(PaginatedResponse::class.java)
+        whenever(produccionRepository.findAll(any(), eq(pageRequest))).thenReturn(pageImpl)
+        whenever(produccionMapper.toPaginatedResponse(pageImpl)).thenReturn(paginatedResp)
 
- @Test
- fun `getTiposProduccion returns all enums`() {
-  val enums = TipoProduccion.values().toList()
-  assertEquals(enums, service.getTiposProduccion())
- }
+        val result = service.filtrarProducciones(
+            titulo = null,
+            tipo = null,
+            estrenoDesde = null,
+            estrenoHasta = null,
+            categorias = null,
+            clasificacionEdad = null,
+            duracionMin = null,
+            duracionMax = null,
+            page = page,
+            size = size,
+            sortBy = listOf(),
+            sortDirection = ""
+        )
 
- @Test
- fun `findProduccionCompletaById - maps when exists`() {
-  val id = "full1"
-  val fullEntity = mock(Produccion::class.java)
-  val fullResponse = mock(ProduccionCompletaResponse::class.java)
-  whenever(produccionRepository.findCompletaById(id)).thenReturn(fullEntity)
-  whenever(produccionMapper.toCompletaResponse(fullEntity)).thenReturn(fullResponse)
+        assertEquals(paginatedResp, result)
+        verify(produccionRepository).findAll(any(), eq(pageRequest))
+        verify(produccionMapper).toPaginatedResponse(pageImpl)
+    }
 
-  val result = service.findProduccionCompletaById(id)
+    @Test
+    fun filtrarProduccionesAllparams() {
+        val page = 1; val size = 3
+        val pageRequest: Pageable = PageRequest.of(page, size)
+        val entity = mock(Produccion::class.java)
+        val pageImpl = PageImpl(listOf(entity), pageRequest, 1)
+        val paginatedResp: PaginatedResponse<ProduccionResponse> = mock(PaginatedResponse::class.java)
+        whenever(produccionRepository.findAll(any(), eq(pageRequest))).thenReturn(pageImpl)
+        whenever(produccionMapper.toPaginatedResponse(pageImpl)).thenReturn(paginatedResp)
 
-  assertEquals(fullResponse, result)
- }
+        val result = service.filtrarProducciones(
+            titulo = "T",
+            tipo = TipoProduccion.SERIE,
+            estrenoDesde = 2020,
+            estrenoHasta = 2023,
+            categorias = setOf(Categoria.DRAMA),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12,
+            duracionMin = 50,
+            duracionMax = 150,
+            page = page,
+            size = size,
+            sortBy = listOf("titulo"),
+            sortDirection = "asc"
+        )
 
- @Test
- fun `countParticipacionesByProduccionId returns count`() {
-  val id = "cnt1"
-  whenever(produccionRepository.countParticipacionesById(id)).thenReturn(3L)
-  assertEquals(3L, service.countParticipacionesByProduccionId(id))
- }
+        assertEquals(paginatedResp, result)
+        verify(produccionRepository).findAll(any(), eq(pageRequest))
+        verify(produccionMapper).toPaginatedResponse(pageImpl)
+    }
+
+    @Test
+    fun getClasificacionesEdad() {
+        val enums = ClasificacionEdad.values().toList()
+        assertEquals(enums, service.getClasificacionesEdad())
+    }
+
+    @Test
+    fun getCategoriasDisponibles() {
+        val enums = Categoria.values().toList()
+        assertEquals(enums, service.getCategoriasDisponibles())
+    }
+
+    @Test
+    fun getTiposProduccion() {
+        val enums = TipoProduccion.values().toList()
+        assertEquals(enums, service.getTiposProduccion())
+    }
+
+    @Test
+    fun findProduccionCompletaById() {
+        val id = "full1"
+        val fullEntity = mock(Produccion::class.java)
+        val fullResponse = mock(ProduccionCompletaResponse::class.java)
+        whenever(produccionRepository.findCompletaById(id)).thenReturn(fullEntity)
+        whenever(produccionMapper.toCompletaResponse(fullEntity)).thenReturn(fullResponse)
+
+        val result = service.findProduccionCompletaById(id)
+
+        assertEquals(fullResponse, result)
+    }
+
+    @Test
+    fun findProduccionCompletaByIdNotFoundException`() {
+        val id = "none"
+        whenever(produccionRepository.findCompletaById(id)).thenReturn(null)
+
+        assertThrows(ProduccionNotFoundException::class.java) {
+            service.findProduccionCompletaById(id)
+        }
+    }
+
+    @Test
+    fun countParticipacionesByProduccionId() {
+        val id = "cnt1"
+        whenever(produccionRepository.countParticipacionesById(id)).thenReturn(3L)
+        assertEquals(3L, service.countParticipacionesByProduccionId(id))
+    }
+
+    @Test
+    fun countParticipacionesByProduccionIdCero() {
+        val id = "cnt0"
+        whenever(produccionRepository.countParticipacionesById(id)).thenReturn(0L)
+        assertEquals(0L, service.countParticipacionesByProduccionId(id))
+    }
+
+    @Test
+    fun filtrarProduccionesEmptyList() {
+        val page = 2; val size = 4
+        val pageRequest: Pageable = PageRequest.of(page, size)
+        val pageImpl = PageImpl<Produccion>(emptyList(), pageRequest, 0)
+        val paginatedResp: PaginatedResponse<ProduccionResponse> = mock(PaginatedResponse::class.java)
+        whenever(produccionRepository.findAll(any(), eq(pageRequest))).thenReturn(pageImpl)
+        whenever(produccionMapper.toPaginatedResponse(pageImpl)).thenReturn(paginatedResp)
+
+        val result = service.filtrarProducciones(
+            titulo = "",
+            tipo = null,
+            estrenoDesde = null,
+            estrenoHasta = null,
+            categorias = null,
+            clasificacionEdad = null,
+            duracionMin = null,
+            duracionMax = null,
+            page = page,
+            size = size,
+            sortBy = listOf(),
+            sortDirection = ""
+        )
+
+        assertEquals(paginatedResp, result)
+        verify(produccionRepository).findAll(any(), eq(pageRequest))
+        verify(produccionMapper).toPaginatedResponse(pageImpl)
+    }
+
+    @Test
+    fun createProduccionNullThrowsException() {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            service.createProduccion(null as ProduccionRequest)
+        }
+        assertNotNull(exception)
+    }
 }

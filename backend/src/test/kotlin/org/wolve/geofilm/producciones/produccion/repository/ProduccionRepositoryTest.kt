@@ -1,83 +1,79 @@
 package org.wolve.geofilm.producciones.produccion.repository
 
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.data.domain.PageRequest
-import org.wolve.geofilm.producciones.produccion.models.*
+import org.springframework.data.jpa.domain.Specification
+import org.wolve.geofilm.producciones.produccion.models.Categoria
+import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
+import org.wolve.geofilm.producciones.produccion.models.Produccion
+import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 @DataJpaTest
 class ProduccionRepositoryTest {
 
     @Autowired
-    private lateinit var repository: ProduccionRepository
+    private lateinit var repo: ProduccionRepository
 
-    @Test
-    fun `should save and retrieve produccion`() {
-        val produccion = Produccion(
-            titulo = "Test Movie",
+    private fun createSample(id: String = UUID.randomUUID().toString()): Produccion {
+        val p = Produccion(
+            id = id,
+            titulo = "Sample",
             tipo = TipoProduccion.PELICULA,
             estreno = Date(),
-            duracion = 120,
-            sinopsis = "Test synopsis",
-            categorias = mutableSetOf(Categoria.ACCION)
+            duracion = 100,
+            sinopsis = "Desc",
+            imagen = null,
+            informacion = null,
+            puntuacion = 7.5,
+            categorias = mutableSetOf(Categoria.ACCION),
+            clasificacionEdad = ClasificacionEdad.TODOS_LOS_PUBLICOS
         )
-
-        val saved = repository.save(produccion)
-        val found = repository.findById(saved.id)
-
-        assertTrue(found.isPresent)
-        assertEquals(saved.id, found.get().id)
-        assertEquals("Test Movie", found.get().titulo)
+        return repo.save(p)
     }
 
     @Test
-    fun `should find by titulo containing ignore case`() {
-        repository.save(Produccion(titulo = "The Great Movie"))
-        repository.save(Produccion(titulo = "Great Expectations"))
-        repository.save(Produccion(titulo = "Not Matching"))
-
-        val page = repository.findByTituloContainingIgnoreCase("great", PageRequest.of(0, 10))
-
-        assertEquals(2, page.totalElements)
-        assertTrue(page.content.any { it.titulo == "The Great Movie" })
-        assertTrue(page.content.any { it.titulo == "Great Expectations" })
+    fun saveAndFindById() {
+        val saved = createSample()
+        val found = repo.findById(saved.id).orElse(null)
+        assertNotNull(found)
+        assertEquals(saved.id, found.id)
     }
 
     @Test
-    fun `should find by tipo`() {
-        repository.save(Produccion(titulo = "Movie 1", tipo = TipoProduccion.PELICULA))
-        repository.save(Produccion(titulo = "Series 1", tipo = TipoProduccion.SERIE))
+    fun deleteById() {
+        val saved = createSample()
+        repo.deleteById(saved.id)
+        assertTrue(repo.findById(saved.id).isEmpty)
+    }
 
-        val page = repository.findByTipo(TipoProduccion.SERIE, PageRequest.of(0, 10))
+    @Test
+    fun countParticipacionesById_empty() {
+        val saved = createSample()
+        val count = repo.countParticipacionesById(saved.id)
+        assertEquals(0L, count)
+    }
 
+    @Test
+    fun filterByTitulo() {
+        createSample(id = "1").apply { titulo = "First" }.let { repo.save(it) }
+        createSample(id = "2").apply { titulo = "Second" }.let { repo.save(it) }
+        val spec: Specification<Produccion> = Specification { root, _, cb -> cb.like(root.get("titulo"), "%First%") }
+        val page = repo.findAll(spec, PageRequest.of(0, 10))
         assertEquals(1, page.totalElements)
-        assertEquals("Series 1", page.content[0].titulo)
+        assertEquals("First", page.content[0].titulo)
     }
 
     @Test
-    fun `should find by categorias`() {
-        val produccion1 = Produccion(titulo = "Action Movie", categorias = mutableSetOf(Categoria.ACCION))
-        val produccion2 = Produccion(titulo = "Comedy Movie", categorias = mutableSetOf(Categoria.COMEDIA))
-        repository.save(produccion1)
-        repository.save(produccion2)
-
-        val page = repository.findByCategoriasIn(setOf(Categoria.ACCION), PageRequest.of(0, 10))
-
-        assertEquals(1, page.totalElements)
-        assertEquals("Action Movie", page.content[0].titulo)
-    }
-
-    @Test
-    fun `should count participaciones by produccion id`() {
-        val produccion = repository.save(Produccion(titulo = "Test Movie"))
-        // Note: In a real test, you'd need to set up participaciones for this produccion
-
-        val count = repository.countParticipacionesById(produccion.id)
-
-        assertEquals(0, count) // Adjust based on test data
+    fun findCompletaById() {
+        val saved = createSample()
+        // Assuming fetch join does not break basic retrieval
+        val complete = repo.findCompletaById(saved.id)
+        assertNotNull(complete)
+        assertEquals(saved.id, complete.id)
     }
 }
