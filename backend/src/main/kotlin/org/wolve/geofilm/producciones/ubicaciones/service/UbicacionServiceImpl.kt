@@ -73,6 +73,9 @@ class UbicacionServiceImpl(
     @CacheEvict(value = ["ubicaciones", "ubicacionesByProduccion"], allEntries = true)
     @Transactional
     override fun deleteUbicacion(id: String) {
+        ubicacionRepository.findById(id)
+            .orElseThrow { UbicacionNotFoundException(id) }
+
         ubicacionRepository.deleteById(id)
     }
     // endregion

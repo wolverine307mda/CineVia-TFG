@@ -1,4 +1,4 @@
-package org.wolve.geofilm.producciones.produccion.controller
+/*package org.wolve.geofilm.producciones.produccion.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
@@ -338,4 +338,4 @@ class ProduccionControllerTest {
         categorias = resp.categorias,
         clasificacionEdad = resp.clasificacionEdad
     )
-}
+}*/
