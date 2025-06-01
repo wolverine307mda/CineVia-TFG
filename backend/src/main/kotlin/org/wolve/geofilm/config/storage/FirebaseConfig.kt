@@ -8,7 +8,7 @@ import java.io.FileInputStream
 class FirebaseConfig {
 
     init {
-        val serviceAccount = FileInputStream("src/main/resources/mi-clave-firebase.json")
+        val serviceAccount = this::class.java.classLoader.getResourceAsStream("mi-clave-firebase.json")
         val options = FirebaseOptions.builder()
             .setCredentials(GoogleCredentials.fromStream(serviceAccount))
             .setStorageBucket("movietrip-e3a91.firebasestorage.app")

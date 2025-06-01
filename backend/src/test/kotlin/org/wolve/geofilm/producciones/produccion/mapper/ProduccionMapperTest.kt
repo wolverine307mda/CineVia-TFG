@@ -1,25 +1,28 @@
 package org.wolve.geofilm.producciones.produccion.mapper
 
+import org.springframework.data.domain.Page
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionResponse
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionRequest
-import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapperImpl
 import org.wolve.geofilm.producciones.produccion.models.Categoria
 import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
 import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 import java.util.*
 
 class ProduccionMapperTest {
 
-    private lateinit var mapper: ProduccionMapperImpl
+    private lateinit var mapper: ProduccionMapper
 
     @BeforeEach
     fun setUp() {
-        mapper = ProduccionMapperImpl()
+        mapper = ProduccionMapper()
     }
 
     @Test
@@ -32,8 +35,11 @@ class ProduccionMapperTest {
             imagen = "img.jpg",
             informacion = "Info",
             puntuacion = 8.5,
-            categorias = listOf(Categoria.ACCION.name),
-            clasificacionEdad = ClasificacionEdad.MAYORES_12.name
+            categorias = setOf(
+            Categoria.ACCION,
+            Categoria.AVENTURA),
+            tipo = TipoProduccion.SERIE,
+            clasificacionEdad = ClasificacionEdad.MAYORES_12.valorNumerico
         )
         val entity = mapper.toProduccionEntity(request)
 
@@ -73,10 +79,10 @@ class ProduccionMapperTest {
         assertEquals(entity.imagen, response.imagen)
         assertEquals(entity.informacion, response.informacion)
         assertEquals(entity.puntuacion, response.puntuacion)
-        assertTrue(response.categorias.contains(Categoria.DRAMA.name))
-        assertTrue(response.categorias.contains(Categoria.ACCION.name))
-        assertEquals(entity.clasificacionEdad.name, response.clasificacionEdad)
-        assertEquals(entity.tipo.name, response.tipo)
+        assertTrue(response.categorias.contains(Categoria.DRAMA))
+        assertTrue(response.categorias.contains(Categoria.ACCION))
+        assertEquals(entity.clasificacionEdad.valorNumerico, response.clasificacionEdad)
+        assertEquals(entity.tipo, response.tipo)
     }
 
     @Test
@@ -99,28 +105,47 @@ class ProduccionMapperTest {
 
         assertEquals(entity.id, completa.id)
         assertEquals(entity.titulo, completa.titulo)
-        assertEquals(entity.clasificacionEdad.name, completa.clasificacionEdad)
+        assertEquals(entity.clasificacionEdad.valorNumerico, completa.clasificacionEdad)
         assertNotNull(completa.participaciones)
         assertNotNull(completa.rodajes)
-        assertNotNull(completa.ubicaciones)
     }
 
     @Test
-    fun toPaginatedResponseConservaPagination() {
-        val sample = listOf(
-            ProduccionResponse("idP", "T", "S", Date(), 50, "img", "info", 5.0, emptyList(), null)
+    fun toPaginatedResponseConservaPaginationYMapeaContenido() {
+        val entidad = Produccion(
+            id = "idP",
+            titulo = "Título de prueba",
+            tipo = TipoProduccion.PELICULA,
+            estreno = Date(),
+            duracion = 120,
+            sinopsis = "Sinopsis de prueba",
+            imagen = "url-imagen",
+            informacion = "Info adicional",
+            puntuacion = 7.5,
+            categorias = mutableSetOf(Categoria.ACCION, Categoria.AVENTURA),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12
         )
-        val pageRequest = org.springframework.data.domain.PageRequest.of(0,1)
-        val page = org.springframework.data.domain.PageImpl(sample, pageRequest, 10)
-        val paginated = mapper.toPaginatedResponse(page)
+
+        val pageRequest = PageRequest.of(0, 1)
+        val page: Page<Produccion> = PageImpl(listOf(entidad), pageRequest, 10)
+
+        val paginated: PaginationUtils.PaginatedResponse<ProduccionResponse> =
+            mapper.toPaginatedResponse(page)
 
         assertEquals(10, paginated.totalItems)
-        assertEquals(1, paginated.content.size)
-        assertEquals(sample[0].id, paginated.content[0].id)
+        assertEquals(10, paginated.totalPages)
+        assertEquals(1, paginated.pageSize)
+
+        assertEquals(1, paginated.data.size)
+        val resp = paginated.data[0]
+        assertEquals(entidad.id, resp.id)
+        assertEquals(entidad.titulo, resp.titulo)
+        assertEquals(entidad.tipo, resp.tipo)
+        assertEquals(entidad.duracion, resp.duracion)
     }
 
     @Test
-    fun mappearEnumsFunciona() {
+    fun mapEnumsFunciona() {
         // Test all TipoProduccion values
         TipoProduccion.values().forEach {
             assertDoesNotThrow { TipoProduccion.valueOf(it.name) }

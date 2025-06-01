@@ -29,6 +29,9 @@ class UsuarioServiceImpl(
             throw IllegalArgumentException("El nombre de usuario ya está en uso")
         }
 
+        val passwordEncript = passwordEncoder.encode(dto.password)
+        dto.password = passwordEncript
+
         val usuario = usuarioMapper.toEntity(dto)
         return usuarioRepository.save(usuario)
     }

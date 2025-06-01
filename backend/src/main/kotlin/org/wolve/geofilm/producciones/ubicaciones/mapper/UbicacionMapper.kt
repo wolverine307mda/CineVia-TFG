@@ -1,10 +1,10 @@
-package org.wolve.geofilm.ubicaciones.mapper
+package org.wolve.geofilm.producciones.ubicaciones.mapper
 
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Component
-import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
-import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
-import org.wolve.geofilm.ubicaciones.models.Ubicacion
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionRequest
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionResponse
+import org.wolve.geofilm.producciones.ubicaciones.models.Ubicacion
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 
 @Component

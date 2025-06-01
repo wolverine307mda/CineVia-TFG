@@ -1,4 +1,4 @@
-package org.wolve.geofilm.producciones.rodajes.dto.request
+package org.wolve.geofilm.rodajes.dto.request
 
 data class RodajeRequest(
     val produccionId: String,

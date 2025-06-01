@@ -1,4 +1,4 @@
-package org.wolve.geofilm.ubicaciones.controller
+package org.wolve.geofilm.producciones.ubicaciones.controller
 
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.ArraySchema
@@ -10,10 +10,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.wolve.geofilm.ubicaciones.dto.UbicacionFilterParams
-import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
-import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
-import org.wolve.geofilm.ubicaciones.service.IUbicacionService
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionFilterParams
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionRequest
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionResponse
+import org.wolve.geofilm.producciones.ubicaciones.service.IUbicacionService
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 

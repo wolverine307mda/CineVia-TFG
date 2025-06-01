@@ -1,7 +1,7 @@
-package org.wolve.geofilm.rodajes.service
+package org.wolve.geofilm.producciones.rodajes.service
 
-import org.wolve.geofilm.rodajes.dto.request.RodajeRequest
-import org.wolve.geofilm.rodajes.dto.response.RodajeResponse
+import org.wolve.geofilm.producciones.rodajes.dto.request.RodajeRequest
+import org.wolve.geofilm.producciones.rodajes.dto.response.RodajeResponse
 
 interface IRodajeService {
     fun findById(id: String): RodajeResponse

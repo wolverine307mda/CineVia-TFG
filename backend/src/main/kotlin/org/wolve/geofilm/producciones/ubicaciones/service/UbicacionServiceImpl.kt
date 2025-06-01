@@ -1,17 +1,17 @@
-package org.wolve.geofilm.ubicaciones.service
+package org.wolve.geofilm.producciones.ubicaciones.service
 
 import jakarta.transaction.Transactional
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
-import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
-import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
-import org.wolve.geofilm.ubicaciones.exceptions.UbicacionNotFoundException
-import org.wolve.geofilm.ubicaciones.mapper.UbicacionMapper
-import org.wolve.geofilm.ubicaciones.models.Ubicacion
-import org.wolve.geofilm.ubicaciones.repository.UbicacionRepository
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionRequest
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionResponse
+import org.wolve.geofilm.producciones.ubicaciones.exceptions.UbicacionNotFoundException
+import org.wolve.geofilm.producciones.ubicaciones.mapper.UbicacionMapper
+import org.wolve.geofilm.producciones.ubicaciones.models.Ubicacion
+import org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
-import org.wolve.geofilm.ubicaciones.dto.UbicacionFilterParams
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionFilterParams
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 

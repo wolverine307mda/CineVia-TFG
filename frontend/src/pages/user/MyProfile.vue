@@ -25,7 +25,7 @@
         <div class="profile-header text-center mb-4">
           <div class="avatar-container mb-3">
             <img :src="user.avatar || defaultAvatar" alt="Avatar" class="avatar-img">
-            <button class="btn-edit-avatar" @click="openAvatarUpload">
+            <button class="btn-edit-avatar" @click="showAvatarModal = true">
               <i class="fas fa-camera"></i>
             </button>
           </div>
@@ -65,7 +65,7 @@
 
         <!-- Acciones -->
         <div class="profile-actions mt-4">
-          <button class="btn btn-primary w-100 mb-3" @click="editProfile">
+          <button class="btn btn-primary w-100 mb-3" @click="showEditModal = true">
             <i class="fas fa-edit me-2"></i>Editar perfil
           </button>
           <button class="btn btn-outline-secondary w-100 mb-3" @click="changePassword">
@@ -77,15 +77,156 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para editar perfil -->
+    <div v-if="showEditModal" class="modal-overlay" @click.self="showEditModal = false">
+      <div class="edit-modal">
+        <div class="modal-header">
+          <h3><i class="fas fa-user-edit me-2"></i>Editar Perfil</h3>
+          <button class="btn-close" @click="showEditModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <form @submit.prevent="saveProfile">
+            <div class="form-group">
+              <label for="nombre">Nombre</label>
+              <input type="text" id="nombre" v-model="editForm.nombre" :class="{'is-invalid': errors.nombre}">
+              <div class="invalid-feedback" v-if="errors.nombre">{{ errors.nombre }}</div>
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellido</label>
+              <input type="text" id="apellido" v-model="editForm.apellido" >
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <input type="tel" id="telefono" v-model="editForm.telefono" :class="{'is-invalid': errors.telefono}" >
+              <div class="invalid-feedback" v-if="errors.telefono">{{ errors.telefono }}</div>
+            </div>
+
+            <div class="form-group">
+              <label for="fechaNacimiento">Fecha de Nacimiento</label>
+              <input type="date" id="fechaNacimiento" v-model="editForm.fechaNacimiento" >
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-cancel" @click="showEditModal = false">
+                Cancelar
+              </button>
+              <button type="submit" class="btn btn-save" :disabled="isSaving">
+                <span v-if="isSaving">
+                  <i class="fas fa-spinner fa-spin me-2"></i>Guardando...
+                </span>
+                <span v-else>
+                  <i class="fas fa-save me-2"></i>Guardar cambios
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para editar avatar -->
+    <div v-if="showAvatarModal" class="modal-overlay" @click.self="showAvatarModal = false">
+      <div class="avatar-modal">
+        <div class="modal-header">
+          <h3>Editar foto de perfil</h3>
+          <button class="btn-close" @click="showAvatarModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Selector de archivo -->
+          <div class="upload-section" v-if="!selectedFile">
+            <div class="upload-area" @dragover.prevent="dragOver" @drop.prevent="handleDrop">
+              <input
+                  type="file"
+                  id="avatar-upload"
+                  ref="fileInput"
+                  accept="image/*"
+                  @change="handleFileSelect"
+                  class="file-input"
+              >
+              <label for="avatar-upload" class="upload-label">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p>Arrastra una imagen o haz clic para seleccionar</p>
+                <p class="small-text">Formatos soportados: JPG, PNG, GIF (Max. 5MB)</p>
+              </label>
+            </div>
+          </div>
+
+          <!-- Editor de imagen -->
+          <div class="editor-section" v-else>
+            <div class="preview-container">
+              <div class="preview-title">Vista previa</div>
+              <div class="preview-image" ref="previewContainer">
+                <img :src="imagePreviewUrl" ref="imagePreview" class="original-image" :style="imageStyle">
+              </div>
+            </div>
+
+            <div class="controls">
+              <div class="zoom-control">
+                <label>Zoom</label>
+                <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.1"
+                    v-model="zoom"
+                    @input="updateImageStyle"
+                >
+              </div>
+
+              <div class="rotation-control">
+                <label>Rotación</label>
+                <div class="rotation-buttons">
+                  <button @click="rotate(-90)" title="Rotar 90° izquierda">
+                    <i class="fas fa-undo"></i>
+                  </button>
+                  <button @click="rotate(90)" title="Rotar 90° derecha">
+                    <i class="fas fa-redo"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-cancel" @click="cancelSelection" v-if="selectedFile">
+            <i class="fas fa-times me-2"></i>Cancelar
+          </button>
+          <button
+              class="btn btn-save"
+              @click="saveAvatar"
+              :disabled="!selectedFile || isSavingAvatar"
+          >
+            <template v-if="isSavingAvatar">
+              <i class="fas fa-spinner fa-spin me-2"></i>Guardando...
+            </template>
+            <template v-else>
+              <i class="fas fa-save me-2"></i>Guardar cambios
+            </template>
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Cropper from 'cropperjs';
+import userService from '@/services/users.service.js';
 
 export default {
   name: 'ProfilePage',
@@ -95,6 +236,33 @@ export default {
     const darkMode = ref(false);
     const defaultAvatar = 'https://ui-avatars.com/api/?name=Usuario&background=7e5bef&color=fff';
     const bubbles = ref([]);
+
+    // Estados para los modales
+    const showEditModal = ref(false);
+    const showAvatarModal = ref(false);
+
+    // Formulario de edición
+    const editForm = ref({
+      nombre: '',
+      apellido: '',
+      telefono: '',
+      fechaNacimiento: ''
+    });
+
+    const errors = ref({});
+    const isSaving = ref(false);
+
+    // Estados para el avatar
+    const fileInput = ref(null);
+    const previewContainer = ref(null);
+    const imagePreview = ref(null);
+    const cropper = ref(null);
+    const selectedFile = ref(null);
+    const imagePreviewUrl = ref('');
+    const isSavingAvatar = ref(false);
+    const zoom = ref(1);
+    const rotation = ref(0);
+    const imageStyle = ref({});
 
     // Cargar datos del usuario desde el store
     const user = computed(() => authStore.user || {});
@@ -110,7 +278,7 @@ export default {
     const formattedBirthDate = computed(() => formatDate(user.value.fechaNacimiento));
     const formattedRegDate = computed(() => formatDate(user.value.createdAt));
 
-    // Métodos
+    // Métodos generales
     const loadDarkModePreference = () => {
       const savedMode = localStorage.getItem('darkMode');
       const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -132,14 +300,198 @@ export default {
       }
     };
 
-    const editProfile = () => router.push('/profile/edit');
     const changePassword = () => router.push('/profile/change-password');
     const adminPanel = () => router.push('/admin');
-    const openAvatarUpload = () => console.log('Subir nuevo avatar');
     const goHome = () => router.push('/');
     const logout = () => {
       authStore.logout();
       router.push('/auth/login');
+    };
+
+    // Métodos para editar perfil
+    const openEditModal = () => {
+      editForm.value = {
+        nombre: user.value.nombre || '',
+        apellido: user.value.apellido || '',
+        telefono: user.value.telefono || '',
+        fechaNacimiento: user.value.fechaNacimiento ? user.value.fechaNacimiento.split('T')[0] : ''
+      };
+      showEditModal.value = true;
+    };
+
+    const validateForm = () => {
+      errors.value = {};
+      let isValid = true;
+
+      if (!editForm.value.nombre.trim()) {
+        errors.value.nombre = 'El nombre es requerido';
+        isValid = false;
+      }
+
+      if (editForm.value.telefono && !/^[0-9+\- ]+$/.test(editForm.value.telefono)) {
+        errors.value.telefono = 'Teléfono no válido';
+        isValid = false;
+      }
+
+      return isValid;
+    };
+
+    const saveProfile = async () => {
+      if (!validateForm()) return;
+
+      isSaving.value = true;
+
+      try {
+        const updateData = {
+          nombre: editForm.value.nombre,
+          apellido: editForm.value.apellido,
+          telefono: editForm.value.telefono,
+          fechaNacimiento: editForm.value.fechaNacimiento
+        };
+
+        await userService.updateUser(authStore.user.id, updateData);
+        await authStore.fetchCurrentUser();
+        showEditModal.value = false;
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        if (error.response && error.response.data.errors) {
+          errors.value = error.response.data.errors;
+        }
+      } finally {
+        isSaving.value = false;
+      }
+    };
+
+    // Métodos para editar avatar
+    const initCropper = () => {
+      if (imagePreview.value && !cropper.value) {
+        cropper.value = new Cropper(imagePreview.value, {
+          aspectRatio: 1,
+          viewMode: 1,
+          autoCropArea: 0.8,
+          responsive: true,
+          guides: false,
+          center: false,
+          background: false,
+          movable: true,
+          rotatable: true,
+          scalable: false,
+          zoomable: true,
+          zoomOnTouch: true,
+          zoomOnWheel: true,
+          cropBoxMovable: true,
+          cropBoxResizable: true,
+          toggleDragModeOnDblclick: false,
+          minContainerWidth: 300,
+          minContainerHeight: 300,
+          ready() {
+            updateImageStyle();
+          }
+        });
+      }
+    };
+
+    const handleFileSelect = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.type.match('image.*')) {
+        alert('Por favor, selecciona un archivo de imagen válido');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen no debe exceder los 5MB');
+        return;
+      }
+
+      processFile(file);
+    };
+
+    const handleDrop = (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        processFile(file);
+      }
+    };
+
+    const dragOver = (e) => {
+      e.preventDefault();
+    };
+
+    const processFile = (file) => {
+      selectedFile.value = file;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreviewUrl.value = e.target.result;
+        nextTick(() => {
+          initCropper();
+        });
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const cancelSelection = () => {
+      selectedFile.value = null;
+      imagePreviewUrl.value = '';
+      if (cropper.value) {
+        cropper.value.destroy();
+        cropper.value = null;
+      }
+    };
+
+    const rotate = (degrees) => {
+      if (cropper.value) {
+        cropper.value.rotate(degrees);
+        rotation.value += degrees;
+        updateImageStyle();
+      }
+    };
+
+    const updateImageStyle = () => {
+      if (cropper.value) {
+        imageStyle.value = {
+          transform: `scale(${zoom.value}) rotate(${rotation.value}deg)`
+        };
+      }
+    };
+
+    const saveAvatar = async () => {
+      if (!cropper.value) return;
+
+      isSavingAvatar.value = true;
+
+      try {
+        const canvas = cropper.value.getCroppedCanvas({
+          width: 400,
+          height: 400,
+          minWidth: 256,
+          minHeight: 256,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          fillColor: '#fff',
+          imageSmoothingEnabled: true,
+          imageSmoothingQuality: 'high'
+        });
+
+        canvas.toBlob(async (blob) => {
+          const croppedFile = new File([blob], 'avatar.jpg', {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          });
+
+          const response = await userService.uploadAvatar(authStore.user.id, croppedFile);
+          await authStore.fetchCurrentUser();
+          showAvatarModal.value = false;
+        }, 'image/jpeg', 0.9);
+      } catch (error) {
+        console.error('Error cropping image:', error);
+        alert('Ocurrió un error al procesar la imagen');
+      } finally {
+        isSavingAvatar.value = false;
+      }
     };
 
     // Crear burbujas animadas
@@ -170,7 +522,6 @@ export default {
           await authStore.fetchCurrentUser();
         }
 
-        // Redirigir si no está autenticado
         if (!authStore.isAuthenticated) {
           router.push('/auth/login');
         }
@@ -192,18 +543,44 @@ export default {
       formattedBirthDate,
       formattedRegDate,
       toggleDarkMode,
-      editProfile,
       changePassword,
       adminPanel,
-      openAvatarUpload,
       goHome,
-      logout
+      logout,
+
+      // Editar perfil
+      showEditModal,
+      editForm,
+      errors,
+      isSaving,
+      openEditModal,
+      saveProfile,
+
+      // Editar avatar
+      showAvatarModal,
+      fileInput,
+      previewContainer,
+      imagePreview,
+      selectedFile,
+      imagePreviewUrl,
+      isSavingAvatar,
+      zoom,
+      rotation,
+      imageStyle,
+      handleFileSelect,
+      handleDrop,
+      dragOver,
+      cancelSelection,
+      rotate,
+      updateImageStyle,
+      saveAvatar
     };
   }
 };
 </script>
 
 <style scoped>
+/* Estilos existentes del perfil (se mantienen igual) */
 .profile-layout,
 .profile-container,
 .profile-card,
@@ -214,7 +591,6 @@ export default {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Estilos base (modo diurno) */
 .profile-layout {
   min-height: 100vh;
   transition: all 0.3s ease;
@@ -627,6 +1003,445 @@ export default {
   .logout-btn {
     bottom: 20px;
     right: 20px;
+  }
+}
+
+/* Estilos para los modales */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.edit-modal,
+.avatar-modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.avatar-modal-lg {
+  max-width: 800px;
+}
+
+.cropper-wrapper {
+  height: 400px;
+}
+
+.upload-area-lg {
+  height: 400px;
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #777;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+  color: #333;
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+/* Estilos específicos para el modal de edición */
+.edit-modal .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.edit-modal label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.edit-modal input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.edit-modal input:focus {
+  border-color: #7e5bef;
+  box-shadow: 0 0 0 0.2rem rgba(126, 91, 239, 0.25);
+  outline: none;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+}
+
+.btn-cancel {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  color: #495057;
+}
+
+.btn-cancel:hover {
+  background-color: #e9ecef;
+}
+
+.btn-save {
+  background-color: #7e5bef;
+  border: none;
+  color: white;
+}
+
+.btn-save:hover {
+  background-color: #6d46e8;
+}
+
+.btn-save:disabled {
+  background-color: #b5a5f5;
+  cursor: not-allowed;
+}
+
+/* Estilos específicos para el modal de avatar */
+.upload-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: #7e5bef;
+  background-color: rgba(126, 91, 239, 0.05);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: #7e5bef;
+  margin-bottom: 1rem;
+}
+
+.small-text {
+  font-size: 0.8rem;
+  color: #777;
+  margin-top: 0.5rem;
+}
+
+.editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.preview-container {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.preview-title {
+  background-color: #f8f9fa;
+  padding: 0.75rem;
+  font-weight: 500;
+  color: #555;
+  border-bottom: 1px solid #eee;
+}
+
+.preview-image {
+  width: 100%;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.original-image {
+  max-width: 100%;
+  max-height: 100%;
+  transition: transform 0.2s ease;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.zoom-control,
+.rotation-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.zoom-control input[type="range"] {
+  width: 100%;
+  height: 8px;
+  -webkit-appearance: none;
+  background: #ddd;
+  border-radius: 4px;
+  outline: none;
+}
+
+.zoom-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #7e5bef;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.rotation-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.rotation-buttons button {
+  background-color: #f1f1f1;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.rotation-buttons button:hover {
+  background-color: #7e5bef;
+  color: white;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* Modo oscuro para modales */
+.dark-mode .edit-modal,
+.dark-mode .avatar-modal {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #333;
+}
+
+.dark-mode .modal-header h3 {
+  color: #e9ecef;
+}
+
+.dark-mode .btn-close {
+  color: #aaa;
+}
+
+.dark-mode .btn-close:hover {
+  color: #fff;
+}
+
+.dark-mode .edit-modal label {
+  color: #ddd;
+}
+
+.dark-mode .edit-modal input {
+  background-color: #333;
+  border-color: #444;
+  color: #fff;
+}
+
+.dark-mode .edit-modal input:focus {
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+}
+
+.dark-mode .upload-area {
+  border-color: #444;
+}
+
+.dark-mode .upload-area:hover {
+  border-color: #a78bfa;
+  background-color: rgba(167, 139, 250, 0.05);
+}
+
+.dark-mode .upload-icon {
+  color: #a78bfa;
+}
+
+.dark-mode .small-text {
+  color: #aaa;
+}
+
+.dark-mode .preview-container {
+  border-color: #333;
+}
+
+.dark-mode .preview-title {
+  background-color: #333;
+  color: #ddd;
+  border-bottom-color: #444;
+}
+
+.dark-mode .preview-image {
+  background-color: #252525;
+}
+
+.dark-mode .zoom-control input[type="range"] {
+  background: #444;
+}
+
+.dark-mode .zoom-control input[type="range"]::-webkit-slider-thumb {
+  background: #a78bfa;
+}
+
+.dark-mode .rotation-buttons button {
+  background-color: #333;
+  color: #ddd;
+}
+
+.dark-mode .rotation-buttons button:hover {
+  background-color: #a78bfa;
+  color: #121212;
+}
+
+.dark-mode .modal-footer {
+  border-top-color: #333;
+}
+
+.dark-mode .btn-cancel {
+  background-color: #333;
+  border-color: #444;
+  color: #ddd;
+}
+
+.dark-mode .btn-cancel:hover {
+  background-color: #444;
+}
+
+.dark-mode .btn-save {
+  background-color: #a78bfa;
+  color: #121212;
+}
+
+.dark-mode .btn-save:hover {
+  background-color: #8b5cf6;
+}
+
+.dark-mode .btn-save:disabled {
+  background-color: #5e4b9e;
+}
+
+@media (max-width: 576px) {
+  .edit-modal,
+  .avatar-modal {
+    width: 95%;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 1rem;
+  }
+
+  .preview-image {
+    height: 250px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>

@@ -1,24 +1,24 @@
-package org.wolve.geofilm.rodajes.service
+package org.wolve.geofilm.producciones.rodajes.service
 
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundException
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
-import org.wolve.geofilm.rodajes.dto.request.RodajeRequest
-import org.wolve.geofilm.rodajes.dto.response.RodajeResponse
-import org.wolve.geofilm.rodajes.exception.RodajeNotFoundException
-import org.wolve.geofilm.rodajes.mapper.RodajeMapper
-import org.wolve.geofilm.rodajes.models.Rodaje
-import org.wolve.geofilm.rodajes.repository.RodajeRepository
-import org.wolve.geofilm.ubicaciones.exceptions.UbicacionNotFoundException
-import org.wolve.geofilm.ubicaciones.repository.UbicacionRepository
+import org.wolve.geofilm.producciones.rodajes.dto.request.RodajeRequest
+import org.wolve.geofilm.producciones.rodajes.dto.response.RodajeResponse
+import org.wolve.geofilm.producciones.rodajes.exception.RodajeNotFoundException
+import org.wolve.geofilm.producciones.rodajes.mapper.RodajeMapper
+import org.wolve.geofilm.producciones.rodajes.models.Rodaje
+import org.wolve.geofilm.producciones.rodajes.repository.RodajeRepository
+import org.wolve.geofilm.producciones.ubicaciones.exceptions.UbicacionNotFoundException
+import org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository
 
 @Service
 class RodajeServiceImpl(
-    private val rodajeRepository: RodajeRepository,
+    private val rodajeRepository: org.wolve.geofilm.producciones.rodajes.repository.RodajeRepository,
     private val produccionRepository: ProduccionRepository,
-    private val ubicacionRepository: UbicacionRepository,
-    private val mapper: RodajeMapper
+    private val ubicacionRepository: org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository,
+    private val mapper: org.wolve.geofilm.producciones.rodajes.mapper.RodajeMapper
 ) : IRodajeService {
 
     override fun findById(id: String) = rodajeRepository.findById(id)
@@ -58,7 +58,7 @@ class RodajeServiceImpl(
         val ubicacion = ubicacionRepository.findById(request.ubicacionId)
             .orElseThrow { UbicacionNotFoundException(request.ubicacionId) }
 
-        val rodaje = Rodaje(
+        val rodaje = org.wolve.geofilm.producciones.rodajes.models.Rodaje(
             produccion = produccion,
             ubicacion = ubicacion,
             notas = request.notas,

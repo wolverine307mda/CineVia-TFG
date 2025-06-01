@@ -1,6 +1,6 @@
-package org.wolve.geofilm.rodajes.dto.response
+package org.wolve.geofilm.producciones.rodajes.dto.response
 
-import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionResponse
 import java.time.LocalDateTime
 
 data class RodajeResponse(

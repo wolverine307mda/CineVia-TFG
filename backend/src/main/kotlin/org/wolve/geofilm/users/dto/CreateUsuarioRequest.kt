@@ -6,7 +6,7 @@ import java.time.LocalDate
 data class CreateUsuarioRequest(
     val username: String,
     val email: String,
-    val password: String,
+    var password: String,
     val nombre: String,
     val apellido: String?,
     val rol: RolUsuario = RolUsuario.USUARIO,

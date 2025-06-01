@@ -1,11 +1,9 @@
 package org.wolve.geofilm.producciones.produccion.models
 
+import jakarta.persistence.*
 import org.wolve.geofilm.producciones.participacion.models.Participacion
 import org.wolve.geofilm.producciones.saga.model.Saga
-import org.wolve.geofilm.ubicaciones.models.Ubicacion
 import org.wolve.geofilm.utils.generators.GuidGenerator
-import jakarta.persistence.*
-import org.wolve.geofilm.rodajes.models.Rodaje
 import java.util.*
 
 @Entity
@@ -57,7 +55,7 @@ data class Produccion(
     val participaciones: Set<Participacion> = mutableSetOf(),
 
     @OneToMany(mappedBy = "produccion", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val rodajes: Set<Rodaje> = mutableSetOf(),
+    val rodajes: Set<org.wolve.geofilm.producciones.rodajes.models.Rodaje> = mutableSetOf(),
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "saga_id")

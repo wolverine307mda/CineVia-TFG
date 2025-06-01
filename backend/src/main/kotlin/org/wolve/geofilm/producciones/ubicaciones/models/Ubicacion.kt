@@ -1,11 +1,11 @@
-package org.wolve.geofilm.ubicaciones.models
+package org.wolve.geofilm.producciones.ubicaciones.models
 
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.wolve.geofilm.utils.generators.GuidGenerator
 import org.wolve.geofilm.producciones.produccion.models.Produccion
-import org.wolve.geofilm.rodajes.models.Rodaje
+import org.wolve.geofilm.producciones.rodajes.models.Rodaje
 import java.time.LocalDateTime
 
 @Entity
@@ -25,7 +25,7 @@ data class Ubicacion(
     var longitud: Double = 0.0,
 
     @OneToMany(mappedBy = "ubicacion", cascade = [CascadeType.ALL], orphanRemoval = true)
-    val rodajes: MutableList<Rodaje> = mutableListOf(),
+    val rodajes: MutableList<org.wolve.geofilm.producciones.rodajes.models.Rodaje> = mutableListOf(),
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

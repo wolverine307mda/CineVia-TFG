@@ -88,6 +88,7 @@ dependencies {
     implementation("com.google.cloud:google-cloud-storage:2.27.0")
 
     // 📌 Test y Contenedores
+    testImplementation("com.ninja-squad:springmockk:4.0.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("io.projectreactor:reactor-test")
@@ -114,6 +115,12 @@ tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperties(
+        "spring.autoconfigure.exclude" to listOf(
+            "org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration",
+            "org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration"
+        ).joinToString(",")
+    )
     outputs.dir(project.extra["snippetsDir"]!!)
     include("**/*Test.*", "**/*Tests.*")
 }

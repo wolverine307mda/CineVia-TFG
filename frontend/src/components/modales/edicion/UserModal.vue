@@ -39,32 +39,23 @@
               <div class="form-row">
                 <div class="form-field form-col">
                   <label class="form-label">Nombre de usuario <span class="required">*</span></label>
-                  <input
-                      v-model="formData.username"
-                      type="text"
+                  <input v-model="formData.username" type="text"
                       class="form-input"
                       required
                       placeholder="Nombre de usuario único"
                       :disabled="isEditMode"
                   >
-                  <div class="form-hint" v-if="usernameAvailable !== null">
-                    {{ usernameAvailable ? '✔ Disponible' : '✖ No disponible' }}
+                  <div class="form-hint" v-if="usernameAvailable !== null" :style="{ color: usernameAvailable ? 'darkgreen' : 'darkred' }">
+                    {{ usernameAvailable? '✔ Disponible': '✖ No disponible' }}
                   </div>
                   <div class="form-error" v-if="errors.username">{{ errors.username }}</div>
                 </div>
 
                 <div class="form-field form-col">
                   <label class="form-label">Email <span class="required">*</span></label>
-                  <input
-                      v-model="formData.email"
-                      type="email"
-                      class="form-input"
-                      required
-                      placeholder="Email del usuario"
-                      :disabled="isEditMode"
-                  >
-                  <div class="form-hint" v-if="emailAvailable !== null">
-                    {{ emailAvailable ? '✔ Disponible' : '✖ No disponible' }}
+                  <input v-model="formData.email" type="email" class="form-input" required placeholder="Email del usuario" :disabled="isEditMode" >
+                  <div class="form-hint" v-if="emailAvailable !== null" :style="{ color: emailAvailable ? 'darkgreen' : 'darkred' }">
+                    {{ emailAvailable? '✔ Disponible': '✖ No disponible' }}
                   </div>
                   <div class="form-error" v-if="errors.email">{{ errors.email }}</div>
                 </div>
@@ -99,11 +90,7 @@
               <div class="form-row">
                 <div class="form-field form-col">
                   <label class="form-label">Fecha de Nacimiento</label>
-                  <input
-                      v-model="formData.fechaNacimiento"
-                      type="date"
-                      class="form-input"
-                  >
+                  <input v-model="formData.fechaNacimiento" type="date" class="form-input" >
                 </div>
               </div>
 
@@ -122,7 +109,7 @@
                 </div>
               </div>
 
-              <div class="form-field">
+              <div class="form-field" v-if="isEditMode">
                 <label class="form-label">Avatar</label>
                 <div class="avatar-upload-container">
                   <input
@@ -178,6 +165,7 @@
 
 <script>
 import UsersService from '@/services/users.service';
+import authService from "@/services/auth.service.js";
 import { debounce } from 'lodash';
 
 export default {
@@ -303,10 +291,10 @@ export default {
     },
     async checkAvailabilityFields() {
       if (this.formData.username && !this.isEditMode) {
-        this.usernameAvailable = await UsersService.checkUsernameAvailability(this.formData.username);
+        this.usernameAvailable = await authService.checkUsernameAvailability(this.formData.username);
       }
       if (this.formData.email && !this.isEditMode) {
-        this.emailAvailable = await UsersService.checkEmailAvailability(this.formData.email);
+        this.emailAvailable = await authService.checkEmailAvailability(this.formData.email);
       }
     },
     async handleAvatarUpload(event) {
@@ -591,7 +579,7 @@ export default {
 }
 
 .form-error {
-  color: var(--danger-color);
+  color: darkred;
   font-size: 0.85rem;
   margin-top: 0.25rem;
 }

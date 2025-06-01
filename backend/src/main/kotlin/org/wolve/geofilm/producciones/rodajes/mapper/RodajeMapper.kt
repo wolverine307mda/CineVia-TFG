@@ -1,9 +1,9 @@
-package org.wolve.geofilm.rodajes.mapper
+package org.wolve.geofilm.producciones.rodajes.mapper
 
 import org.springframework.stereotype.Component
-import org.wolve.geofilm.rodajes.dto.response.RodajeResponse
-import org.wolve.geofilm.rodajes.models.Rodaje
-import org.wolve.geofilm.ubicaciones.mapper.UbicacionMapper
+import org.wolve.geofilm.producciones.rodajes.dto.response.RodajeResponse
+import org.wolve.geofilm.producciones.rodajes.models.Rodaje
+import org.wolve.geofilm.producciones.ubicaciones.mapper.UbicacionMapper
 
 @Component
 class RodajeMapper(

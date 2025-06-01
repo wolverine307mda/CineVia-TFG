@@ -113,8 +113,8 @@
                   </div>
                 </div>
                 <div class="production-actions">
-                  <router-link :to="`/admin/producciones/editar/${production.id}`" class="action-btn">
-                    <i class="fas fa-edit"></i> Editar
+                  <router-link :to="`/produccion/${production.id}`" class="action-btn">
+                    <i class="fas fa-eye"></i> ver
                   </router-link>
                 </div>
               </div>
@@ -179,6 +179,7 @@ import SagasService from '@/services/sagas.service.js';
 import UsersService from '@/services/users.service';
 import { useAuthStore } from '@/stores/auth';
 import ConfirmationModal from "@/components/modales/edicion/ConfirmModal.vue";
+import ubicacionesService from "@/services/ubicaciones.service.js";
 
 export default {
   name: 'Dashboard',
@@ -209,6 +210,7 @@ export default {
       produccionesCount: 0,
       profesionalesCount: 0,
       sagasCount: 0,
+      ubicacionesCount: 0,
       newAdmin: {
         name: '',
         email: '',
@@ -298,6 +300,13 @@ export default {
         this.stats[2].progress = Math.min(100, sagasRes.totalItems / 20 * 100);
         this.sagasCount = sagasRes.totalItems || 0;
 
+        // Obtener conteo de ubicaciones
+        const ubicacionesRes = await ubicacionesService.fetchUbicaciones({}, { page: 0, size: 1 });
+        this.stats[3].value = ubicacionesRes.totalItems;
+        this.stats[3].loading = false;
+        this.stats[3].progress = Math.min(100, ubicacionesRes.totalItems / 20 * 100);
+        this.ubicacionesCount = ubicacionesRes.totalItems || 0;
+
       } catch (error) {
         console.error('Error fetching stats:', error);
         this.stats.forEach(stat => {
@@ -332,15 +341,9 @@ export default {
 
         this.recentUsers = response.content;
         // Actualizar el contador de usuarios
-        this.stats[3].value = response.totalElements;
-        this.stats[3].loading = false;
-        this.stats[3].progress = Math.min(100, response.totalElements / 50 * 100);
       } catch (error) {
         console.error('Error fetching recent users:', error);
         this.recentUsers = [];
-        this.stats[3].loading = false;
-        this.stats[3].value = 0;
-        this.stats[3].progress = 0;
       } finally {
         this.loadingUsers = false;
       }

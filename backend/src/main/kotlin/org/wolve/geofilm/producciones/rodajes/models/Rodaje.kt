@@ -1,10 +1,10 @@
-package org.wolve.geofilm.rodajes.models
+package org.wolve.geofilm.producciones.rodajes.models
 
 import jakarta.persistence.*
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.wolve.geofilm.producciones.produccion.models.Produccion
-import org.wolve.geofilm.ubicaciones.models.Ubicacion
+import org.wolve.geofilm.producciones.ubicaciones.models.Ubicacion
 import org.wolve.geofilm.utils.generators.GuidGenerator
 import java.time.LocalDate
 import java.time.LocalDateTime

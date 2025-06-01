@@ -1,3 +1,3 @@
-package org.wolve.geofilm.rodajes.exception
+package org.wolve.geofilm.producciones.rodajes.exception
 
 class RodajeNotFoundException(id: String) : RuntimeException("Rodaje con id $id no encontrado")

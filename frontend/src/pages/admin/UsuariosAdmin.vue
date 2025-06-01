@@ -71,18 +71,10 @@
       <table class="users-table">
         <thead>
         <tr>
-          <th
-              v-for="header in tableHeaders"
-              :key="header.value"
-              class="table-header"
-              @click="sortBy(header.value)"
-          >
+          <th v-for="header in tableHeaders" :key="header.value" class="table-header" @click="sortBy(header.value)">
             <div class="header-content">
               <span>{{ header.text }}</span>
-              <i
-                  v-if="sort.field === header.value"
-                  :class="['sort-icon', sort.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down']"
-              ></i>
+              <i v-if="sort.field === header.value" :class="['sort-icon', sort.direction === 'asc' ? 'fa-arrow-up' : 'fa-arrow-down']" ></i>
             </div>
           </th>
           <th class="table-header actions-header">Acciones</th>
@@ -105,20 +97,11 @@
             </div>
           </td>
         </tr>
-        <tr
-            v-for="user in users"
-            :key="user.id"
-            class="user-row"
-        >
+        <tr v-for="user in users" :key="user.id" class="user-row">
           <td class="user-cell">
             <div class="user-info">
               <div class="avatar-container">
-                <img
-                    class="user-avatar"
-                    :src="user.avatar"
-                    :alt="`Avatar de ${user.nombre}`"
-                    @error="setDefaultAvatar"
-                >
+                <img class="user-avatar" :src="user.avatar" :alt="`Avatar de ${user.nombre}`" @error="setDefaultAvatar" >
               </div>
               <div class="user-details">
                 <span class="user-name">{{ user.nombre }} {{ user.apellido }}</span>
@@ -144,33 +127,26 @@
           </td>
           <td class="user-cell actions-cell">
             <div class="action-buttons">
-              <button v-if="isAdmin || currentUserId === user.id" @click="openEditModal(user)" class="icon-button edit-button" title="Editar">
+              <!-- EDITAR -->
+              <button v-if=" isAdmin && currentUserId !== user.id && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin')" @click="openEditModal(user)" class="icon-button edit-button" title="Editar" >
                 <i class="fas fa-edit"></i>
               </button>
-              <button
-                  v-if="isAdmin && !user.isDeleted"
-                  @click="confirmAction('softDelete', user.id, 'Desactivar usuario', '¿Estás seguro de que quieres desactivar este usuario?')"
-                  class="icon-button deactivate-button"
-                  title="Desactivar"
-              >
+
+              <!-- DESACTIVAR -->
+              <button v-if=" isAdmin && currentUserId !== user.id && !user.isDeleted && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin' ) " @click="confirmAction( 'softDelete', user.id, 'Desactivar usuario', '¿Estás seguro de que quieres desactivar este usuario?')" class="icon-button deactivate-button" title="Desactivar" >
                 <i class="fas fa-user-slash"></i>
               </button>
-              <button
-                  v-if="isAdmin && user.isDeleted"
-                  @click="confirmAction('restore', user.id, 'Activar usuario', '¿Estás seguro de que quieres activar este usuario?')"
-                  class="icon-button activate-button"
-                  title="Activar"
-              >
+
+              <!-- ACTIVAR (restore) -->
+              <button v-if=" isAdmin &&  currentUserId !== user.id &&  user.isDeleted && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin' ) " @click="confirmAction( 'restore', user.id, 'Activar usuario', '¿Estás seguro de que quieres activar este usuario?' )" class="icon-button activate-button" title="Activar" >
                 <i class="fas fa-user-check"></i>
               </button>
-              <button
-                  v-if="isAdmin && user.rol !== 'ADMINISTRADOR'"
-                  @click="confirmAction('delete', user.id, 'Eliminar usuario', '¿Estás seguro de que quieres eliminar permanentemente este usuario?')"
-                  class="icon-button delete-button"
-                  title="Eliminar"
-              >
+
+              <!-- ELIMINAR PERMANENTE -->
+              <button v-if=" isAdmin && currentUserId !== user.id &&  user.rol !== 'ADMINISTRADOR' " @click="confirmAction( 'delete', user.id, 'Eliminar usuario', '¿Estás seguro de que quieres eliminar permanentemente este usuario?' )" class="icon-button delete-button" title="Eliminar" >
                 <i class="fas fa-trash-alt"></i>
               </button>
+
             </div>
           </td>
         </tr>
@@ -293,6 +269,9 @@ export default {
     },
     currentUserId() {
       return this.authStore.user?.id;
+    },
+    currentUsername() {
+      return this.authStore.user?.username || '';
     },
     visiblePages() {
       const pages = [];
@@ -446,6 +425,18 @@ export default {
         this.actionToConfirm = null;
         this.actionParams = null;
       }
+    },
+
+    async handleSaveUser(userData) {
+      this.closeUserModal();
+
+      await this.fetchUsers();
+
+      this.$toast.success(
+          this.selectedUser
+              ? 'Usuario actualizado correctamente'
+              : 'Usuario creado correctamente'
+      );
     },
 
     formatDate(dateString) {

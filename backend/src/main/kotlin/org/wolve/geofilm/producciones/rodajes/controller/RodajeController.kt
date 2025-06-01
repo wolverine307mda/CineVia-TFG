@@ -1,10 +1,10 @@
-package org.wolve.geofilm.rodajes.controller
+package org.wolve.geofilm.producciones.rodajes.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.wolve.geofilm.rodajes.dto.request.RodajeRequest
-import org.wolve.geofilm.rodajes.dto.response.RodajeResponse
-import org.wolve.geofilm.rodajes.service.IRodajeService
+import org.wolve.geofilm.producciones.rodajes.dto.request.RodajeRequest
+import org.wolve.geofilm.producciones.rodajes.dto.response.RodajeResponse
+import org.wolve.geofilm.producciones.rodajes.service.IRodajeService
 
 @RestController
 @RequestMapping("/api/rodajes")

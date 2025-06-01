@@ -1,9 +1,9 @@
-package org.wolve.geofilm.ubicaciones.service
+package org.wolve.geofilm.producciones.ubicaciones.service
 
-import org.wolve.geofilm.ubicaciones.dto.UbicacionFilterParams
-import org.wolve.geofilm.ubicaciones.dto.UbicacionRequest
-import org.wolve.geofilm.ubicaciones.dto.UbicacionResponse
-import org.wolve.geofilm.ubicaciones.models.Ubicacion
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionFilterParams
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionRequest
+import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionResponse
+import org.wolve.geofilm.producciones.ubicaciones.models.Ubicacion
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 

@@ -98,6 +98,15 @@ class ProduccionServiceImplTest {
         verify(produccionRepository).findById(id)
     }
 
+    @Test
+    fun deleteProduccionTeste() {
+        val id = "id3"
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(mock(Produccion::class.java)))
+
+        service.deleteProduccion(id)
+
+        verify(produccionRepository).deleteById(id)
+    }
 
     @Test
     fun deleteProduccionTest() {

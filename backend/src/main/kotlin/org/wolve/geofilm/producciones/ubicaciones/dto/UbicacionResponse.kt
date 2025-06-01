@@ -1,4 +1,4 @@
-package org.wolve.geofilm.ubicaciones.dto
+package org.wolve.geofilm.producciones.ubicaciones.dto
 
 import java.time.LocalDateTime
 

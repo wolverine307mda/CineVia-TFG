@@ -19,7 +19,10 @@ class FirebaseStorageService {
 
     init {
         // Carga las credenciales desde el archivo JSON
-        val serviceAccountStream = FileInputStream("src/main/resources/mi-clave-firebase.json")
+        val serviceAccountStream = this::class.java.classLoader
+            .getResourceAsStream("mi-clave-firebase.json")
+            ?: throw IllegalStateException("No se encontró el archivo 'mi-clave-firebase.json' en resources.")
+
         val credentials = GoogleCredentials.fromStream(serviceAccountStream)
 
         // Crea el cliente de Storage usando las credenciales explícitamente
