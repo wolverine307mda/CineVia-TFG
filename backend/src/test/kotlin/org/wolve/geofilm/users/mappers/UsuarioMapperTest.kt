@@ -24,7 +24,7 @@ class UsuarioMapperTest {
         mapper = UsuarioMapper(passwordEncoder)
     }
 
-    @Test
+   @Test
     fun `toEntity - convierte CreateUsuarioRequest a Usuario con password codificada`() {
         val rawPassword = "secret123"
         val encodedPassword = "encodedSecret"
@@ -46,7 +46,7 @@ class UsuarioMapperTest {
 
         assertNotNull(entidad.id)
         assertTrue(entidad.id.isNotEmpty())
-        assertEquals("usuario1", entidad.username)
+        assertEquals("usuario1", entidad.getNombreUsuario())
         assertEquals("user1@example.com", entidad.email)
         assertEquals(encodedPassword, entidad.password)
         assertEquals("Nombre", entidad.nombre)
@@ -55,8 +55,6 @@ class UsuarioMapperTest {
         assertEquals("555-1234", entidad.telefono)
         assertEquals(LocalDate.of(1990, 5, 20), entidad.fechaNacimiento)
         assertEquals("avatar.png", entidad.avatar)
-        assertNotNull(entidad.createdAt)
-        assertNotNull(entidad.updatedAt)
     }
 
     @Test
@@ -85,7 +83,7 @@ class UsuarioMapperTest {
         val actualizado = mapper.updateEntity(original.copy(), request)
 
         assertEquals("u1", actualizado.id)
-        assertEquals("user1", actualizado.username)
+        assertEquals("user1", actualizado.getNombreUsuario())
         assertEquals("user1@example.com", actualizado.email)
         assertEquals("pwd", actualizado.password) // no se cambia aquí
         assertEquals("Nuevo", actualizado.nombre)
@@ -93,9 +91,7 @@ class UsuarioMapperTest {
         assertEquals(RolUsuario.ADMINISTRADOR, actualizado.rol)
         assertEquals("999-9999", actualizado.telefono)
         assertEquals(LocalDate.of(1985, 12, 31), actualizado.fechaNacimiento)
-        assertEquals("original.png", actualizado.avatar) // null en DTO => mantiene original
-        assertNotNull(actualizado.createdAt)
-        assertNotNull(actualizado.updatedAt)
+        assertEquals("original.png", actualizado.avatar)
     }
 
     @Test

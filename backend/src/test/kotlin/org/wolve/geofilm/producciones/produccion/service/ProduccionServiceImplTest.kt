@@ -6,11 +6,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.verify
-import org.mockito.kotlin.whenever
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.*
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -24,6 +21,7 @@ import org.wolve.geofilm.producciones.produccion.models.ClasificacionEdad
 import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
+import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import java.util.*
 
@@ -251,5 +249,175 @@ class ProduccionServiceImplTest {
             service.createProduccion(null as ProduccionRequest)
         }
         assertNotNull(exception)
+    }
+    @Test
+    fun `updateProduccion actualiza todos los campos cuando la entidad existe`() {
+        val id = "upd-1"
+        val existente = Produccion(
+            id = id,
+            titulo = "Viejo",
+            tipo = TipoProduccion.PELICULA,
+            estreno = Date(),
+            duracion = 90,
+            sinopsis = "Sinopsis",
+            imagen = "vieja.png",
+            informacion = "info",
+            puntuacion = 5.0,
+            categorias = mutableSetOf(Categoria.ACCION),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12
+        )
+        val peticion = ProduccionRequest(
+            titulo = "Nuevo",
+            tipo = TipoProduccion.SERIE,
+            estreno = existente.estreno,
+            duracion = 120,
+            sinopsis = "Nueva sinopsis",
+            imagen = "nueva.png",
+            informacion = "nueva info",
+            puntuacion = 8.0,
+            categorias = setOf(Categoria.DRAMA),
+            clasificacionEdad = ClasificacionEdad.MAYORES_16.valorNumerico
+        )
+        val entidadGuardada = existente.copy(
+            titulo = peticion.titulo,
+            tipo = peticion.tipo,
+            duracion = peticion.duracion,
+            sinopsis = peticion.sinopsis,
+            imagen = peticion.imagen,
+            informacion = peticion.informacion,
+            puntuacion = peticion.puntuacion,
+            categorias = peticion.categorias.toMutableSet(),
+            clasificacionEdad = ClasificacionEdad.MAYORES_16
+        )
+        val respuestaEsperada = mock<ProduccionResponse>()
+
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(existente))
+        whenever(produccionRepository.save(any())).thenReturn(entidadGuardada)
+        whenever(produccionMapper.toProduccionResponse(entidadGuardada)).thenReturn(respuestaEsperada)
+
+        val resultado = service.updateProduccion(id, peticion)
+
+        assertEquals(respuestaEsperada, resultado)
+        argumentCaptor<Produccion>().apply {
+            verify(produccionRepository).save(capture())
+            val capturada = firstValue
+            assertEquals(peticion.titulo, capturada.titulo)
+            assertEquals(peticion.imagen, capturada.imagen)
+            assertEquals(peticion.duracion, capturada.duracion)
+            assertEquals(ClasificacionEdad.MAYORES_16, capturada.clasificacionEdad)
+        }
+    }
+
+    /** ---------- actualizarImagen ---------- **/
+    @Test
+    fun `actualizarImagen cambia la url y devuelve el dto`() {
+        val id = "img1"
+        val entidad = Produccion(
+            id = id,
+            titulo = "Img",
+            tipo = TipoProduccion.PELICULA,
+            estreno = Date(),
+            duracion = 100,
+            sinopsis = "s",
+            imagen = "antigua.png",
+            informacion = "inf",
+            puntuacion = 7.0,
+            categorias = mutableSetOf(Categoria.ACCION),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12
+        )
+        val respuesta = mock<ProduccionResponse>()
+        val nuevaUrl = "nueva.png"
+
+        whenever(produccionRepository.findById(id)).thenReturn(Optional.of(entidad))
+        whenever(produccionRepository.save(entidad)).thenReturn(entidad)
+        whenever(produccionMapper.toResponse(entidad)).thenReturn(respuesta)
+
+        val resultado = service.actualizarImagen(id, nuevaUrl)
+
+        assertEquals(respuesta, resultado)
+        assertEquals(nuevaUrl, entidad.imagen)
+        verify(produccionRepository).save(entidad)
+        verify(produccionMapper).toResponse(entidad)
+    }
+
+    /** ---------- getAllProducciones (sin paginar) ---------- **/
+    @Test
+    fun `getAllProducciones lista completa mapea correctamente`() {
+        val entidad = mock<Produccion>()
+        val dto = mock<ProduccionResponse>()
+
+        whenever(produccionRepository.findAll()).thenReturn(listOf(entidad))
+        whenever(produccionMapper.toProduccionResponse(entidad)).thenReturn(dto)
+
+        val resultado = service.getAllProducciones()
+
+        assertEquals(listOf(dto), resultado)
+        verify(produccionRepository).findAll()
+        verify(produccionMapper).toProduccionResponse(entidad)
+    }
+
+    /** ---------- existsById ---------- **/
+    @Test
+    fun `existsById devuelve true y false correctamente`() {
+        whenever(produccionRepository.existsById("yes")).thenReturn(true)
+        whenever(produccionRepository.existsById("no")).thenReturn(false)
+
+        assertTrue(service.existsById("yes"))
+        assertFalse(service.existsById("no"))
+    }
+
+    /** ---------- findEntityById ---------- **/
+    @Test
+    fun `findEntityById devuelve la entidad cuando existe`() {
+        val entidad = mock<Produccion>()
+        whenever(produccionRepository.findById("ok")).thenReturn(Optional.of(entidad))
+
+        assertEquals(entidad, service.findEntityById("ok"))
+    }
+
+    @Test
+    fun `findEntityById lanza ProduccionNotFoundException cuando no existe`() {
+        whenever(produccionRepository.findById("bad")).thenReturn(Optional.empty())
+
+        assertThrows(ProduccionNotFoundException::class.java) {
+            service.findEntityById("bad")
+        }
+    }
+
+    /** ---------- filtrarProducciones (rama de orden por estreno DESC) ---------- **/
+    @Test
+    fun `filtrarProducciones ordena por estreno descendente cuando no se pasa sortBy`() {
+        val hoy = Date()
+        val ayer = Date(hoy.time - 86_400_000)
+        val e1 = Produccion(
+            id = "1", titulo = "A", tipo = TipoProduccion.PELICULA,
+            estreno = ayer, duracion = 90, sinopsis = "", imagen = "",
+            informacion = "", puntuacion = 5.0, categorias = mutableSetOf(),
+            clasificacionEdad = ClasificacionEdad.MAYORES_12
+        )
+        val e2 = e1.copy(id = "2", estreno = hoy, titulo = "B")
+        whenever(produccionRepository.findAll()).thenReturn(listOf(e1, e2))
+        whenever(produccionMapper.toProduccionResponse(any())).thenAnswer {
+            val p: Produccion = it.getArgument(0)
+            ProduccionResponse(
+                id = p.id, titulo = p.titulo, tipo = p.tipo, estreno = p.estreno,
+                duracion = p.duracion, sinopsis = p.sinopsis, imagen = p.imagen,
+                informacion = p.informacion, puntuacion = p.puntuacion,
+                categorias = p.categorias, clasificacionEdad = p.clasificacionEdad.valorNumerico
+            )
+        }
+
+        val result = service.filtrarProducciones(
+            titulo = null, tipo = null,
+            estrenoDesde = null, estrenoHasta = null,
+            categorias = null, clasificacionEdad = null,
+            duracionMin = null, duracionMax = null,
+            page = 0, size = 10,
+            sortBy = emptyList(), sortDirection = ""
+        )
+
+        assertEquals(2, result.data.size)
+        // Al no haber sortBy el estreno más reciente debe ir primero
+        assertEquals("2", result.data.first().id)
     }
 }

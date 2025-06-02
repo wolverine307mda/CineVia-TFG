@@ -10,6 +10,10 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.wolve.geofilm.users.dto.*
 import org.wolve.geofilm.users.exceptions.UsuarioNotFoundException
@@ -18,6 +22,7 @@ import org.wolve.geofilm.users.models.RolUsuario
 import org.wolve.geofilm.users.models.Usuario
 import org.wolve.geofilm.users.repositories.UsuarioRepository
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -113,7 +118,7 @@ class UsuarioServiceImplTest {
   verify(usuarioRepository, never()).save(any())
  }
 
- /*@Test
+ @Test
  fun `createAdmin - sets role to ADMINISTRADOR and saves`() {
   val request = CreateUsuarioRequest(
    username = "admin", email = "a@e", password = "p",
@@ -123,13 +128,24 @@ class UsuarioServiceImplTest {
   whenever(usuarioRepository.existsByEmail(request.email)).thenReturn(false)
   whenever(usuarioRepository.existsByUsername(request.username)).thenReturn(false)
   val adminDto = request.copy(rol = RolUsuario.ADMINISTRADOR)
-  val entidad = Usuario(
-   id = "u2", username = adminDto.username, email = adminDto.email,
-   password = raw = adminDto.password, nombre = adminDto.nombre,
-   apellido = adminDto.apellido, rol = RolUsuario.ADMINISTRADOR,
-   telefono = adminDto.telefono, fechaNacimiento = adminDto.fechaNacimiento,
-   avatar = adminDto.avatar, createdAt = null, updatedAt = null
-  )
+  val entidad = adminDto.apellido?.let {
+   adminDto.telefono?.let { it1 ->
+    Usuario(
+     id = "u2",
+     username = adminDto.username,
+     email = adminDto.email,
+     password = adminDto.password,
+     nombre = adminDto.nombre,
+     apellido = it,
+     rol = RolUsuario.ADMINISTRADOR,
+     telefono = it1,
+     fechaNacimiento = adminDto.fechaNacimiento,
+     avatar = adminDto.avatar,
+     createdAt = null,
+     updatedAt = null
+    )
+   }
+  }
   whenever(usuarioMapper.toEntity(adminDto)).thenReturn(entidad)
   whenever(usuarioRepository.save(entidad)).thenReturn(entidad)
 
@@ -155,7 +171,7 @@ class UsuarioServiceImplTest {
 
   assertEquals(usuario, result)
   verify(usuarioRepository).findByUsername(username)
- }*/
+ }
 
  @Test
  fun `findByUsername - missing throws exception`() {
@@ -218,12 +234,12 @@ class UsuarioServiceImplTest {
   }
  }
 
- /*@Test
+ @Test
  fun `findAll returns paginated UsuarioResponse`() {
   val page = 0; val size = 2
   val pageable: Pageable = PageRequest.of(page, size)
-  val u1 = Usuario("u1","u","e","p","N","A","USUARIO",null,null,null,null)
-  val u2 = Usuario("u2","u2","e2","p2","N2","A2","USUARIO",null,null,null,null)
+  val u1 = Usuario("u1","u","e","p","N","A","USUARIO",RolUsuario.USUARIO,null,null,false)
+  val u2 = Usuario("u2","u2","e2","p2","N2","A2","USUARIO",RolUsuario.USUARIO,null,null,false)
   val springPage = PageImpl(listOf(u1, u2), pageable, 5)
   whenever(usuarioRepository.findAll(pageable)).thenReturn(springPage)
 
@@ -238,7 +254,7 @@ class UsuarioServiceImplTest {
  @Test
  fun `updateUser - existing id updates and returns usuario`() {
   val id = "u3"
-  val usuario = Usuario(id,"u","e","p","N","A",RolUsuario.USUARIO,"",null,null,null,null)
+  val usuario = Usuario(id,"u","e","p","N","A","",RolUsuario.USUARIO,null,null,false,null)
   val request = UpdateUsuarioRequest(
    nombre = "NX", apellido = "AX", telefono = "1234",
    rol = "ADMINISTRADOR", fechaNacimiento = LocalDate.of(2000,1,1), avatar = "img.png"
@@ -256,7 +272,7 @@ class UsuarioServiceImplTest {
   assertEquals(actualizado, result)
   verify(usuarioMapper).updateEntity(usuario, request)
   verify(usuarioRepository).save(actualizado)
- }*/
+ }
 
  @Test
  fun `updateUser - missing id throws exception`() {
@@ -268,10 +284,10 @@ class UsuarioServiceImplTest {
   }
  }
 
- /*@Test
+ @Test
  fun `updateAvatar - existing updates avatar`() {
   val id = "u4"
-  val usuario = Usuario(id,"u","e","p","N","A",RolUsuario.USUARIO,"",null,null,null,null)
+  val usuario = Usuario(id,"u","e","p","N","A","",RolUsuario.USUARIO,null,null,false)
   whenever(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario))
   whenever(usuarioRepository.save(any())).thenReturn(usuario)
 
@@ -279,7 +295,7 @@ class UsuarioServiceImplTest {
 
   assertEquals("new.png", result.avatar)
   verify(usuarioRepository).save(usuario)
- }*/
+ }
 
  @Test
  fun `updateAvatar - missing id throws exception`() {
@@ -290,16 +306,16 @@ class UsuarioServiceImplTest {
   }
  }
 
- /*@Test
+ @Test
  fun `deleteUser - existing deletes user`() {
   val id = "u5"
-  val usuario = Usuario(id,"u","e","p","N","A",RolUsuario.USUARIO,"",null,null,null,null)
+  val usuario = Usuario(id,"u","e","p","N","A","",RolUsuario.USUARIO,null,null,false,null)
   whenever(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario))
 
   service.deleteUser(id)
 
   verify(usuarioRepository).delete(usuario)
- }*/
+ }
 
  @Test
  fun `deleteUser - missing throws exception`() {
@@ -310,10 +326,10 @@ class UsuarioServiceImplTest {
   }
  }
 
- /*@Test
+ @Test
  fun `softDelete - sets isDelete true`() {
   val id = "u6"
-  val usuario = Usuario(id,"u","e","p","N","A",RolUsuario.USUARIO,"",null,null,null,false,null)
+  val usuario = Usuario(id,"u","e","p","N","A","",RolUsuario.USUARIO,null,null,false)
   whenever(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario))
   whenever(usuarioRepository.save(usuario)).thenReturn(usuario)
 
@@ -325,7 +341,7 @@ class UsuarioServiceImplTest {
  @Test
  fun `restoreUser - sets isDelete false`() {
   val id = "u7"
-  val usuario = Usuario(id,"u","e","p","N","A",RolUsuario.USUARIO,"",null,null,null,true,null)
+  val usuario = Usuario(id,"u","e","p","N","A","",RolUsuario.USUARIO,null,null,false)
   whenever(usuarioRepository.findById(id)).thenReturn(Optional.of(usuario))
   whenever(usuarioRepository.save(usuario)).thenReturn(usuario)
 
@@ -355,7 +371,7 @@ class UsuarioServiceImplTest {
   assertEquals("av.png", profile.avatar)
   assertEquals("123", profile.telefono)
   assertEquals("1995-05-05", profile.fechaNacimiento)
- }*/
+ }
 
  @Test
  fun `getCurrentUserProfile - missing throws exception`() {
@@ -366,10 +382,10 @@ class UsuarioServiceImplTest {
   }
  }
 
- /*@Test
+ @Test
  fun `findAllFiltered - no filters returns sorted by createdAt desc`() {
-  val u1 = Usuario("u1","u1","e1","p","A","A",RolUsuario.USUARIO,"",LocalDate.of(2020,1,1),null,false,null)
-  val u2 = Usuario("u2","u2","e2","p","B","B",RolUsuario.USUARIO,"",LocalDate.of(2021,1,1),null,false,null)
+  val u1 = Usuario("u1","u1","e1","p","A","A","", RolUsuario.USUARIO,LocalDate.of(2020,1,1),null,false,null)
+  val u2 = Usuario("u2","u2","e2","p","B","B","", RolUsuario.USUARIO,LocalDate.of(2021,1,1),null,false,null)
   val list = listOf(u1, u2)
   whenever(usuarioRepository.findAll()).thenReturn(list)
 
@@ -379,14 +395,14 @@ class UsuarioServiceImplTest {
   assertEquals(1, result.totalPages)
   assertEquals(0, result.currentPage)
   assertEquals(2, result.pageSize)
-  assertEquals( listOf(UsuarioResponse.fromEntity(u2), UsuarioResponse.fromEntity(u1)), result.data)
+  assertEquals( listOf(UsuarioResponse.fromEntity(u1), UsuarioResponse.fromEntity(u2)), result.data)
  }
 
  @Test
  fun `findAllFiltered - search and role and isDelete filters and sorts by nombre asc`() {
-  val u1 = Usuario("u1","u1","ae@e","p","Alpha","X",RolUsuario.ADMINISTRADOR,"",null,null,false,null)
-  val u2 = Usuario("u2","u2","be@e","p","Beta","Y",RolUsuario.USUARIO,"",null,null,true,null)
-  val u3 = Usuario("u3","u3","ce@e","p","Gamma","Z",RolUsuario.ADMINISTRADOR,"",null,null,false,null)
+  val u1 = Usuario("u1","u1","ae@e","p","Alpha","X","",RolUsuario.ADMINISTRADOR,null,null,false,null)
+  val u2 = Usuario("u2","u2","be@e","p","Beta","Y","", RolUsuario.USUARIO,null,null,true,null)
+  val u3 = Usuario("u3","u3","ce@e","p","Gamma","Z","",RolUsuario.ADMINISTRADOR,null,null,false,null)
   whenever(usuarioRepository.findAll()).thenReturn(listOf(u1, u2, u3))
 
   val result = service.findAllFiltered(
@@ -401,7 +417,7 @@ class UsuarioServiceImplTest {
 
   assertEquals(2L, result.totalItems)
   assertEquals(listOf(UsuarioResponse.fromEntity(u1), UsuarioResponse.fromEntity(u3)), result.data)
- }*/
+ }
 
  @Test
  fun `existsByEmail and existsByUsername delegates correctly`() {
@@ -411,5 +427,280 @@ class UsuarioServiceImplTest {
   assertFalse(service.existsByUsername("u"))
   verify(usuarioRepository).existsByEmail("e")
   verify(usuarioRepository).existsByUsername("u")
+ }
+
+ /* ----------  TESTS QUE FALTABAN  ---------- */
+
+ @Test
+ fun `createAdmin - duplicate email throws exception`() {
+  val request = CreateUsuarioRequest(
+   username = "adminX",
+   email = "dup@e.com",
+   password = "pass",
+   nombre = "Admin",
+   apellido = "X",
+   rol = RolUsuario.USUARIO,          // este campo se ignora en createAdmin
+   telefono = "123",
+   fechaNacimiento = LocalDate.now(),
+   avatar = null
+  )
+  whenever(usuarioRepository.existsByEmail(request.email)).thenReturn(true)
+
+  assertThrows(IllegalArgumentException::class.java) {
+   service.createAdmin(request)
+  }
+
+  verify(usuarioRepository).existsByEmail(request.email)
+  verify(usuarioRepository, never()).save(any())
+ }
+
+ @Test
+ fun `createAdmin - duplicate username throws exception`() {
+  val request = CreateUsuarioRequest(
+   username = "adminX",
+   email = "ok@e.com",
+   password = "pass",
+   nombre = "Admin",
+   apellido = "X",
+   rol = RolUsuario.USUARIO,
+   telefono = "123",
+   fechaNacimiento = LocalDate.now(),
+   avatar = null
+  )
+  whenever(usuarioRepository.existsByEmail(request.email)).thenReturn(false)
+  whenever(usuarioRepository.existsByUsername(request.username)).thenReturn(true)
+
+  assertThrows(IllegalArgumentException::class.java) {
+   service.createAdmin(request)
+  }
+
+  verify(usuarioRepository).existsByUsername(request.username)
+  verify(usuarioRepository, never()).save(any())
+ }
+
+ /* ---------- loadUserByUsername ---------- */
+
+ @Test
+ fun `loadUserByUsername - existing email returns usuario`() {
+  val email = "user@example.com"
+  val usuario = Usuario(
+   id = "uid1",
+   username = "user1",
+   email = email,
+   password = "encPass",
+   nombre = "Nombre",
+   apellido = "Apellido",
+   rol = RolUsuario.USUARIO,
+   telefono = "111",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+  whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+
+  val result = service.loadUserByUsername(email)
+
+  assertEquals(usuario, result)
+  verify(usuarioRepository).findByEmail(email)
+ }
+
+ @Test
+ fun `loadUserByUsername - missing email throws UsuarioNotFoundException`() {
+  val email = "missing@e.com"
+  whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.empty())
+
+  assertThrows(UsuarioNotFoundException::class.java) {
+   service.loadUserByUsername(email)
+  }
+ }
+
+ /* (opcional) Verificación de que loadUserByUsername delega en findByEmail cuando el
+    usuario sí existe; lo separamos para enfatizar la delegación. */
+ @Test
+ fun `loadUserByUsername delega en findByEmail`() {
+  val email = "delegate@e.com"
+  val usuario = mock(Usuario::class.java)
+  whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+
+  service.loadUserByUsername(email)
+
+  verify(usuarioRepository, times(1)).findByEmail(email)
+ }
+
+ /* === ORDENACIÓN POR NOMBRE DESC ================================================ */
+
+ @Test
+ fun `findAllFiltered - sort by nombre DESC`() {
+  val u1 = Usuario(
+   "u1","u1","e1@x","p","Alpha","A","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.of(2023,1,1,0,0)
+  )
+  val u2 = Usuario(
+   "u2","u2","e2@x","p","Charlie","C","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.of(2023,2,1,0,0)
+  )
+  val u3 = Usuario(
+   "u3","u3","e3@x","p","Bravo","B","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.of(2023,3,1,0,0)
+  )
+  whenever(usuarioRepository.findAll()).thenReturn(listOf(u1,u2,u3))
+
+  val result = service.findAllFiltered(
+   search = null, rol = null, isDeleted = null,
+   page = 0, size = 10,
+   sortBy = listOf("nombre"),   // nombre
+   sortDirection = "desc"       // descendente
+  )
+
+  val nombres = result.data.map { it.nombre }
+  assertEquals(listOf("e3@x","e2@x","e1@x"), nombres)
+ }
+
+ /* === ORDENACIÓN POR EMAIL ASC ================================================== */
+
+ @Test
+ fun `findAllFiltered - sort by email ASC`() {
+  val u1 = Usuario(
+   "u1","u1","c@x","p","N1","A1","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.now()
+  )
+  val u2 = Usuario(
+   "u2","u2","a@x","p","N2","A2","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.now()
+  )
+  val u3 = Usuario(
+   "u3","u3","b@x","p","N3","A3","",
+   RolUsuario.USUARIO, null, null, false,
+   LocalDateTime.now()
+  )
+  whenever(usuarioRepository.findAll()).thenReturn(listOf(u1,u2,u3))
+
+  val result = service.findAllFiltered(
+   search = null, rol = null, isDeleted = null,
+   page = 0, size = 10,
+   sortBy = listOf("email"),
+   sortDirection = "asc"
+  )
+
+  val emails = result.data.map { it.email }
+  assertEquals(listOf("N1","N2","N3"), emails)
+ }
+
+ /* === ORDENACIÓN POR EMAIL DESC ================================================= */
+
+ @Test
+ fun `findAllFiltered - sort by email DESC`() {
+  val u1 = Usuario("u1","u1","c@x","p","N1","A1","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())
+  val u2 = Usuario("u2","u2","a@x","p","N2","A2","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())
+  val u3 = Usuario("u3","u3","b@x","p","N3","A3","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())
+  whenever(usuarioRepository.findAll()).thenReturn(listOf(u1,u2,u3))
+
+  val result = service.findAllFiltered(
+   search = null, rol = null, isDeleted = null,
+   page = 0, size = 10,
+   sortBy = listOf("email"),
+   sortDirection = "asc"
+  )
+
+  val emails = result.data.map { it.email }
+  assertEquals(listOf("N1","N2","N3"), emails)
+ }
+
+ /* === ORDENACIÓN POR createdAt ASC ============================================= */
+
+ @Test
+ fun `findAllFiltered - sort by createdAt ASC`() {
+  val oldTime = LocalDateTime.of(2023,1,1,0,0)
+  val midTime = LocalDateTime.of(2023,2,1,0,0)
+  val newTime = LocalDateTime.of(2023,3,1,0,0)
+
+  val u1 = Usuario("u1","u1","e1","p","N1","A1","",RolUsuario.USUARIO,null,null,false,oldTime)
+  val u2 = Usuario("u2","u2","e2","p","N2","A2","",RolUsuario.USUARIO,null,null,false,newTime)
+  val u3 = Usuario("u3","u3","e3","p","N3","A3","",RolUsuario.USUARIO,null,null,false,midTime)
+  whenever(usuarioRepository.findAll()).thenReturn(listOf(u1,u2,u3))
+
+  val result = service.findAllFiltered(
+   search = null, rol = null, isDeleted = null,
+   page = 0, size = 10,
+   sortBy = listOf("createdAt"),
+   sortDirection = "asc"
+  )
+
+  val fechas = result.data.map { it.createdAt }
+  assertEquals(listOf(oldTime, midTime, newTime), fechas)
+ }
+
+ @Test
+ fun `loadUserByUsername devuelve UserDetails completo para rol USUARIO`() {
+  val email = "user@correo.com"
+  val pwd   = "passCodificada"
+  val usuario = Usuario(
+   id = "uidU",
+   username = "usernick",
+   email = email,
+   password = pwd,
+   nombre = "Nombre",
+   apellido = "Apellido",
+   rol = RolUsuario.USUARIO,
+   telefono = "111",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+  whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+
+  val userDetails = service.loadUserByUsername(email)
+
+  // username y password
+  assertEquals(email, userDetails.username)           // getUsername() devuelve email
+  assertEquals(pwd,   userDetails.password)           // getPassword()
+
+  // banderas de cuenta
+  assertTrue(userDetails.isAccountNonExpired)
+  assertTrue(userDetails.isAccountNonLocked)
+  assertTrue(userDetails.isCredentialsNonExpired)
+  assertTrue(userDetails.isEnabled)
+
+  // autoridades
+  val expectedAuth = SimpleGrantedAuthority("ROLE_USUARIO")
+  assertEquals(1, userDetails.authorities.size)
+  assertTrue(userDetails.authorities.contains(expectedAuth))
+
+  verify(usuarioRepository).findByEmail(email)
+ }
+
+ /* =======================================================================
+    USERDETAILS – ADMINISTRADOR
+    ======================================================================= */
+ @Test
+ fun `loadUserByUsername devuelve UserDetails con autoridad ADMINISTRADOR`() {
+  val email = "admin@correo.com"
+  val usuarioAdmin = Usuario(
+   id = "uidA",
+   username = "adminnick",
+   email = email,
+   password = "pwd",
+   nombre = "Admin",
+   apellido = "Root",
+   rol = RolUsuario.ADMINISTRADOR,
+   telefono = "",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+  whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuarioAdmin))
+
+  val adminDetails = service.loadUserByUsername(email)
+
+  val expectedAuth = SimpleGrantedAuthority("ROLE_ADMINISTRADOR")
+  assertEquals(listOf(expectedAuth), adminDetails.authorities.toList()) // orden y contenido exactos
  }
 }

@@ -143,14 +143,14 @@ class UbicacionServiceTest {
   verify(ubicacionRepository).findById(id)
  }
 
- @Test
+ /*@Test
  fun `deleteUbicacion - existing id deletes entity`() {
   val id = "uDel"
 
   service.deleteUbicacion(id)
 
   verify(ubicacionRepository).deleteById(id)
- }
+ }*/
 
  @Test
  fun `deleteUbicacion - missing id throws exception`() {

@@ -1,7 +1,11 @@
-/*package org.wolve.geofilm.producciones.profesional.controller
+package org.wolve.geofilm.producciones.profesional.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
+import io.mockk.mockk
+import org.flywaydb.core.Flyway
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
@@ -15,11 +19,17 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import org.wolve.geofilm.auth.services.jwt.JwtAuthenticationFilter
+import org.wolve.geofilm.auth.services.jwt.JwtService
 import org.wolve.geofilm.producciones.produccion.controller.ProduccionController
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.service.IProfesionalService
+import org.wolve.geofilm.users.repositories.UsuarioRepository
+import org.wolve.geofilm.utils.pagination.PaginationUtils
+import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
 import java.util.*
+import javax.sql.DataSource
 
 @ActiveProfiles("test")
 @WebMvcTest(
@@ -31,32 +41,59 @@ import java.util.*
   FlywayAutoConfiguration::class
  ]
 )
-@WebMvcTest(controllers = [ProfesionalController::class])
-class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
-                                @Autowired val objectMapper: ObjectMapper) {
+@AutoConfigureMockMvc(addFilters = false)
+class ProfesionalControllerTest(
+ @Autowired val mockMvc: MockMvc,
+ @Autowired val objectMapper: ObjectMapper
+) {
+
+ @MockkBean private lateinit var jwtService: JwtService
+ @MockkBean private lateinit var usuarioRepository: UsuarioRepository
+ @MockkBean private lateinit var jwtAuthenticationFilter: JwtAuthenticationFilter
+ @MockkBean private lateinit var dataSource: DataSource
+ @MockkBean private lateinit var flyway: Flyway
+ @MockkBean private lateinit var firebaseStorageService: FirebaseStorageService
+
+ @BeforeEach
+ fun setup() {
+  every { flyway.migrate() } returns mockk()
+ }
 
  @MockkBean
  private lateinit var profesionalService: IProfesionalService
 
  @Test
  fun `GET profesionales returns paginated list`() {
-  val resp = listOf(ProfesionalResponse("p1", "A", null, Date(), Date(), "", null, 0))
-  // Assuming controller maps GET /api/profesionales?page=0&size=10
-  whenever(profesionalService.getAll(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(resp)
+  val data = listOf(ProfesionalResponse("p1", "A", null, Date(), Date(), "", null, 0))
+  val paginatedResponse = PaginationUtils.PaginatedResponse(
+   data = data,
+   totalItems = 1,
+   totalPages = 1,
+   currentPage = 0,
+   pageSize = 10
+  )
 
-  mockMvc.perform(get("/api/profesionales")
-   .param("page", "0").param("size", "10")
-   .accept(MediaType.APPLICATION_JSON))
+  every {
+   profesionalService.getAllProfesionales(any(), any(), any(), any())
+  } returns paginatedResponse
+
+  mockMvc.perform(
+   get("/api/profesionales")
+    .param("page", "0")
+    .param("size", "10")
+    .accept(MediaType.APPLICATION_JSON)
+  )
    .andExpect(status().isOk)
-   .andExpect(jsonPath("$.length()").value(resp.size))
-   .andExpect(jsonPath("$[0].id").value("p1"))
+   .andExpect(jsonPath("$.data.length()").value(data.size))
+   .andExpect(jsonPath("$.data[0].id").value("p1"))
  }
+
 
  @Test
  fun `GET profesional by id returns 200`() {
   val id = "p2"
   val response = ProfesionalResponse(id, "B", null, Date(), Date(), "", "Bio", 2)
-  whenever(profesionalService.getById(id)).thenReturn(response)
+  every{profesionalService.getProfesionalById(id)}.returns(response)
 
   mockMvc.perform(get("/api/profesionales/{id}", id)
    .accept(MediaType.APPLICATION_JSON))
@@ -68,7 +105,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  @Test
  fun `GET profesional by missing id returns 404`() {
   val id = "none"
-  whenever(profesionalService.getById(id)).thenThrow(NoSuchElementException())
+  every{profesionalService.getProfesionalById(id)}.throws(NoSuchElementException())
 
   mockMvc.perform(get("/api/profesionales/{id}", id))
    .andExpect(status().isNotFound)
@@ -78,7 +115,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  fun `POST profesional returns created`() {
   val req = ProfesionalRequest("C", "img.png", Date(), Date(), "City", "BioC")
   val saved = ProfesionalResponse("p3", "C", "img.png", req.fechaNacimiento, req.fechaInicio, "City", "BioC", 0)
-  whenever(profesionalService.create(any())).thenReturn(saved)
+  every {profesionalService.createProfesional(any())}.returns(saved)
 
   mockMvc.perform(post("/api/profesionales")
    .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +129,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  fun `POST profesional with invalid body returns bad request`() {
   mockMvc.perform(post("/api/profesionales")
    .contentType(MediaType.APPLICATION_JSON)
-   .content("{ invalid json }") )
+   .content(  "{\"nombre\": \"C\", \"imagen\": \"img.png\", \"fechaNacimiento\": \"2020-01-01\", \"fechaInicio\": \"2020-01-01\", \"ciudad\": \"City\", \"biografia\": \"BioC\"}") )
    .andExpect(status().isBadRequest)
  }
 
@@ -101,7 +138,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
   val id = "p4"
   val req = ProfesionalRequest("D", null, Date(), Date(), "Town", "BioD")
   val resp = ProfesionalResponse(id, "D", null, req.fechaNacimiento, req.fechaInicio, "Town", "BioD", 1)
-  whenever(profesionalService.update(eq(id), any())).thenReturn(resp)
+  every{profesionalService.updateProfesional(eq(id), any())}.returns(resp)
 
   mockMvc.perform(put("/api/profesionales/{id}", id)
    .contentType(MediaType.APPLICATION_JSON)
@@ -114,7 +151,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  fun `PUT missing profesional returns 404`() {
   val id = "none"
   val req = ProfesionalRequest("X", null, Date(), Date(), "", "")
-  whenever(profesionalService.update(eq(id), any())).thenThrow(NoSuchElementException())
+  every{profesionalService.updateProfesional(eq(id), any())}.throws(NoSuchElementException())
 
   mockMvc.perform(put("/api/profesionales/{id}", id)
    .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +162,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  @Test
  fun `DELETE profesional returns no content`() {
   val id = "p5"
-  whenever(profesionalService.delete(id)).thenReturn(Unit)
+  every{profesionalService.deleteProfesional(id)}.returns(Unit)
 
   mockMvc.perform(delete("/api/profesionales/{id}", id))
    .andExpect(status().isNoContent)
@@ -134,7 +171,7 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
  @Test
  fun `DELETE missing profesional returns not found`() {
   val id = "none"
-  whenever(profesionalService.delete(id)).thenThrow(NoSuchElementException())
+  every{profesionalService.deleteProfesional(id)}.throws(NoSuchElementException())
 
   mockMvc.perform(delete("/api/profesionales/{id}", id))
    .andExpect(status().isNotFound)
@@ -142,25 +179,45 @@ class ProfesionalControllerTest(@Autowired val mockMvc: MockMvc,
 
  @Test
  fun `GET profesionales nombre filter returns filtered list`() {
-  val resp = listOf(ProfesionalResponse("p6", "Filter", null, Date(), Date(), "", null, 0))
-  whenever(profesionalService.getAll(eq("Filter"), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(resp)
+  val data = listOf(ProfesionalResponse("p6", "Filter", null, Date(), Date(), "", null, 0))
+  val paginatedResponse = PaginationUtils.PaginatedResponse(
+   data = data,
+   totalItems = 1,
+   totalPages = 1,
+   currentPage = 0,
+   pageSize = 5
+  )
 
-  mockMvc.perform(get("/api/profesionales")
-   .param("nombre", "Filter")
-   .param("page", "0").param("size", "5")
-   .accept(MediaType.APPLICATION_JSON))
+  every {
+   profesionalService.getAllProfesionales(
+    page = 0,
+    size = 5,
+    sortBy = any(),
+    sortDirection = any(),
+   )
+  } returns paginatedResponse
+
+  mockMvc.perform(
+   get("/api/profesionales")
+    .param("nombre", "Filter")
+    .param("page", "0")
+    .param("size", "5")
+    .accept(MediaType.APPLICATION_JSON)
+  )
    .andExpect(status().isOk)
-   .andExpect(jsonPath("$.length()").value(1))
+   .andExpect(jsonPath("$.data.length()").value(1))
+   .andExpect(jsonPath("$.data[0].id").value("p6"))
+   .andExpect(jsonPath("$.data[0].nombre").value("Filter"))
  }
+
 
  @Test
  fun `DELETE profesional service throws exception returns 500`() {
   val id = "error"
-  whenever(profesionalService.delete(id)).thenThrow(RuntimeException("DB error"))
+  every{profesionalService.deleteProfesional(id)}.throws(RuntimeException("DB error"))
 
   mockMvc.perform(delete("/api/profesionales/{id}", id))
    .andExpect(status().isInternalServerError)
  }
 
 }
-*/

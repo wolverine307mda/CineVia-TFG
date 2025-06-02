@@ -7,6 +7,7 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
+import org.springframework.core.env.Environment
 import javax.sql.DataSource
 
 @SpringBootApplication
@@ -30,16 +31,15 @@ class GeoFilmApplication {
     // Este Bean se ejecuta al arrancar la aplicación
     // y lanza las migraciones de Flyway después de que Hibernate haya creado las tablas
     @Bean
-    fun flywayRunner(flyway: Flyway): ApplicationRunner {
+    fun flywayRunner(flyway: Flyway, env: Environment): ApplicationRunner {
         return ApplicationRunner {
-            // Ejecuta las migraciones de Flyway
-            flyway.migrate()
-            logger.info("✅ Migración de Flyway ejecutada con éxito.")
+            if (!env.activeProfiles.contains("test")) {
+                flyway.migrate()
+                logger.info("✅ Migración de Flyway ejecutada con éxito.")
+            }
 
-            // Mostrar en consola la URL base de la app
             val urlPort = "http://localhost:$serverPort"
             val urlSwagger = "http://localhost:$serverPort/swagger-ui/index.html\n"
-
             logger.info("🚀 La aplicación está corriendo en: $urlPort")
             logger.info("🔍 Swagger disponible en: $urlSwagger")
         }

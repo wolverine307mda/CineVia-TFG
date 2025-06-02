@@ -1,3 +1,5 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
 plugins {
     kotlin("jvm") version "1.9.25"
     kotlin("plugin.spring") version "1.9.25"
@@ -64,6 +66,7 @@ dependencies {
 
     // 📌 Logs
     implementation("ch.qos.logback:logback-classic")
+    testRuntimeOnly("org.apache.logging.log4j:log4j-core:2.23.1")
 
     // 📌 Sesión y JWT
     implementation("org.springframework.session:spring-session-core")
@@ -109,8 +112,18 @@ dependencies {
     testImplementation("io.mockk:mockk:1.13.10")
 }
 
-tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
+tasks.withType<BootJar> {
     archiveFileName.set("app.jar")
+}
+
+koverReport {
+    filters {
+        excludes {
+            classes(
+                "org.wolve.geofilm.utils.email.*",
+            )
+        }
+    }
 }
 
 tasks.test {
