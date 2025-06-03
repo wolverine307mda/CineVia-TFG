@@ -34,133 +34,122 @@ import javax.sql.DataSource
 
 @ActiveProfiles("test")
 @WebMvcTest(
- controllers = [RodajeController::class],
- excludeAutoConfiguration = [
-  SecurityFilterAutoConfiguration::class,
-  DataSourceAutoConfiguration::class,
-  HibernateJpaAutoConfiguration::class,
-  FlywayAutoConfiguration::class
- ]
+    controllers = [RodajeController::class],
+    excludeAutoConfiguration = [
+        SecurityFilterAutoConfiguration::class,
+        DataSourceAutoConfiguration::class,
+        HibernateJpaAutoConfiguration::class,
+        FlywayAutoConfiguration::class
+    ]
 )
 @AutoConfigureMockMvc(addFilters = false)
 class RodajeControllerTest {
 
- @MockkBean private lateinit var jwtService: JwtService
- @MockkBean private lateinit var usuarioRepository: UsuarioRepository
- @MockkBean private lateinit var jwtAuthenticationFilter: JwtAuthenticationFilter
- @MockkBean private lateinit var dataSource: DataSource
- @MockkBean private lateinit var flyway: Flyway
- @MockkBean private lateinit var firebaseStorageService: FirebaseStorageService
+    @MockkBean private lateinit var jwtService: JwtService
+    @MockkBean private lateinit var usuarioRepository: UsuarioRepository
+    @MockkBean private lateinit var jwtAuthenticationFilter: JwtAuthenticationFilter
+    @MockkBean private lateinit var dataSource: DataSource
+    @MockkBean private lateinit var flyway: Flyway
+    @MockkBean private lateinit var firebaseStorageService: FirebaseStorageService
 
- @Autowired
- lateinit var mockMvc: MockMvc
+    @Autowired
+    lateinit var mockMvc: MockMvc
 
- @Autowired
- lateinit var objectMapper: ObjectMapper
+    @Autowired
+    lateinit var objectMapper: ObjectMapper
 
- @MockkBean
- lateinit var rodajeService: IRodajeService
+    @MockkBean
+    lateinit var rodajeService: IRodajeService
 
- @BeforeEach
- fun setup() {
-  every { flyway.migrate() } returns mockk()
- }
+    @BeforeEach
+    fun setup() {
+      every { flyway.migrate() } returns mockk()
+    }
 
- private val sampleUbicacion = UbicacionResponse(
-  id = "ubic-1",
-  nombre = "Plaza Mayor",
-  latitud = 40.4168,
-  longitud = -3.7038,
-  createdAt = LocalDateTime.now(),
-  updatedAt = LocalDateTime.now()
- )
+    private val sampleUbicacion = UbicacionResponse(
+        id = "ubic-1",
+        nombre = "Plaza Mayor",
+        latitud = 40.4168,
+        longitud = -3.7038,
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now()
+    )
 
- private val sampleResponse = RodajeResponse(
-  id = "rod-1",
-  notas = "Notas de prueba",
-  imagenes = listOf("img1.jpg", "img2.jpg"),
-  createdAt = LocalDateTime.now(),
-  updatedAt = LocalDateTime.now(),
-  ubicacion = sampleUbicacion
- )
+    private val sampleResponse = RodajeResponse(
+        id = "rod-1",
+        notas = "Notas de prueba",
+        imagenes = listOf("img1.jpg", "img2.jpg"),
+        createdAt = LocalDateTime.now(),
+        updatedAt = LocalDateTime.now(),
+        ubicacion = sampleUbicacion
+    )
 
- private val sampleRequest = RodajeRequest(
-  produccionId = "prod-1",
-  ubicacionId = "ubic-1",
-  notas = "Notas de prueba",
-  imagenes = listOf("img1.jpg", "img2.jpg")
- )
+    private val sampleRequest = RodajeRequest(
+        produccionId = "prod-1",
+        ubicacionId = "ubic-1",
+        notas = "Notas de prueba",
+        imagenes = listOf("img1.jpg", "img2.jpg")
+    )
 
- @Test
- fun `should return rodaje by id`() {
-  every { rodajeService.findById("rod-1") } returns sampleResponse
+    @Test
+    fun findRodajeById() {
+        every { rodajeService.findById("rod-1") } returns sampleResponse
 
-  mockMvc.perform(get("/api/rodajes/{id}", "rod-1"))
-   .andExpect(status().isOk)
-   .andExpect(jsonPath("$.id").value("rod-1"))
-   .andExpect(jsonPath("$.notas").value("Notas de prueba"))
- }
+        mockMvc.perform(get("/api/rodajes/{id}", "rod-1"))
+        .andExpect(status().isOk)
+        .andExpect(jsonPath("$.id").value("rod-1"))
+        .andExpect(jsonPath("$.notas").value("Notas de prueba"))
+    }
 
- @Test
- fun `should create rodaje`() {
-  every { rodajeService.create(sampleRequest) } returns sampleResponse
+    @Test
+    fun createRodaje() {
+        every { rodajeService.create(sampleRequest) } returns sampleResponse
 
-  mockMvc.perform(
-   post("/api/rodajes")
-    .contentType(MediaType.APPLICATION_JSON)
-    .content(objectMapper.writeValueAsString(sampleRequest))
-  )
-   .andExpect(status().isOk)
-   .andExpect(jsonPath("$.id").value("rod-1"))
- }
+        mockMvc.perform(
+        post("/api/rodajes")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(sampleRequest))
+        )
+        .andExpect(status().isOk)
+        .andExpect(jsonPath("$.id").value("rod-1"))
+    }
 
- @Test
- fun `should update rodaje`() {
-  every { rodajeService.update("rod-1", sampleRequest) } returns sampleResponse
+    @Test
+    fun updateRodaje() {
+        every { rodajeService.update("rod-1", sampleRequest) } returns sampleResponse
 
-  mockMvc.perform(
-   put("/api/rodajes/{id}", "rod-1")
-    .contentType(MediaType.APPLICATION_JSON)
-    .content(objectMapper.writeValueAsString(sampleRequest))
-  )
-   .andExpect(status().isOk)
-   .andExpect(jsonPath("$.id").value("rod-1"))
- }
+        mockMvc.perform(
+        put("/api/rodajes/{id}", "rod-1")
+          .contentType(MediaType.APPLICATION_JSON)
+          .content(objectMapper.writeValueAsString(sampleRequest))
+        )
+        .andExpect(status().isOk)
+        .andExpect(jsonPath("$.id").value("rod-1"))
+    }
 
- @Test
- fun `should delete rodaje`() {
-  justRun { rodajeService.delete("rod-1") }
+    @Test
+    fun deleteRodaje() {
+        justRun { rodajeService.delete("rod-1") }
 
-  mockMvc.perform(delete("/api/rodajes/{id}", "rod-1"))
-   .andExpect(status().isNoContent)
- }
+        mockMvc.perform(delete("/api/rodajes/{id}", "rod-1"))
+        .andExpect(status().isNoContent)
+    }
 
- @Test
- fun `should return rodajes by produccion`() {
-  every { rodajeService.findByProduccion("prod-1", 0, 10) } returns mapOf(
-   "data" to listOf(sampleResponse),
-   "totalItems" to 1,
-   "totalPages" to 1
-  )
+    @Test
+    fun rodajesByProduccion() {
+        every { rodajeService.findByProduccion("prod-1", 0, 10) } returns mapOf(
+            "data" to listOf(sampleResponse),
+            "totalItems" to 1,
+            "totalPages" to 1
+        )
 
-  mockMvc.perform(
-   get("/api/rodajes/produccion/{produccionId}", "prod-1")
-    .param("page", "0")
-    .param("size", "10")
-  )
-   .andExpect(status().isOk)
-   .andExpect(jsonPath("$.totalItems").value(1))
-   .andExpect(jsonPath("$.data[0].id").value("rod-1"))
- }
+        mockMvc.perform(
+        get("/api/rodajes/produccion/{produccionId}", "prod-1")
+            .param("page", "0")
+            .param("size", "10")
+        )
+        .andExpect(status().isOk)
+        .andExpect(jsonPath("$.totalItems").value(1))
+        .andExpect(jsonPath("$.data[0].id").value("rod-1"))
+    }
 }
-
-/**
- * Versión mínima del DTO de respuesta de Ubicacion para evitar dependencias en el módulo de ubicaciones.
- */
-data class UbicacionResponse(
- val id: String,
- val nombre: String,
- val direccion: String,
- val latitud: Double,
- val longitud: Double
-)

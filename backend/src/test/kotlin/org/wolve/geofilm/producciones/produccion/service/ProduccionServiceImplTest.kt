@@ -96,7 +96,6 @@ class ProduccionServiceImplTest {
         verify(produccionRepository).findById(id)
     }
 
-
     @Test
     fun deleteProduccionTest() {
         service.deleteProduccion("whatever")
@@ -244,14 +243,15 @@ class ProduccionServiceImplTest {
     }
 
     @Test
-    fun createProduccionNullThrowsException() {
+    fun createProduccionNullLanzaException() {
         val exception = assertThrows(NullPointerException::class.java) {
             service.createProduccion(null as ProduccionRequest)
         }
         assertNotNull(exception)
     }
+
     @Test
-    fun `updateProduccion actualiza todos los campos cuando la entidad existe`() {
+    fun updateProduccionExiste() {
         val id = "upd-1"
         val existente = Produccion(
             id = id,
@@ -308,9 +308,8 @@ class ProduccionServiceImplTest {
         }
     }
 
-    /** ---------- actualizarImagen ---------- **/
     @Test
-    fun `actualizarImagen cambia la url y devuelve el dto`() {
+    fun actualizarImagen() {
         val id = "img1"
         val entidad = Produccion(
             id = id,
@@ -340,9 +339,8 @@ class ProduccionServiceImplTest {
         verify(produccionMapper).toResponse(entidad)
     }
 
-    /** ---------- getAllProducciones (sin paginar) ---------- **/
     @Test
-    fun `getAllProducciones lista completa mapea correctamente`() {
+    fun getAllProduccionesMapeaCorrectamente() {
         val entidad = mock<Produccion>()
         val dto = mock<ProduccionResponse>()
 
@@ -356,9 +354,8 @@ class ProduccionServiceImplTest {
         verify(produccionMapper).toProduccionResponse(entidad)
     }
 
-    /** ---------- existsById ---------- **/
     @Test
-    fun `existsById devuelve true y false correctamente`() {
+    fun existsByIdTrueYFalse() {
         whenever(produccionRepository.existsById("yes")).thenReturn(true)
         whenever(produccionRepository.existsById("no")).thenReturn(false)
 
@@ -366,9 +363,8 @@ class ProduccionServiceImplTest {
         assertFalse(service.existsById("no"))
     }
 
-    /** ---------- findEntityById ---------- **/
     @Test
-    fun `findEntityById devuelve la entidad cuando existe`() {
+    fun findEntityByIdDevuelveEntidad() {
         val entidad = mock<Produccion>()
         whenever(produccionRepository.findById("ok")).thenReturn(Optional.of(entidad))
 
@@ -376,7 +372,7 @@ class ProduccionServiceImplTest {
     }
 
     @Test
-    fun `findEntityById lanza ProduccionNotFoundException cuando no existe`() {
+    fun findEntityByIdProduccionNotFoundException() {
         whenever(produccionRepository.findById("bad")).thenReturn(Optional.empty())
 
         assertThrows(ProduccionNotFoundException::class.java) {
@@ -384,9 +380,8 @@ class ProduccionServiceImplTest {
         }
     }
 
-    /** ---------- filtrarProducciones (rama de orden por estreno DESC) ---------- **/
     @Test
-    fun `filtrarProducciones ordena por estreno descendente cuando no se pasa sortBy`() {
+    fun filtrarProduccionesEstrenoDescendente() {
         val hoy = Date()
         val ayer = Date(hoy.time - 86_400_000)
         val e1 = Produccion(

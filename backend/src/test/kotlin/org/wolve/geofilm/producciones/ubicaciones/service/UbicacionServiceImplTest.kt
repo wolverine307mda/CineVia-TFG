@@ -45,7 +45,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `getUbicacionById - existing id returns response`() {
+ fun getUbicacionById () {
   val id = "u1"
   val now = LocalDateTime.now()
   val entity = Ubicacion(id = id, nombre = "Lugar", latitud = 1.0, longitud = 2.0, createdAt = now, updatedAt = now)
@@ -63,7 +63,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `getUbicacionById - missing id returns null`() {
+ fun getUbicacionByIdNotFoundId() {
   val id = "noExiste"
   whenever(ubicacionRepository.findById(id)).thenReturn(java.util.Optional.empty())
 
@@ -73,7 +73,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `getAllUbicaciones returns list`() {
+ fun getAllUbicaciones() {
   val now = LocalDateTime.now()
   val e1 = Ubicacion(id = "u1", nombre = "A", latitud = 0.0, longitud = 0.0, createdAt = now, updatedAt = now)
   val e2 = Ubicacion(id = "u2", nombre = "B", latitud = 1.0, longitud = 1.0, createdAt = now, updatedAt = now)
@@ -91,7 +91,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `createUbicacion - maps, saves, returns response`() {
+ fun createUbicacion() {
   val request = UbicacionRequest(nombre = "X", latitud = 5.0, longitud = 6.0)
   val now = LocalDateTime.now()
   val entityToSave = Ubicacion(nombre = "X", latitud = 5.0, longitud = 6.0, createdAt = now, updatedAt = now)
@@ -111,7 +111,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `updateUbicacion - existing id updates and returns response`() {
+ fun updateUbicacion() {
   val id = "uUpd"
   val request = UbicacionRequest(nombre = "Y", latitud = 7.0, longitud = 8.0)
   val now = LocalDateTime.now()
@@ -133,7 +133,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `updateUbicacion - missing id returns null`() {
+ fun updateUbicacionNotFounfId() {
   val id = "noExisteUpd"
   val request = UbicacionRequest(nombre = "Z", latitud = 9.0, longitud = 10.0)
   whenever(ubicacionRepository.findById(id)).thenReturn(java.util.Optional.empty())
@@ -143,17 +143,17 @@ class UbicacionServiceTest {
   verify(ubicacionRepository).findById(id)
  }
 
- /*@Test
- fun `deleteUbicacion - existing id deletes entity`() {
+ @Test
+ fun deleteUbicacion() {
   val id = "uDel"
 
   service.deleteUbicacion(id)
 
   verify(ubicacionRepository).deleteById(id)
- }*/
+ }
 
  @Test
- fun `deleteUbicacion - missing id throws exception`() {
+ fun deleteUbicacionNotFound() {
   val id = "noExisteDel"
   whenever(ubicacionRepository.findById(id)).thenReturn(java.util.Optional.empty())
 
@@ -164,7 +164,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `findEntityById - existing id returns entity`() {
+ fun findEntityById() {
   val id = "uFind"
   val now = LocalDateTime.now()
   val entity = Ubicacion(id = id, nombre = "Found", latitud = 2.2, longitud = 3.3, createdAt = now, updatedAt = now)
@@ -176,7 +176,7 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `findEntityById - missing id throws exception`() {
+ fun findEntityByIdNotFound() {
   val id = "noFind"
   whenever(ubicacionRepository.findById(id)).thenReturn(java.util.Optional.empty())
 
@@ -187,14 +187,14 @@ class UbicacionServiceTest {
  }
 
  @Test
- fun `existsById returns repository value`() {
+ fun existsByIdReturnValor() {
   whenever(ubicacionRepository.existsById("uEx")).thenReturn(true)
   assertTrue(service.existsById("uEx"))
   verify(ubicacionRepository).existsById("uEx")
  }
 
  @Test
- fun `filterUbicaciones - filters by nombre and paginates`() {
+ fun filterUbicaciones() {
   val now = LocalDateTime.now()
   val e1 = Ubicacion(id = "u1", nombre = "Casa", latitud = 1.0, longitud = 1.0, createdAt = now, updatedAt = now)
   val e2 = Ubicacion(id = "u2", nombre = "Calle", latitud = 2.0, longitud = 2.0, createdAt = now, updatedAt = now)

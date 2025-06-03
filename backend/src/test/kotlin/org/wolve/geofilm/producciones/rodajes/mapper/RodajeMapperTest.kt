@@ -26,7 +26,7 @@ class RodajeMapperTest {
  }
 
  @Test
- fun `toResponse - asigna todos los campos correctamente con notas e imagenes`() {
+ fun toResponse() {
   val now = LocalDateTime.of(2023, 6, 1, 10, 0)
   val ubicacionEntity = Ubicacion(
    id = "loc1",
@@ -66,7 +66,7 @@ class RodajeMapperTest {
  }
 
  @Test
- fun `toResponse - maneja notas nulas e imagenes vacias`() {
+ fun toResponseConNulos() {
   val now = LocalDateTime.of(2023, 7, 1, 12, 0)
   val ubicacionEntity = Ubicacion(
    id = "loc2",
@@ -106,7 +106,7 @@ class RodajeMapperTest {
  }
 
  @Test
- fun `toResponse - asegura que llama a ubicacionMapper una sola vez`() {
+ fun toResponseUnaVezMapea() {
   val now = LocalDateTime.now()
   val ubicacionEntity = Ubicacion(
    id = "loc3",
@@ -142,7 +142,7 @@ class RodajeMapperTest {
  }
 
  @Test
- fun `toResponse - valida varios tipos de imagenes`() {
+ fun toResponseTiposImagenes() {
   val now = LocalDateTime.of(2022, 1, 1, 0, 0)
   val ubicacionEntity = Ubicacion(
    id = "loc4",

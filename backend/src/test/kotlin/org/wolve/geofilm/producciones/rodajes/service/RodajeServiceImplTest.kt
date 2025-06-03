@@ -63,8 +63,8 @@ class RodajeServiceTest {
   )
  }
 
- /*@Test
- fun `createRodaje - valid request saves and returns response`() {
+ @Test
+ fun createRodaje() {
   val prodId = "prod1"
   val locId = "loc1"
   val request = RodajeRequest(
@@ -142,7 +142,7 @@ class RodajeServiceTest {
  }
 
  @Test
- fun `findByProduccion - returns paginated data`() {
+ fun findByProduccion() {
   val prodId = "prodX"
   val page = 0
   val size = 2
@@ -221,10 +221,10 @@ class RodajeServiceTest {
   assertEquals(dto1, data[0])
   assertEquals(dto2, data[1])
   verify(rodajeRepository).findAllByProduccionId(prodId, pageable)
- }*/
+ }
 
  @Test
- fun `createRodaje - missing produccion throws exception`() {
+ fun createRodajeNotFound() {
   val prodId = "noProd"
   val locId = "loc1"
   val request = RodajeRequest(
@@ -244,7 +244,7 @@ class RodajeServiceTest {
  }
 
  @Test
- fun `createRodaje - missing ubicacion throws exception`() {
+ fun createRodajeSinUbicacion() {
   val prodId = "prod1"
   val locId = "noLoc"
   val request = RodajeRequest(
@@ -265,7 +265,7 @@ class RodajeServiceTest {
  }
 
  @Test
- fun `findByProduccion - no rodajes returns empty data`() {
+ fun findByProduccionSinRodajes() {
   val prodId = "prodY"
   val page = 1
   val size = 3

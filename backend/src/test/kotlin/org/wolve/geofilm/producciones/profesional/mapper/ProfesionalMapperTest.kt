@@ -22,7 +22,7 @@ class ProfesionalMapperTest {
  }
 
  @Test
- fun `toEntity maps request to entity`() {
+ fun toEntity() {
   val fechaNac = Date(1000000)
   val fechaIni = Date(2000000)
   val request = ProfesionalRequest(
@@ -47,7 +47,7 @@ class ProfesionalMapperTest {
  }
 
  @Test
- fun `toResponse maps entity to response`() {
+ fun toResponse() {
   val fechaNac = Date(1000000)
   val fechaIni = Date(2000000)
   val participacionesList = listOf(Participacion())
@@ -75,7 +75,7 @@ class ProfesionalMapperTest {
  }
 
  @Test
- fun `toPaginatedResponse maps Page to PaginatedResponse`() {
+ fun toPaginatedResponse() {
   val fecha = Date()
   val e1 = Profesional(
    id = "p1", nombre = "X", foto = null,
@@ -102,7 +102,7 @@ class ProfesionalMapperTest {
  }
 
  @Test
- fun `toResponse handles empty participaciones`() {
+ fun toResponseSinParticipaciones() {
   val fecha = Date()
   val entity = Profesional(
    id = "p3", nombre = "Z", foto = null,

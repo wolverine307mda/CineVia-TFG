@@ -74,7 +74,7 @@ class UsuarioControllerTest {
  }
 
  @Test
- fun `should delete usuario`() {
+ fun deleteUsuario() {
   justRun { usuarioService.deleteUser("user-1") }
 
   mockMvc.perform(delete("/api/users/user-1"))
@@ -82,7 +82,7 @@ class UsuarioControllerTest {
  }
 
  @Test
- fun `should soft delete usuario`() {
+ fun desactivarUsuario() {
   justRun { usuarioService.softDelete("user-1") }
 
   mockMvc.perform(delete("/api/users/soft/user-1"))
@@ -90,7 +90,7 @@ class UsuarioControllerTest {
  }
 
  @Test
- fun `should restore usuario`() {
+ fun restoreUsuario() {
   justRun { usuarioService.restoreUser("user-1") }
 
   mockMvc.perform(post("/api/users/restore/user-1"))
@@ -98,7 +98,7 @@ class UsuarioControllerTest {
  }
 
  @Test
- fun `should check username availability`() {
+ fun shouldUsernameDisponible() {
   every { usuarioService.existsByUsername("usuario") } returns false
 
   mockMvc.perform(get("/api/users/check-username").param("username", "usuario"))
@@ -107,7 +107,7 @@ class UsuarioControllerTest {
  }
 
  @Test
- fun `should check email availability`() {
+ fun shouldEmailDisponible() {
   every { usuarioService.existsByEmail("test@email.com") } returns true
 
   mockMvc.perform(get("/api/users/check-email").param("email", "test@email.com"))

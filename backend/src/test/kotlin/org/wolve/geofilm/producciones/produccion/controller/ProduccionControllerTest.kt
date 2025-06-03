@@ -102,8 +102,9 @@ class ProduccionControllerTest {
             pageSize = 10
         )
     }
+
     @Test
-    fun getAllProduccionesWithoutPagination200Ok() {
+    fun getAllProduccionesSinPaginacion() {
         every { produccionService.getAllProducciones() } returns listOf(sampleResponse)
 
         mockMvc.perform(get("/api/producciones/all").accept(MediaType.APPLICATION_JSON))
@@ -115,7 +116,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getProduccionesPaginated200Ok() {
+    fun getProduccionesPaginado() {
         every {
             produccionService.getAllProducciones(
                 page = 0, size = 10, sortBy = listOf("titulo"), sortDirection = "asc"
@@ -138,7 +139,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getProduccionById200Ok() {
+    fun getProduccionById() {
         every{produccionService.getProduccionById("id1")}
             .returns(sampleResponse)
 
@@ -151,7 +152,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getProduccionById404NotFound() {
+    fun getProduccionByIdNotFound() {
         every {produccionService.getProduccionById("missing")}
             .returns(null)
 
@@ -162,7 +163,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun createProduccion201Created() {
+    fun createProduccion() {
         val req = ProduccionRequest(
             titulo = "Nueva",
             tipo = TipoProduccion.SERIE,
@@ -189,7 +190,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun createProduccion400BadRequest() {
+    fun createProduccionBadRequest() {
         val invalidProduccion = """
         {
             "titulo": null,
@@ -205,7 +206,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun updateProduccion200Ok() {
+    fun updateProduccion() {
         every {produccionService.updateProduccion("id1", any())}
             .returns(sampleResponse)
 
@@ -219,7 +220,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun updateProduccion404NotFound() {
+    fun updateProduccionNotFound() {
         val req = ProduccionRequest(
             titulo = "Nada",
             tipo = TipoProduccion.PELICULA,
@@ -246,7 +247,7 @@ class ProduccionControllerTest {
 
 
     @Test
-    fun deleteProduccion400BadRequest() {
+    fun deleteProduccionBadRequest() {
         every { produccionService.deleteProduccion("bad") } throws
                 IllegalArgumentException("Bad ID")
 
@@ -257,7 +258,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun deleteProduccion204NoContent() {
+    fun deleteProduccionNoContent() {
         every { produccionService.deleteProduccion("id1") } just Runs
 
         mockMvc.perform(delete("/api/producciones/id1"))
@@ -267,7 +268,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun deleteProduccion500InternalServerError() {
+    fun deleteProduccionInternalServerError() {
         every { produccionService.deleteProduccion("id1") } throws RuntimeException("Error")
 
         mockMvc.perform(delete("/api/producciones/id1"))
@@ -277,7 +278,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun filtrarProducciones200Ok() {
+    fun filtrarProducciones() {
         every {
             produccionService.filtrarProducciones(
                 titulo = "Te",
@@ -334,7 +335,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getCategorias200Ok() {
+    fun getCategorias() {
         every{produccionService.getCategoriasDisponibles()}
             .returns(Categoria.values().toList())
 
@@ -346,7 +347,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getClasificaciones200Ok() {
+    fun getClasificaciones() {
         every{produccionService.getClasificacionesEdad()}
             .returns(ClasificacionEdad.values().toList())
 
@@ -358,7 +359,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getTipos200Ok() {
+    fun getTipos() {
         every{produccionService.getTiposProduccion()}
             .returns(TipoProduccion.values().toList())
 
@@ -370,7 +371,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getProduccionCompleta200Ok() {
+    fun getProduccionCompleta() {
         every{produccionService.findProduccionCompletaById("id1")}
             .returns(sampleCompleta)
 
@@ -382,7 +383,7 @@ class ProduccionControllerTest {
     }
 
     @Test
-    fun getProduccionCompleta404NotFound() {
+    fun getProduccionCompletaNotFound() {
         every{produccionService.findProduccionCompletaById("none")}
             .returns(null)
 
@@ -392,7 +393,6 @@ class ProduccionControllerTest {
         verify {produccionService.findProduccionCompletaById("none")}
     }
 
-    // Helper to map a ProduccionResponse to ProduccionRequest for update
     private fun reqFromResponse(resp: ProduccionResponse): ProduccionRequest = ProduccionRequest(
         titulo = resp.titulo,
         tipo = resp.tipo,

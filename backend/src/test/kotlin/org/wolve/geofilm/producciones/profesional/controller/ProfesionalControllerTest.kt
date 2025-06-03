@@ -63,7 +63,7 @@ class ProfesionalControllerTest(
  private lateinit var profesionalService: IProfesionalService
 
  @Test
- fun `GET profesionales returns paginated list`() {
+ fun getprofesionales() {
   val data = listOf(ProfesionalResponse("p1", "A", null, Date(), Date(), "", null, 0))
   val paginatedResponse = PaginationUtils.PaginatedResponse(
    data = data,
@@ -90,7 +90,7 @@ class ProfesionalControllerTest(
 
 
  @Test
- fun `GET profesional by id returns 200`() {
+ fun getProfesionalById() {
   val id = "p2"
   val response = ProfesionalResponse(id, "B", null, Date(), Date(), "", "Bio", 2)
   every{profesionalService.getProfesionalById(id)}.returns(response)
@@ -103,7 +103,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `GET profesional by missing id returns 404`() {
+ fun getProfesionalIdNotFound() {
   val id = "none"
   every{profesionalService.getProfesionalById(id)}.throws(NoSuchElementException())
 
@@ -112,7 +112,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `POST profesional returns created`() {
+ fun createdProfesional() {
   val req = ProfesionalRequest("C", "img.png", Date(), Date(), "City", "BioC")
   val saved = ProfesionalResponse("p3", "C", "img.png", req.fechaNacimiento, req.fechaInicio, "City", "BioC", 0)
   every {profesionalService.createProfesional(any())}.returns(saved)
@@ -126,7 +126,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `POST profesional with invalid body returns bad request`() {
+ fun crearProfesionalInvalido() {
   mockMvc.perform(post("/api/profesionales")
    .contentType(MediaType.APPLICATION_JSON)
    .content(  "{\"nombre\": \"C\", \"imagen\": \"img.png\", \"fechaNacimiento\": \"2020-01-01\", \"fechaInicio\": \"2020-01-01\", \"ciudad\": \"City\", \"biografia\": \"BioC\"}") )
@@ -134,7 +134,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `PUT profesional returns ok`() {
+ fun actualizarProfesional() {
   val id = "p4"
   val req = ProfesionalRequest("D", null, Date(), Date(), "Town", "BioD")
   val resp = ProfesionalResponse(id, "D", null, req.fechaNacimiento, req.fechaInicio, "Town", "BioD", 1)
@@ -148,7 +148,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `PUT missing profesional returns 404`() {
+ fun updateProfesionalNotFound() {
   val id = "none"
   val req = ProfesionalRequest("X", null, Date(), Date(), "", "")
   every{profesionalService.updateProfesional(eq(id), any())}.throws(NoSuchElementException())
@@ -160,7 +160,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `DELETE profesional returns no content`() {
+ fun deleteProfesional() {
   val id = "p5"
   every{profesionalService.deleteProfesional(id)}.returns(Unit)
 
@@ -169,7 +169,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `DELETE missing profesional returns not found`() {
+ fun deleteNotFound() {
   val id = "none"
   every{profesionalService.deleteProfesional(id)}.throws(NoSuchElementException())
 
@@ -178,7 +178,7 @@ class ProfesionalControllerTest(
  }
 
  @Test
- fun `GET profesionales nombre filter returns filtered list`() {
+ fun getProfesionalesFilterByNombre() {
   val data = listOf(ProfesionalResponse("p6", "Filter", null, Date(), Date(), "", null, 0))
   val paginatedResponse = PaginationUtils.PaginatedResponse(
    data = data,
@@ -210,9 +210,8 @@ class ProfesionalControllerTest(
    .andExpect(jsonPath("$.data[0].nombre").value("Filter"))
  }
 
-
  @Test
- fun `DELETE profesional service throws exception returns 500`() {
+ fun deleteLanzaError() {
   val id = "error"
   every{profesionalService.deleteProfesional(id)}.throws(RuntimeException("DB error"))
 

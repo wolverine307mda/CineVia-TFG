@@ -36,7 +36,7 @@ class ParticipacionMapperTest {
  }
 
  @Test
- fun `toEntity maps request to entity correctamente`() {
+ fun toParticipacionEntity() {
   val request = ParticipacionRequest(
    produccionId = "prod1",
    profesionalId = "prof1",
@@ -84,7 +84,7 @@ class ParticipacionMapperTest {
  }
 
  @Test
- fun `toResponse maps entity to ParticipacionResponse`() {
+ fun toParticipacionResponse() {
   val profEntity = Profesional(
    id = "prof2",
    nombre = "Actor Y",
@@ -144,7 +144,7 @@ class ParticipacionMapperTest {
  }
 
  @Test
- fun `toResponseProfesional maps entity to ParticipacionResponseProfesional`() {
+ fun toResponseProfesional () {
   val profEntity = Profesional(
    id = "pf2",
    nombre = "Actor A",
@@ -207,7 +207,7 @@ class ParticipacionMapperTest {
  }
 
  @Test
- fun `toPaginatedResponse maps Page correctly`() {
+ fun toPaginatedResponse() {
   val prof = Profesional(
    id = "pX", nombre = "X", foto = null,
    fechaNacimiento = Date(), fechaInicio = Date(),

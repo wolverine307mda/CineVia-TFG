@@ -52,7 +52,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `getSagaById - existing id returns response`() {
+ fun getSagaById() {
   val id = "saga1"
   val entity = Saga(
    id = id,
@@ -87,7 +87,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `getSagaById - missing id returns null`() {
+ fun getSagaByIdNotFound() {
   val id = "noExiste"
   whenever(sagaRepository.findById(id)).thenReturn(Optional.empty())
 
@@ -98,7 +98,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `getAllSagas returns list of all converted`() {
+ fun getAllSagas() {
   val e1 = Saga(id = "s1", nombre = "A", descripcion = "x", isAcabada = true, fechaInicio = Date(), fechaFin = null, imagen = null, producciones = mutableListOf())
   val e2 = Saga(id = "s2", nombre = "B", descripcion = "y", isAcabada = false, fechaInicio = Date(), fechaFin = null, imagen = null, producciones = mutableListOf())
   whenever(sagaRepository.findAll()).thenReturn(listOf(e1, e2))
@@ -118,7 +118,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `createSaga - valid request saves and returns dto`() {
+ fun createSaga() {
   val request = SagaRequest(
    nombre = "Nueva Saga",
    descripcion = "Desc",
@@ -164,7 +164,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `createSaga - blank nombre throws validation exception`() {
+ fun createSagaVacia() {
   val request = SagaRequest(
    nombre = "   ",  // en blanco
    descripcion = "Desc",
@@ -181,7 +181,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `createSaga - duplicate nombre throws validation exception`() {
+ fun createSagaMismoNombre() {
   val request = SagaRequest(
    nombre = "Duplicada",
    descripcion = "Desc",
@@ -200,7 +200,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `updateSaga - existing id updates and returns dto`() {
+ fun updateSaga() {
   val id = "sagaX"
   val existing = Saga(
    id = id, nombre = "Antigua", descripcion = "DescAntigua", isAcabada = false,
@@ -237,7 +237,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `updateSaga - missing id throws exception`() {
+ fun updateSagaNotFound() {
   val id = "noExiste"
   val request = SagaRequest(
    nombre = "Nombre",
@@ -260,7 +260,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `updateSaga - changing a saga to a name that already exists throws validation exception`() {
+ fun updateSagaANombreExistente() {
   val id = "saga1"
   val existing = Saga(
    id = id,
@@ -291,7 +291,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `actualizarImagenSaga - existing id updates image and returns dto`() {
+ fun actualizarImagenSaga() {
   val id = "sagaImg"
   val existing = Saga(
    id = id,
@@ -329,7 +329,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `filterSagas - no filters returns all sorted desc by fechaInicio`() {
+ fun filterSagas() {
   val page = 0
   val size = 2
   val params = SagaFilterParams(
@@ -357,7 +357,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `actualizarImagenSaga - missing id throws not found`() {
+ fun actualizarImagenSagaNotFound() {
   val id = "noExisteImg"
   whenever(sagaRepository.findById(id)).thenReturn(Optional.empty())
 
@@ -369,7 +369,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `deleteSaga - missing id throws not found`() {
+ fun deleteSagaNotFound() {
   val id = "noExisteDel"
   // findByIdOrNull internamente hace findById().orElse(null), así que usamos esto
   whenever(sagaRepository.findById(id)).thenReturn(Optional.empty())
@@ -384,7 +384,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `agregarProduccionASaga - valid saga and production links them`() {
+ fun agregarProduccionASaga() {
   val sagaId = "s1"
   val prodId = "p1"
   val sagaEntity = Saga(
@@ -424,7 +424,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `agregarProduccionASaga - missing saga throws not found`() {
+ fun agregarProduccionASagaNotFound() {
   val sagaId = "noS1"
   val prodId = "p1"
   whenever(sagaRepository.findById(sagaId)).thenReturn(Optional.empty())
@@ -437,7 +437,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `agregarProduccionASaga - missing production throws not found`() {
+ fun agregarProduccionASagaProductionNotFound`() {
   val sagaId = "s1"
   val prodId = "noP"
   val sagaEntity = Saga(
@@ -461,7 +461,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `eliminarProduccionDeSaga - existing production with saga removes link`() {
+ fun eliminarProduccionDeSaga() {
   val prodId = "p4"
   val sagaEntity = Saga(
    id = "sA",
@@ -498,7 +498,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `eliminarProduccionDeSaga - missing production throws not found`() {
+ fun eliminarProduccionDeSagaNotFound() {
   val prodId = "noP4"
   whenever(produccionRepository.findById(prodId)).thenReturn(Optional.empty())
 
@@ -510,7 +510,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `eliminarProduccionDeSaga - production without saga throws illegal state`() {
+ fun eliminarProduccionDeSagaIllegalState() {
   val prodId = "p5"
   val prodEntity = Produccion(
    id = prodId,
@@ -533,8 +533,9 @@ class SagaServiceTest {
   verify(produccionRepository).findById(prodId)
   verify(produccionRepository, never()).save(any())
  }
+
  @Test
- fun `getAllSagasPaginated returns paginated response`() {
+ fun getAllSagasPaginated() {
   val page = 0
   val size = 2
   val pageRequest = PageRequest.of(page, size)
@@ -559,7 +560,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `updateSaga lanza excepcion si id no existe`() {
+ fun updateSagaNotFoundId() {
   val id = "noExiste"
   val request = SagaRequest(
    nombre = "Nombre",
@@ -582,7 +583,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `deleteSaga elimina saga y limpia producciones si existe`() {
+ fun deleteSagaEliminaYQuitaProducciones() {
   val id = "sagaDel"
   val existing = Saga(
    id = id,
@@ -606,7 +607,7 @@ class SagaServiceTest {
  }
 
  @Test
- fun `filterSagas - apply all filters correctly`() {
+ fun filterSagasConParametros() {
   val page = 0
   val size = 5
   val now = Date(1625097600000L)
@@ -637,14 +638,14 @@ class SagaServiceTest {
  }
 
  @Test
- fun `existsById returns repository value`() {
+ fun existsByIdReturValor() {
   whenever(sagaRepository.existsById("xyz")).thenReturn(true)
   assertTrue(service.existsById("xyz"))
   verify(sagaRepository).existsById("xyz")
  }
 
  @Test
- fun `existsByNombre returns repository value`() {
+ fun existsByNombreReturnValor() {
   whenever(sagaRepository.existsByNombre("MiNombre")).thenReturn(false)
   assertFalse(service.existsByNombre("MiNombre"))
   verify(sagaRepository).existsByNombre("MiNombre")

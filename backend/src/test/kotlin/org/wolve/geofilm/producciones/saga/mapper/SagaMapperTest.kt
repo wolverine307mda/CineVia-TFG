@@ -28,7 +28,7 @@ class SagaMapperTest {
  }
 
  @Test
- fun `toSagaEntity - asigna todos los campos del request`() {
+ fun toSagaEntity() {
   val fechaIni = Date(1688205600000L)
   val fechaFi = Date(1690924200000L)
 
@@ -58,7 +58,7 @@ class SagaMapperTest {
  }
 
  @Test
- fun `toSagaResponse - convierte entidad sin producciones`() {
+ fun toSagaResponse() {
   val fechaIni = Date(1688205600000L)
   val fechaFi = Date(1690924200000L)
 
@@ -88,7 +88,7 @@ class SagaMapperTest {
  }
 
  @Test
- fun `toSagaResponse - convierte entidad con producciones mapeadas`() {
+ fun toSagaResponseConProducciones() {
   val produccion1 = Produccion(
    id = "p1",
    titulo = "Película 1",

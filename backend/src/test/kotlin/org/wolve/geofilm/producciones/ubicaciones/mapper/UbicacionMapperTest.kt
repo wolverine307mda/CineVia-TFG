@@ -22,7 +22,7 @@ class UbicacionMapperTest {
  }
 
  @Test
- fun `toEntity - convierte UbicacionRequest a Ubicacionentity`() {
+ fun toEntity() {
   val request = UbicacionRequest(
    nombre = "Lugar X",
    latitud = 12.345,
@@ -39,7 +39,7 @@ class UbicacionMapperTest {
  }
 
  @Test
- fun `toResponse - convierte Ubicacionentity a UbicacionResponse`() {
+ fun toResponse() {
   val now = LocalDateTime.of(2023, 6, 1, 10, 0)
   val entidad = Ubicacion(
    id = "u1",
@@ -59,7 +59,7 @@ class UbicacionMapperTest {
  }
 
  @Test
- fun `toPaginatedResponse - convierte Page a PaginatedResponse con mapeo correcto`() {
+ fun toPaginatedResponse() {
   val now = LocalDateTime.of(2023, 7, 1, 12, 0)
   val e1 = Ubicacion(id = "uA", nombre = "A", latitud = 0.1, longitud = 0.2, createdAt = now, updatedAt = now)
   val e2 = Ubicacion(id = "uB", nombre = "B", latitud = 0.3, longitud = 0.4, createdAt = now, updatedAt = now)

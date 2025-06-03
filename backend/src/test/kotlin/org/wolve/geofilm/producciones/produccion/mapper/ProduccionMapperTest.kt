@@ -111,7 +111,7 @@ class ProduccionMapperTest {
     }
 
     @Test
-    fun toPaginatedResponseConservaPaginationYMapeaContenido() {
+    fun toPaginatedResponseConPaginationYMapeaContenido() {
         val entidad = Produccion(
             id = "idP",
             titulo = "Título de prueba",
@@ -145,16 +145,13 @@ class ProduccionMapperTest {
     }
 
     @Test
-    fun mapEnumsFunciona() {
-        // Test all TipoProduccion values
+    fun mapEnums() {
         TipoProduccion.values().forEach {
             assertDoesNotThrow { TipoProduccion.valueOf(it.name) }
         }
-        // Test all ClasificacionEdad values
         ClasificacionEdad.values().forEach {
             assertDoesNotThrow { ClasificacionEdad.valueOf(it.name) }
         }
-        // Test all Categoria values
         Categoria.values().forEach {
             assertDoesNotThrow { Categoria.valueOf(it.name) }
         }

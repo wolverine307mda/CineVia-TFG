@@ -46,7 +46,7 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `getParticipacionById lanza excepcion si no existe`() {
+ fun getParticipacionByIdNotFound() {
   whenever(participacionRepository.findById("notfound")).thenReturn(Optional.empty())
   assertThrows<ParticipacionNotFoundException> {
    service.getParticipacionById("notfound")
@@ -54,7 +54,7 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `updateParticipacion lanza excepcion si no existe`() {
+ fun updateParticipacionNotFound() {
   whenever(participacionRepository.findById("missing")).thenReturn(Optional.empty())
   assertThrows<ParticipacionNotFoundException> {
    service.updateParticipacion("missing", ParticipacionRequest("prod", "prof", RolParticipacion.ACTOR, "rol"))
@@ -62,14 +62,14 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `deleteParticipacion elimina si existe`() {
+ fun deleteParticipacion() {
   whenever(participacionRepository.existsById("del1")).thenReturn(true)
   service.deleteParticipacion("del1")
   verify(participacionRepository).deleteById("del1")
  }
 
  @Test
- fun `deleteParticipacion lanza excepcion si no existe`() {
+ fun deleteParticipacionNotFound() {
   whenever(participacionRepository.existsById("nope")).thenReturn(false)
   assertThrows<ParticipacionNotFoundException> {
    service.deleteParticipacion("nope")
@@ -77,7 +77,7 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `getByProfesional devuelve lista de respuestas`() {
+ fun getByProfesional() {
   val prof = mock<Profesional>()
   val p1 = mock<Participacion>()
   val p2 = mock<Participacion>()
@@ -94,7 +94,7 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `getByProfesional lanza excepcion si profesional no existe`() {
+ fun getByProfesionalNotFound() {
   whenever(profesionalService.findEntityById("profX")).thenReturn(null)
   assertThrows<RelacionNotFoundException> {
    service.getByProfesional("profX")
@@ -102,7 +102,7 @@ class ParticipacionServiceTest {
  }
 
  @Test
- fun `getByProduccion devuelve resultados paginados`() {
+ fun getByProduccionNotFound() {
   val prod = mock<Produccion>()
   val p1 = mock<Participacion>()
   val p2 = mock<Participacion>()

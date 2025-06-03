@@ -25,7 +25,7 @@ class UsuarioMapperTest {
     }
 
    @Test
-    fun `toEntity - convierte CreateUsuarioRequest a Usuario con password codificada`() {
+    fun toEntity() {
         val rawPassword = "secret123"
         val encodedPassword = "encodedSecret"
         val request = CreateUsuarioRequest(
@@ -58,7 +58,7 @@ class UsuarioMapperTest {
     }
 
     @Test
-    fun `updateEntity - actualiza solo campos no nulos de UpdateUsuarioRequest`() {
+    fun updateEntity() {
         val original = Usuario(
             id = "u1",
             username = "user1",
@@ -95,7 +95,7 @@ class UsuarioMapperTest {
     }
 
     @Test
-    fun `updateEntity - todos campos nulos no cambian entidad`() {
+    fun updateEntityCamposNulos() {
         val now = LocalDate.of(2000, 1, 1)
         val original = Usuario(
             id = "u2",
