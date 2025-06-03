@@ -69,13 +69,9 @@
 </template>
 
 <script>
-import { Loader } from '@googlemaps/js-api-loader';
 
-const loader = new Loader({
-  apiKey: "AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc",
-  version: "weekly",
-  libraries: ["places"]
-});
+import {getGoogleMapsLoader} from "@/utils/googleMapsLoader.js";
+
 
 export default {
   name: 'UbicacionModal',
@@ -140,6 +136,8 @@ export default {
       this.$emit('save', this.formData);
     },
     async initPreviewMap() {
+      const loader = getGoogleMapsLoader();
+
       if (!this.$refs.previewMap || this.previewMap) return;
 
       try {

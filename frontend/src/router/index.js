@@ -81,6 +81,10 @@ const routes = [
         meta: { requiresAuth: true }
     },
     {
+        path: '/dashboard',
+            redirect: { name: 'MyProfile' }
+    },
+    {
         path: '/profile/:id?',
         name: 'Profile',
         component: Profile,

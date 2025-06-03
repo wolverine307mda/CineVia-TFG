@@ -151,6 +151,7 @@
 <script>
 import { Loader } from '@googlemaps/js-api-loader';
 import UbicacionModal from "@/components/modales/edicion/UbicacionModal.vue";
+import {getGoogleMapsLoader} from "@/utils/googleMapsLoader.js";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -319,11 +320,7 @@ export default {
     },
     async initMap() {
       try {
-        const loader = new Loader({
-          apiKey: "AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc",
-          version: "weekly",
-          libraries: ["places"]
-        });
+        const loader = getGoogleMapsLoader();
 
         await loader.load();
 

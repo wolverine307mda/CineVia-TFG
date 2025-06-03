@@ -126,7 +126,7 @@
               </div>
             </div>
 
-            <div class="form-field">
+            <div class="form-field" v-if="isEditMode">
               <label class="form-label">Imagen</label>
               <div class="image-upload-container">
                 <div class="upload-options">

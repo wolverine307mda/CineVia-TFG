@@ -147,6 +147,10 @@ class UbicacionServiceTest {
  fun deleteUbicacion() {
   val id = "uDel"
 
+  val now = LocalDateTime.now()
+  val entity = Ubicacion(id = id, nombre = "Found", latitud = 2.2, longitud = 3.3, createdAt = now, updatedAt = now)
+  ubicacionRepository.save(entity)
+
   service.deleteUbicacion(id)
 
   verify(ubicacionRepository).deleteById(id)

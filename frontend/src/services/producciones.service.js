@@ -137,34 +137,6 @@ class ProduccionesService {
         };
     }
 
-    formatTipoProduccion(tipo) {
-        const tiposMap = {
-            'PELICULA': 'Película',
-            'SERIE': 'Serie',
-            'DOCUMENTAL': 'Documental',
-            'CORTOMETRAJE': 'Cortometraje'
-        };
-        return tiposMap[tipo] || tipo;
-    }
-
-    formatCategoria(categoria) {
-        const map = {
-            'ACCION': 'Acción',
-            'AVENTURA': 'Aventura',
-            'COMEDIA': 'Comedia',
-            'DRAMA': 'Drama',
-            'TERROR': 'Terror',
-            'CIENCIA_FICCION': 'Ciencia Ficción',
-            'ANIMACION': 'Animación',
-            'SUSPENSE': 'Suspense',
-            'ROMANCE': 'Romance',
-            'FANTASIA': 'Fantasía',
-            'DOCUMENTAL': 'Documental',
-            'INFANTIL': 'Infantil'
-        };
-        return map[categoria] || categoria;
-    }
-
     formatClasificacionEdad(clasificacion) {
         const map = {
             '0': 'Todo público',

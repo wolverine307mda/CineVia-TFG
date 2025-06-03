@@ -204,7 +204,7 @@ class ProfesionalServiceTest {
     }
 
     @Test
-    fun filtrarProfesionales() {
+    fun filtrarProfesionalesWithPagination() {
         val page = 0
         val size = 3
         val pageRequest: Pageable = PageRequest.of(page, size)

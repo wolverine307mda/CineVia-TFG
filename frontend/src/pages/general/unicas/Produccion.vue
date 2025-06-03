@@ -133,9 +133,12 @@
 
           <!-- Saga -->
           <section class="sidebar-section" v-if="movie.sagaCompleta">
-            <h3 class="sidebar-title">Parte de la saga</h3>
             <div class="saga-info">
-              <h4>{{ movie.sagaCompleta.nombre }}</h4>
+              <h4>
+                <a :href="`/saga/${movie.sagaCompleta.id}`" style="text-decoration: none; color: #7e5bef">
+                  {{ movie.sagaCompleta.nombre }}
+                </a>
+              </h4>
               <p v-if="movie.sagaCompleta.descripcion">{{ movie.sagaCompleta.descripcion }}</p>
               <div class="saga-movies">
                 <router-link  v-for="(film, index) in movie.sagaCompleta.producciones" :key="film.id" :to="`/produccion/${film.id}`" class="saga-movie" :class="{ 'current': film.id === movie.id }">
@@ -272,7 +275,7 @@
 </template>
 
 <script>
-import { getGoogleMapsLoader } from '@/utils/googleMapsLoader.js';
+import { getGoogleMapsLoader } from '@/utils/googleMapsLoader';
 import peliculaService from '@/services/producciones.service.js';
 import Header from "@/components/principal/Header.vue";
 import Footer from "@/components/principal/Footer.vue";
@@ -415,14 +418,17 @@ export default {
     },
 
     loadMaps() {
-      const loader = getGoogleMapsLoader('AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc');
-      loader.load().then(() => {
-        this.mapsLoaded = true;
-        this.initLocationMaps();
-        this.initFullMap();
-      }).catch(error => {
-        console.error('Error al cargar Google Maps:', error);
-      });
+
+      const loader = getGoogleMapsLoader(); // ✅ sin argumentos
+      loader.load()
+          .then(() => {
+            this.mapsLoaded = true;
+            this.initLocationMaps();
+            this.initFullMap();
+          })
+          .catch(error => {
+            console.error('Error al cargar Google Maps:', error);
+          });
     },
 
     initLocationMaps() {
@@ -445,7 +451,7 @@ export default {
             styles: this.darkMode ? this.getDarkMapStyle() : []
           });
 
-          new google.maps.Marker({
+          new google.maps.marker.AdvancedMarkerElement({
             position: {
               lat: rodaje.ubicacion.latitud,
               lng: rodaje.ubicacion.longitud
@@ -474,7 +480,7 @@ export default {
             rodaje.ubicacion.longitud
         );
 
-        new google.maps.Marker({
+        new google.maps.marker.AdvancedMarkerElement({
           position,
           map,
           title: rodaje.ubicacion.nombre
@@ -488,10 +494,35 @@ export default {
 
     getDarkMapStyle() {
       return [
-        {elementType: "geometry", stylers: [{color: "#242f3e"}]},
-        {elementType: "labels.text.stroke", stylers: [{color: "#242f3e"}]},
-        {elementType: "labels.text.fill", stylers: [{color: "#746855"}]},
-        // ... (resto de los estilos del mapa oscuro)
+        { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+        { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+        {
+          featureType: 'administrative',
+          elementType: 'geometry',
+          stylers: [{ color: '#757575' }]
+        },
+        {
+          featureType: 'poi',
+          elementType: 'labels.text.fill',
+          stylers: [{ color: '#757575' }]
+        },
+        {
+          featureType: 'poi.park',
+          elementType: 'geometry',
+          stylers: [{ color: '#181818' }]
+        },
+        {
+          featureType: 'road',
+          elementType: 'geometry',
+          stylers: [{ color: '#383838' }]
+        },
+        {
+          featureType: 'water',
+          elementType: 'geometry',
+          stylers: [{ color: '#000000' }]
+        }
       ];
     }
   },

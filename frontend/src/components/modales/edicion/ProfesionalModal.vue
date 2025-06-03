@@ -64,7 +64,7 @@
                 ></textarea>
               </div>
 
-              <div class="form-field">
+              <div class="form-field" v-if="isEditMode">
                 <label class="form-label">Foto</label>
                 <div class="image-upload-container">
                   <div class="upload-options">

@@ -399,7 +399,7 @@ class UsuarioServiceImplTest {
  }
 
  @Test
- fun findAllFiltered Role() {
+ fun findAllFilteredRole() {
   val u1 = Usuario("u1","u1","ae@e","p","Alpha","X","",RolUsuario.ADMINISTRADOR,null,null,false,null)
   val u2 = Usuario("u2","u2","be@e","p","Beta","Y","", RolUsuario.USUARIO,null,null,true,null)
   val u3 = Usuario("u3","u3","ce@e","p","Gamma","Z","",RolUsuario.ADMINISTRADOR,null,null,false,null)
@@ -477,7 +477,7 @@ class UsuarioServiceImplTest {
  }
 
  @Test
- fun loadUserByUsername() {
+ fun loadUserByUsernamefound() {
   val email = "user@example.com"
   val usuario = Usuario(
    id = "uid1",
@@ -583,7 +583,7 @@ class UsuarioServiceImplTest {
  }
 
  @Test
- fun findAllFilteredSortEmail() {
+ fun findAllFilteredSortEmail2() {
   val u1 = Usuario("u1","u1","c@x","p","N1","A1","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())
   val u2 = Usuario("u2","u2","a@x","p","N2","A2","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())
   val u3 = Usuario("u3","u3","b@x","p","N3","A3","",RolUsuario.USUARIO,null,null,false,LocalDateTime.now())

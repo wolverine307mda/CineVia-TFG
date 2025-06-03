@@ -1,4 +1,5 @@
 ﻿import api from './api';
+import toast from "@/utils/toast.js";
 
 export default {
     async fetchSagas(filters, pagination, sortOptions) {
@@ -53,6 +54,7 @@ export default {
             return { success: true, data: this.mapSagaResponse(response.data) };
         } catch (error) {
             console.error('Error creating saga:', error);
+            toast.error('Error al crear saga:', error)
             throw this.handleApiError(error);
         }
     },
@@ -63,6 +65,7 @@ export default {
             return { success: true, data: this.mapSagaResponse(response.data) };
         } catch (error) {
             console.error('Error updating saga:', error);
+            toast.error('Error al actulizar saga:', error)
             throw this.handleApiError(error);
         }
     },

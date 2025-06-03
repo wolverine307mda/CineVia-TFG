@@ -33,7 +33,8 @@
 </template>
 
 <script>
-import { logout } from '@/services/auth.service';
+import {useAuthStore} from "@/stores/auth.js";
+import router from "@/router/index.js";
 
 export default {
   name: 'AdminMenu',
@@ -52,10 +53,14 @@ export default {
       ]
     }
   },
-  methods: {
-    logout() {
-      logout();
-      this.$router.push('/');
+  setup() {
+    const authStore = useAuthStore();
+    const logout = () => {
+      authStore.logout();
+      router.push('/');
+    }
+    return {
+      logout,
     }
   }
 }

@@ -14,63 +14,36 @@
             <form @submit.prevent="save" class="modal-form">
               <div class="form-field">
                 <label class="form-label">Nombre <span class="required">*</span></label>
-                <input
-                    v-model="formData.nombre"
-                    type="text"
-                    class="form-input"
-                    required
-                    placeholder="Ej: El Señor de los Anillos"
-                >
+                <input v-model="formData.nombre" type="text" class="form-input"required :readonly="isEditMode" placeholder="Ej: El Señor de los Anillos" />
                 <div class="form-error" v-if="errors.nombre">{{ errors.nombre }}</div>
               </div>
 
               <div class="form-field">
                 <label class="form-label">Descripción</label>
-                <textarea
-                    v-model="formData.descripcion"
-                    rows="3"
-                    class="form-textarea"
-                    placeholder="Descripción detallada de la saga..."
-                ></textarea>
+                <textarea v-model="formData.descripcion" rows="3" class="form-textarea" placeholder="Descripción detallada de la saga..."></textarea>
               </div>
 
               <div class="form-row">
                 <div class="form-field form-col">
                   <label class="form-label">Fecha de Inicio <span class="required">*</span></label>
-                  <input
-                      v-model="formData.fechaInicio"
-                      type="date"
-                      class="form-input"
-                      required
-                  >
+                  <input v-model="formData.fechaInicio" type="date" class="form-input" required>
                   <div class="form-error" v-if="errors.fechaInicio">{{ errors.fechaInicio }}</div>
                 </div>
 
                 <div class="form-field form-col">
                   <label class="form-label">Fecha de Finalización</label>
-                  <input
-                      v-model="formData.fechaFin"
-                      type="date"
-                      class="form-input"
-                      :disabled="!formData.isAcabada"
-                      :class="{ 'disabled': !formData.isAcabada }"
-                  >
+                  <input v-model="formData.fechaFin" type="date" class="form-input" :disabled="!formData.isAcabada" :class="{ 'disabled': !formData.isAcabada }" >
                 </div>
               </div>
 
               <div class="form-field checkbox-field">
                 <div class="form-checkbox-item">
-                  <input
-                      id="isAcabada"
-                      v-model="formData.isAcabada"
-                      type="checkbox"
-                      class="form-checkbox"
-                  >
+                  <input id="isAcabada" v-model="formData.isAcabada" type="checkbox" class="form-checkbox" >
                   <label for="isAcabada" class="form-checkbox-label">Saga finalizada</label>
                 </div>
               </div>
 
-              <div class="form-field">
+              <div class="form-field" v-if="isEditMode">
                 <label class="form-label">Imagen</label>
                 <div class="image-upload-container">
                   <div class="upload-options">
@@ -194,13 +167,7 @@
 
         <div class="modal-content">
           <div class="search-container">
-            <input
-                v-model="produccionSearchQuery"
-                @input="searchProducciones"
-                type="text"
-                class="form-input"
-                placeholder="Buscar producciones por título..."
-            >
+            <input v-model="produccionSearchQuery" @input="searchProducciones" type="text" class="form-input" placeholder="Buscar producciones por título..." >
           </div>
 
           <div v-if="searchLoading" class="loading-spinner">

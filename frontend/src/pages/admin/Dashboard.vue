@@ -390,11 +390,7 @@ export default {
           throw new Error('El contenedor del mapa no está disponible');
         }
 
-        const loader = new Loader({
-          apiKey: "AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc",
-          version: "weekly",
-          libraries: ["places"]
-        });
+        const loader = getGoogleMapsLoader();
 
         await loader.load();
 
@@ -935,21 +931,23 @@ export default {
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 600;
+  color: black;
+}
+
+.dark-mode .badge{
+  color:white;
 }
 
 .badge.película {
   background: rgba(16, 185, 129, 0.1);
-  color: var(--success-color);
 }
 
 .badge.serie {
   background: rgba(59, 130, 246, 0.1);
-  color: var(--info-color);
 }
 
 .badge.documental {
   background: rgba(139, 92, 246, 0.1);
-  color: var(--primary-color);
 }
 
 .badge.cortometraje {
