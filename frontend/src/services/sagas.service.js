@@ -175,12 +175,14 @@ export default {
         }
     },
 
-    async uploadSagaImage(id, file) {
+    async uploadTempSagaImage(file, oldUrl = null) {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await api.post(`/api/sagas/${id}/upload-image`, formData, {
+        if (oldUrl) formData.append('oldUrl', oldUrl);
+
+        const response = await api.post(`/api/sagas/upload-image-temp`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;
-    },
+    }
 };

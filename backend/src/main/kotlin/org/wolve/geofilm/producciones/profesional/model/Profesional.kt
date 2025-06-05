@@ -19,14 +19,14 @@ data class Profesional(
     var foto: String? = null,
 
     @Temporal(TemporalType.DATE)
-    @Column(nullable = false)
+    @Column(nullable = true)
     val fechaNacimiento: Date,
 
     @Temporal(TemporalType.DATE)
     @Column(nullable = true, columnDefinition = "date default CURRENT_DATE")
     val fechaInicio: Date,
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     val lugarNacimiento: String,
 
     @Column(columnDefinition = "TEXT")

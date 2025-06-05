@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="users-management-container">
+  <div class="users-management-container" >
     <!-- Header con título y botón de acción -->
     <div class="management-header">
       <h1 class="management-title" style="display: none">Gestión de Usuarios</h1>
@@ -212,6 +212,13 @@ export default {
   components: {
     UserModal,
     ConfirmationModal
+  },
+  mounted() {
+    if (localStorage.getItem('darkMode') === 'true') {
+      document.documentElement.classList.add('dark-mode');
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+    }
   },
   data() {
     return {

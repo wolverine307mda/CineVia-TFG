@@ -419,7 +419,7 @@ export default {
 
     loadMaps() {
 
-      const loader = getGoogleMapsLoader(); // ✅ sin argumentos
+      const loader = getGoogleMapsLoader();
       loader.load()
           .then(() => {
             this.mapsLoaded = true;
@@ -446,9 +446,9 @@ export default {
               lat: rodaje.ubicacion.latitud,
               lng: rodaje.ubicacion.longitud
             },
+            mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
             zoom: 12,
             disableDefaultUI: true,
-            styles: this.darkMode ? this.getDarkMapStyle() : []
           });
 
           new google.maps.marker.AdvancedMarkerElement({
@@ -468,8 +468,8 @@ export default {
 
       const bounds = new google.maps.LatLngBounds();
       const map = new google.maps.Map(this.$refs.fullMap, {
+        mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
         zoom: 6,
-        styles: this.darkMode ? this.getDarkMapStyle() : []
       });
 
       this.movie.rodajesCompletos.forEach(rodaje => {
@@ -491,40 +491,6 @@ export default {
 
       map.fitBounds(bounds);
     },
-
-    getDarkMapStyle() {
-      return [
-        { elementType: 'geometry', stylers: [{ color: '#212121' }] },
-        { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-        { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
-        { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
-        {
-          featureType: 'administrative',
-          elementType: 'geometry',
-          stylers: [{ color: '#757575' }]
-        },
-        {
-          featureType: 'poi',
-          elementType: 'labels.text.fill',
-          stylers: [{ color: '#757575' }]
-        },
-        {
-          featureType: 'poi.park',
-          elementType: 'geometry',
-          stylers: [{ color: '#181818' }]
-        },
-        {
-          featureType: 'road',
-          elementType: 'geometry',
-          stylers: [{ color: '#383838' }]
-        },
-        {
-          featureType: 'water',
-          elementType: 'geometry',
-          stylers: [{ color: '#000000' }]
-        }
-      ];
-    }
   },
   watch: {
     '$route.params.id': {

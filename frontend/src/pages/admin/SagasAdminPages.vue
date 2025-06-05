@@ -221,8 +221,14 @@ export default {
       this.selectedSaga = null;
     },
 
-    async handleSave({id, data}) {
+    async handleSave({ id, data }) {
       try {
+        // Si hay imagen temporal en formData.imagen y es una saga nueva, subimos la imagen primero
+        if (!id && data.imagen && this.selectedFile) {
+          const imageUrl = await SagasService.uploadTempSagaImage(this.selectedFile);
+          data.imagen = imageUrl;
+        }
+
         if (id) {
           await SagasService.updateSaga(id, data);
           this.$toast.success('Saga actualizada correctamente');

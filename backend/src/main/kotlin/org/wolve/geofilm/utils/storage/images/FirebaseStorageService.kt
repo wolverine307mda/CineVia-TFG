@@ -15,7 +15,7 @@ import java.util.* // Importa java.util.* si usas UUID en otro lugar, aunque no 
 class FirebaseStorageService {
 
     private val storage: Storage
-    private val bucketName = "movietrip-e3a91.firebasestorage.app" // ¡Este es el nombre correcto del bucket que existe!
+    private val bucketName = "movietrip-e3a91.firebasestorage.app"
 
     init {
         // Carga las credenciales desde el archivo JSON

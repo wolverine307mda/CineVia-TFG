@@ -112,41 +112,24 @@
               ></textarea>
             </div>
 
-            <!-- Imágenes -->
+            <!-- Subida de Imágenes -->
             <div class="form-field">
-              <label class="form-label">Imágenes (URLs)</label>
-              <div v-for="(imagen, index) in formData.imagenes" :key="index" class="image-input-container">
-                <input
-                    v-model="formData.imagenes[index]"
-                    type="text"
-                    class="form-input"
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                >
-                <button
-                    type="button"
-                    class="button-icon danger"
-                    @click="removeImagen(index)"
-                    title="Eliminar imagen"
-                >
-                  <i class="fas fa-trash"></i>
-                </button>
+              <label class="form-label">Imágenes</label>
+              <input type="file" accept="image/*" multiple @change="handleFileUpload" class="form-input">
+
+              <div class="image-preview-list">
+                <div v-for="(img, idx) in formData.imagenes" :key="idx" class="image-preview-item">
+                  <img :src="img" alt="Imagen subida">
+                  <button type="button" class="button-icon danger" @click="removeImage(idx)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
-              <button
-                  type="button"
-                  class="button button-small button-secondary"
-                  @click="addImagen"
-              >
-                <i class="fas fa-plus"></i> Añadir imagen
-              </button>
             </div>
 
             <div class="modal-footer">
               <button type="button" @click="close" class="button button-secondary">Cancelar</button>
-              <button
-                  type="submit"
-                  class="button button-primary"
-                  :disabled="!formData.ubicacionId"
-              >
+              <button type="submit" class="button button-primary" :disabled="!formData.ubicacionId">
                 {{ isEditMode ? 'Actualizar Rodaje' : 'Crear Rodaje' }}
               </button>
             </div>
@@ -226,6 +209,21 @@ export default {
     }
   },
   methods: {
+    async handleFileUpload(event) {
+      const files = Array.from(event.target.files);
+      for (const file of files) {
+        try {
+          const url = await RodajesService.uploadTempRodajeImage(file);
+          this.formData.imagenes.push(url);
+        } catch (e) {
+          console.error('Error subiendo imagen:', e);
+          this.$toast.error('Error subiendo imagen');
+        }
+      }
+    },
+    removeImage(index) {
+      this.formData.imagenes.splice(index, 1);
+    },
     resetForm() {
       this.formData = {
         id: null,
@@ -260,25 +258,18 @@ export default {
 
       try {
         const rodajeData = {
-          produccionId: this.formData.produccionId,
+          id: this.formData.id,
+          produccionId: this.produccionId, // viene por props
           ubicacionId: this.formData.ubicacionId,
           notas: this.formData.notas,
           imagenes: this.formData.imagenes.filter(img => img.trim() !== '')
         };
 
-        if (this.isEditMode) {
-          await RodajesService.updateRodaje(this.formData.id, rodajeData);
-          this.$toast.success('Rodaje actualizado correctamente');
-        } else {
-          await RodajesService.createRodaje(rodajeData);
-          this.$toast.success('Rodaje creado correctamente');
-        }
-
-        this.$emit('save');
+        this.$emit('save', rodajeData);
         this.close();
       } catch (error) {
-        console.error('Error al guardar el rodaje:', error);
-        this.$toast.error('Error al guardar el rodaje');
+        console.error('Error al emitir rodaje:', error);
+        this.$toast.error('Error al procesar el rodaje');
       }
     },
     addImagen() {
@@ -471,6 +462,37 @@ export default {
   --border-color: #334155;
   --text-secondary: #94a3b8;
   --hover-bg: #1e293b;
+}
+
+.image-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.image-preview-item {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-preview-item .button-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
 

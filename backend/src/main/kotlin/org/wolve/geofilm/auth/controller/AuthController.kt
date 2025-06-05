@@ -24,7 +24,10 @@ class AuthController(
 ) {
 
     @PostMapping("/signup")
-    @Operation(summary = "Registrar un nuevo usuario", description = "Registra un usuario en el sistema y devuelve un token JWT.")
+    @Operation(
+        summary = "Registrar un nuevo usuario",
+        description = "Registra un usuario en el sistema y devuelve un token JWT."
+    )
     fun signup(@RequestBody request: SignUpRequest): ResponseEntity<JwtAuthenticationResponse> {
         // Verificar si el email ya existe
         if (usuarioService.existsByEmail(request.email)) {
@@ -109,4 +112,97 @@ class AuthController(
             else -> "Desconocido"
         }
     }
+
+    @RestController
+    @RequestMapping("/api/v1/auth")
+    @Tag(name = "Autenticación", description = "Endpoints para autenticación de usuarios")
+    class AuthController(
+        private val authenticationService: AuthenticationService,
+        private val emailService: EmailService,
+        private val usuarioService: UsuarioService
+    ) {
+        // ... (otros métodos existentes)
+
+        @PostMapping("/request-password-reset")
+        @Operation(
+            summary = "Solicitar restablecimiento de contraseña",
+            description = "Envía un PIN al correo electrónico para restablecer la contraseña"
+        )
+        fun requestPasswordReset(@RequestBody request: PasswordResetRequest): ResponseEntity<ApiResponse> {
+            if (!usuarioService.existsByEmail(request.email)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse(false, "No se encontró una cuenta con ese correo electrónico"))
+            }
+
+            val pin = generateRandomPin()
+            val expirationTime = LocalDateTime.now().plusMinutes(15)
+
+            // Guardar el PIN en la base de datos (implementar en usuarioService)
+            usuarioService.savePasswordResetPin(request.email, pin, expirationTime)
+
+            // Enviar correo con el PIN
+            emailService.sendPasswordResetPinEmail(request.email, pin)
+
+            return ResponseEntity.ok(ApiResponse(true, "Se ha enviado un PIN a tu correo electrónico"))
+        }
+
+        @PostMapping("/verify-reset-pin")
+        @Operation(
+            summary = "Verificar PIN de restablecimiento",
+            description = "Verifica el PIN enviado para restablecer la contraseña"
+        )
+        fun verifyResetPin(@RequestBody request: VerifyPinRequest): ResponseEntity<ApiResponse> {
+            val isValid = usuarioService.validatePasswordResetPin(request.email, request.pin)
+
+            if (!isValid) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse(false, "PIN inválido o expirado"))
+            }
+
+            return ResponseEntity.ok(ApiResponse(true, "PIN verificado correctamente"))
+        }
+
+        @PostMapping("/reset-password")
+        @Operation(
+            summary = "Restablecer contraseña",
+            description = "Restablece la contraseña después de verificar el PIN"
+        )
+        fun resetPassword(@RequestBody request: ResetPasswordRequest): ResponseEntity<ApiResponse> {
+            if (request.newPassword != request.confirmPassword) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse(false, "Las contraseñas no coinciden"))
+            }
+
+            // Verificar el PIN nuevamente por seguridad
+            val isPinValid = usuarioService.validatePasswordResetPin(request.email, request.pin)
+            if (!isPinValid) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse(false, "PIN inválido o expirado"))
+            }
+
+            // Cambiar la contraseña
+            usuarioService.resetPassword(request.email, request.newPassword)
+
+            // Invalidar el PIN usado
+            usuarioService.invalidatePasswordResetPin(request.email)
+
+            return ResponseEntity.ok(ApiResponse(true, "Contraseña restablecida correctamente"))
+        }
+
+        private fun generateRandomPin(): String {
+            return (100000..999999).random().toString()
+        }
+    }
+
+    // DTOs para los nuevos endpoints
+    data class PasswordResetRequest(val email: String)
+    data class VerifyPinRequest(val email: String, val pin: String)
+    data class ResetPasswordRequest(
+        val email: String,
+        val pin: String,
+        val newPassword: String,
+        val confirmPassword: String
+    )
+
+    data class ApiResponse(val success: Boolean, val message: String)
 }

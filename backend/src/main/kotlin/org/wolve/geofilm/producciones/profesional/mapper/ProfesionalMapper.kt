@@ -5,9 +5,12 @@ import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.model.Profesional
 import org.wolve.geofilm.utils.pagination.PaginationUtils
+import java.text.SimpleDateFormat
 
 @Component
 class ProfesionalMapper {
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
+
     fun toResponse(profesional: Profesional): ProfesionalResponse = ProfesionalResponse(
         id = profesional.id,
         nombre = profesional.nombre,
@@ -22,8 +25,8 @@ class ProfesionalMapper {
     fun toEntity(request: ProfesionalRequest): Profesional = Profesional(
         nombre = request.nombre,
         foto = request.foto,
-        fechaNacimiento = request.fechaNacimiento,
-        fechaInicio = request.fechaInicio,
+        fechaNacimiento = dateFormatter.parse(request.fechaNacimiento),
+        fechaInicio = dateFormatter.parse(request.fechaInicio),
         lugarNacimiento = request.lugarNacimiento,
         biografia = request.biografia
     )

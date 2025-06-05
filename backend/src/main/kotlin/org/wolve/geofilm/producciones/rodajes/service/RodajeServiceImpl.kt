@@ -15,10 +15,10 @@ import org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository
 
 @Service
 class RodajeServiceImpl(
-    private val rodajeRepository: org.wolve.geofilm.producciones.rodajes.repository.RodajeRepository,
+    private val rodajeRepository: RodajeRepository,
     private val produccionRepository: ProduccionRepository,
-    private val ubicacionRepository: org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository,
-    private val mapper: org.wolve.geofilm.producciones.rodajes.mapper.RodajeMapper
+    private val ubicacionRepository: UbicacionRepository,
+    private val mapper: RodajeMapper
 ) : IRodajeService {
 
     override fun findById(id: String) = rodajeRepository.findById(id)
@@ -58,7 +58,7 @@ class RodajeServiceImpl(
         val ubicacion = ubicacionRepository.findById(request.ubicacionId)
             .orElseThrow { UbicacionNotFoundException(request.ubicacionId) }
 
-        val rodaje = org.wolve.geofilm.producciones.rodajes.models.Rodaje(
+        val rodaje = Rodaje(
             produccion = produccion,
             ubicacion = ubicacion,
             notas = request.notas,
@@ -67,6 +67,8 @@ class RodajeServiceImpl(
 
         return mapper.toResponse(rodajeRepository.save(rodaje))
     }
+
+    //subir imagenes
 
     override fun findByProduccion(produccionId: String, page: Int, size: Int): Map<String, Any> {
         val pageable = PageRequest.of(page, size)

@@ -177,31 +177,26 @@ class ProfesionalController(
         return ResponseEntity.ok(response)
     }
 
-    @PostMapping("/{id}/upload-image")
-    fun uploadProfesionalImage(
-        @PathVariable id: String,
-        @RequestParam("file") file: MultipartFile
+    @PostMapping("/upload-image-temp")
+    fun uploadTempProfesionalImage(
+        @RequestParam("file") file: MultipartFile,
+        @RequestParam(name = "oldUrl", required = false) oldUrl: String?
     ): ResponseEntity<String> {
-        val profesional = profesionalService.getProfesionalById(id)
-            ?: return ResponseEntity.notFound().build()
-
-        // Eliminar imagen anterior si es de Firebase
-        profesional.foto?.let { urlAnterior ->
+        // Borrar imagen anterior si existe y es de Firebase
+        oldUrl?.let { url ->
             val bucketPrefix = "https://storage-download.googleapis.com/movietrip-e3a91.appspot.com/"
-            if (urlAnterior.startsWith(bucketPrefix)) {
-                val relativePath = urlAnterior.removePrefix(bucketPrefix)
+            if (url.startsWith(bucketPrefix)) {
+                val relativePath = url.removePrefix(bucketPrefix)
                 try {
                     firebaseStorageService.deleteImage(relativePath)
                 } catch (ex: IllegalArgumentException) {
-                    println("⚠️ No se pudo borrar la imagen anterior de la profesional: ${ex.message}")
+                    println("⚠️ No se pudo borrar la imagen anterior: ${ex.message}")
                 }
             }
         }
 
-        val time: LocalDateTime = LocalDateTime.now()
-        val filename = "profesional_${id}_${time}.png"
-        val nuevaUrl = firebaseStorageService.uploadImage(file, "profesionales", filename)
-        profesionalService.actualizarImagen(id, nuevaUrl)
-        return ResponseEntity.ok(nuevaUrl)
+        val filename = "temp_profesional_${LocalDateTime.now()}.png"
+        val newUrl = firebaseStorageService.uploadImage(file, "profesionales", filename)
+        return ResponseEntity.ok(newUrl)
     }
 }

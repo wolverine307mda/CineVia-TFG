@@ -233,17 +233,17 @@ export default {
       this.selectedProfesional = null;
     },
 
-    async handleSave(profesionalData) {
+    async handleSave({ id, data }) {
       try {
-        if (profesionalData.id) {
-          await ProfessionalsService.updateProfessional(profesionalData.id, profesionalData);
+        if (id) {
+          await ProfessionalsService.updateProfessional(id, data);
           this.$toast.success('Profesional actualizado correctamente');
         } else {
-          await ProfessionalsService.createProfessional(profesionalData);
+          await ProfessionalsService.createProfessional(data);
           this.$toast.success('Profesional creado correctamente');
         }
 
-        this.fetchProfesionales();
+        await this.fetchProfesionales();
         this.closeModal();
       } catch (error) {
         const errorMessage = ProfessionalsService.handleError(error, 'Error al guardar el profesional');
@@ -275,7 +275,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 /* Contenedor principal */

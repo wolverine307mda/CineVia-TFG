@@ -69,9 +69,7 @@
 </template>
 
 <script>
-
-import {getGoogleMapsLoader} from "@/utils/googleMapsLoader.js";
-
+import { getGoogleMapsLoader } from '@/utils/googleMapsLoader.js';
 
 export default {
   name: 'UbicacionModal',
@@ -96,8 +94,8 @@ export default {
       previewMap: null,
       marker: null,
       clickListener: null,
-      mapLoaded: false // Nuevo flag para controlar carga
-    }
+      mapLoaded: false
+    };
   },
   watch: {
     ubicacion: {
@@ -113,6 +111,7 @@ export default {
             produccionId: null
           };
         }
+
         this.$nextTick(() => {
           if (this.show) {
             this.initPreviewMap();
@@ -136,12 +135,11 @@ export default {
       this.$emit('save', this.formData);
     },
     async initPreviewMap() {
-      const loader = getGoogleMapsLoader();
-
       if (!this.$refs.previewMap || this.previewMap) return;
 
       try {
-        // Cargar la API solo si no está cargada
+        const loader = getGoogleMapsLoader(); // loader aquí dentro para evitar errores previos
+
         if (!this.mapLoaded) {
           await loader.load();
           this.mapLoaded = true;
@@ -154,6 +152,7 @@ export default {
         this.previewMap = new google.maps.Map(this.$refs.previewMap, {
           center: initialPosition,
           zoom: this.formData.latitud ? 12 : 2,
+          mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
           disableDefaultUI: true,
           clickableIcons: false
         });
@@ -195,13 +194,14 @@ export default {
       this.previewMap.setZoom(12);
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.clickListener) {
       google.maps.event.removeListener(this.clickListener);
     }
   }
-}
+};
 </script>
+
 
 <style scoped>
 .modal-overlay {

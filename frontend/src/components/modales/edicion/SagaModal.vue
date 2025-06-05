@@ -43,7 +43,7 @@
                 </div>
               </div>
 
-              <div class="form-field" v-if="isEditMode">
+              <div class="form-field">
                 <label class="form-label">Imagen</label>
                 <div class="image-upload-container">
                   <div class="upload-options">
@@ -104,13 +104,7 @@
               <div class="form-field">
                 <div class="producciones-header">
                   <h2>Producciones en la Saga</h2>
-                  <button
-                      v-if="isEditMode"
-                      type="button"
-                      class="button button-small button-primary"
-                      @click="openAddProduccionModal"
-                      :disabled="isUploading || isSaving"
-                  >
+                  <button v-if="isEditMode" type="button"  class="button button-small button-primary" @click="openAddProduccionModal" :disabled="isUploading || isSaving">
                     <i class="fas fa-plus"></i> Añadir Producción
                   </button>
                 </div>
@@ -402,23 +396,21 @@ export default {
       };
       reader.readAsDataURL(file);
 
-      // Subir automáticamente si estamos en modo edición
-      if (this.isEditMode) {
-        this.uploadImage();
-      }
+      this.uploadImage();
     },
 
     async uploadImage() {
-      if (!this.selectedFile || !this.isEditMode) return;
+      if (!this.selectedFile) return;
 
       this.isUploading = true;
       this.uploadError = null;
 
       try {
-        const imageUrl = await SagasService.uploadSagaImage(this.saga.id, this.selectedFile);
+        const oldImageUrl = this.formData.imagen;
+        const imageUrl = await SagasService.uploadTempSagaImage(this.selectedFile, oldImageUrl);
         this.formData.imagen = imageUrl;
         this.$toast.success('Imagen subida correctamente');
-        this.selectedFile = null; // Limpiar después de subir
+        this.selectedFile = null;
       } catch (error) {
         console.error('Error uploading image:', error);
         this.uploadError = 'Error al subir la imagen. Inténtalo de nuevo.';

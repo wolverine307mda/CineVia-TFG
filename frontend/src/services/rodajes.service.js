@@ -11,6 +11,20 @@ class RodajesService {
         }
     }
 
+    async uploadTempRodajeImage(file, oldUrl = null) {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (oldUrl) {
+            formData.append('oldUrl', oldUrl);
+        }
+
+        const response = await api.post('/api/rodajes/upload-image-temp', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+
+        return response.data; // URL de la imagen subida
+    }
+
     async updateRodaje(id, rodajeData) {
         try {
             const response = await api.put(`/api/rodajes/${id}`, rodajeData);

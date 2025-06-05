@@ -43,7 +43,7 @@
             <tr v-for="produccion in producciones" :key="produccion.id">
               <td style="width: 55%;">{{ produccion.titulo }}</td>
               <td style="width: 15%; text-align: center;">{{ formatDate(produccion.estreno) }}</td>
-              <td style="width: 5%; text-align: center;">{{ formatTipoProduccion(produccion.tipo) }}</td>
+              <td style="width: 5%; text-align: center;">{{ produccion.tipo }}</td>
               <td style="width: 10%; text-align: center;">{{ formatClasificacionEdad(produccion.clasificacionEdad) }}</td>
               <td style="width: 10%; text-align: center;">
                 <div class="action-buttons">
@@ -194,10 +194,6 @@ export default {
       ];
       this.totalItems = 1;
       this.totalPages = 1;
-    },
-
-    formatTipoProduccion(tipo) {
-      return ProduccionesService.formatTipoProduccion(tipo);
     },
 
     formatDate(dateString) {

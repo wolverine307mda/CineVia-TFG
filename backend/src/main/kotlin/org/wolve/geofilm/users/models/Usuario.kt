@@ -33,7 +33,8 @@ data class Usuario(
     var telefono: String = "",
 
     @Column(nullable = false)
-    private val password: String = "",
+    @get:JvmName("getPasswordField")
+    var password: String = "",
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -54,7 +55,14 @@ data class Usuario(
 
     @UpdateTimestamp
     @Column(name = "updated_at")
-    val updatedAt: LocalDateTime? = null
+    val updatedAt: LocalDateTime? = null,
+
+    @Column(name = "reset_pin")
+    var resetPin: String? = null,
+
+    @Column(name = "reset_pin_expiration")
+    var resetPinExpiration: LocalDateTime? = null
+
 ) : UserDetails {
     override fun getUsername(): String = email
     override fun getPassword(): String = password
@@ -66,6 +74,22 @@ data class Usuario(
         return listOf(SimpleGrantedAuthority("ROLE_${rol.name}"))
     }
     fun getNombreUsuario(): String = username
+    fun generateResetPin(): String {
+        this.resetPin = (100000..999999).random().toString()
+        this.resetPinExpiration = LocalDateTime.now().plusMinutes(15)
+        return this.resetPin!!
+    }
+
+    fun isResetPinValid(pin: String): Boolean {
+        return this.resetPin == pin &&
+                this.resetPinExpiration != null &&
+                this.resetPinExpiration!!.isAfter(LocalDateTime.now())
+    }
+
+    fun clearResetPin() {
+        this.resetPin = null
+        this.resetPinExpiration = null
+    }
 }
 
 enum class RolUsuario {

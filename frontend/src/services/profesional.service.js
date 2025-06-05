@@ -58,10 +58,12 @@ class ProfesionalesService {
         }
     }
 
-    async uploadProfesionalImage(id, file) {
+    async uploadProfesionalImage(file, oldUrl = null) {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await api.post(`/api/profesionales/${id}/upload-image`, formData, {
+        if (oldUrl) formData.append('oldUrl', oldUrl);
+
+        const response = await api.post(`/api/profesionales/upload-image-temp`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         return response.data;

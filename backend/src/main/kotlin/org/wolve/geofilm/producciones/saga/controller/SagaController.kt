@@ -171,31 +171,26 @@ class SagaController(
         return ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/{id}/upload-image")
-    fun uploadSagaImage(
-        @PathVariable id: String,
-        @RequestParam("file") file: MultipartFile
+    @PostMapping("/upload-image-temp")
+    fun uploadTempSagaImage(
+        @RequestParam("file") file: MultipartFile,
+        @RequestParam(name = "oldUrl", required = false) oldUrl: String?
     ): ResponseEntity<String> {
-        val saga = sagaService.getSagaById(id)
-            ?: return ResponseEntity.notFound().build()
-
-        // Eliminar imagen anterior si es de Firebase
-        saga.imagen?.let { urlAnterior ->
+        // Borrar imagen anterior si existe y es de Firebase
+        oldUrl?.let { url ->
             val bucketPrefix = "https://storage-download.googleapis.com/movietrip-e3a91.appspot.com/"
-            if (urlAnterior.startsWith(bucketPrefix)) {
-                val relativePath = urlAnterior.removePrefix(bucketPrefix)
+            if (url.startsWith(bucketPrefix)) {
+                val relativePath = url.removePrefix(bucketPrefix)
                 try {
                     firebaseStorageService.deleteImage(relativePath)
                 } catch (ex: IllegalArgumentException) {
-                    println("⚠️ No se pudo borrar la imagen anterior de la saga: ${ex.message}")
+                    println("⚠️ No se pudo borrar la imagen anterior: ${ex.message}")
                 }
             }
         }
 
-        val time: LocalDateTime = LocalDateTime.now()
-        val filename = "saga_${id}_${time}.png"
-        val nuevaUrl = firebaseStorageService.uploadImage(file, "sagas", filename)
-        sagaService.actualizarImagenSaga(id, nuevaUrl)
-        return ResponseEntity.ok(nuevaUrl)
+        val filename = "temp_saga_${LocalDateTime.now()}.png"
+        val newUrl = firebaseStorageService.uploadImage(file, "sagas", filename)
+        return ResponseEntity.ok(newUrl)
     }
 }

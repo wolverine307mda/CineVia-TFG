@@ -2,13 +2,19 @@ package org.wolve.geofilm.producciones.rodajes.controller
 
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.rodajes.dto.request.RodajeRequest
 import org.wolve.geofilm.producciones.rodajes.dto.response.RodajeResponse
 import org.wolve.geofilm.producciones.rodajes.service.IRodajeService
+import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.util.UUID.randomUUID
 
 @RestController
 @RequestMapping("/api/rodajes")
-class RodajeController(private val rodajeService: IRodajeService) {
+class RodajeController(
+    private val rodajeService: IRodajeService,
+    private val firebaseStorageService: FirebaseStorageService
+) {
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: String): ResponseEntity<RodajeResponse> {
@@ -41,6 +47,15 @@ class RodajeController(private val rodajeService: IRodajeService) {
     ): ResponseEntity<Map<String, Any>> {
         val paged = rodajeService.findByProduccion(produccionId, page, size)
         return ResponseEntity.ok(paged)
+    }
+
+    @PostMapping("/upload-image-temp")
+    fun uploadTempRodajeImage(
+        @RequestParam("file") file: MultipartFile
+    ): ResponseEntity<String> {
+        val filename = "rodaje_${randomUUID()}.jpg"
+        val imageUrl = firebaseStorageService.uploadImage(file, "rodajes", filename)
+        return ResponseEntity.ok(imageUrl)
     }
 
 }

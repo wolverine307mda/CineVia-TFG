@@ -1,11 +1,12 @@
-﻿// src/utils/googleMapsLoader.js
-import { Loader } from '@googlemaps/js-api-loader';
+﻿import { Loader } from '@googlemaps/js-api-loader';
 
-// 🚨 Esto se ejecuta solo una vez y todos los componentes comparten la instancia
+// Carga la API Key desde las variables de entorno
+const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+
 const loaderInstance = new Loader({
-    apiKey: 'AIzaSyCtMIHC_PntZzdioTFmRcamhjRNKZMw4hc',
+    apiKey,
     version: 'weekly',
-    libraries: ['places', 'marker'] // ✅ Incluye TODO lo que necesitas
+    libraries: ['places', 'marker']
 });
 
 export function getGoogleMapsLoader() {

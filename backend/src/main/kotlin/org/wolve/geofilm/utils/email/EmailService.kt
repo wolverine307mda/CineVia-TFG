@@ -68,4 +68,14 @@ class EmailService(
         helper.setText(htmlContent, true)  // 'true' para que sea HTML
         emailSender.send(message)
     }
+
+    fun sendPasswordResetPinEmail(to: String, pin: String) {
+        val context = Context().apply {
+            setVariable("pin", pin)
+            setVariable("currentYear", LocalDate.now().year)
+        }
+
+        val htmlContent = templateEngine.process("password-reset-pin", context)
+        sendEmail(to, "🔐 Tu PIN para restablecer la contraseña", htmlContent)
+    }
 }

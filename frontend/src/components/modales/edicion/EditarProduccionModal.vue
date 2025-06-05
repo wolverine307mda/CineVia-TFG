@@ -97,16 +97,11 @@
 
             <div class="form-field">
               <label class="form-label">Clasificación de Edad <span class="required">*</span></label>
-              <select
-                  v-model="formData.clasificacionEdad"
-                  class="form-select"
-                  required
-                  :disabled="isUploading || isSaving"
-              >
+              <select v-model="formData.clasificacionEdad" class="form-select" required :disabled="isUploading || isSaving">
                 <option v-for="clasificacion in clasificacionesEdad"
                         :key="clasificacion.valorNumerico"
                         :value="clasificacion.valorNumerico">
-                  {{ clasificacion.valorNumerico }}+ - {{ clasificacion }}
+                  {{ clasificacion.valorNumerico }}+ - {{ clasificacion.descripcion }}
                 </option>
               </select>
             </div>
@@ -443,9 +438,9 @@ export default {
         { valorNumerico: 18, descripcion: 'Mayores de 18 años' }
       ],
       categoriasDisponibles: [
-        'Acción', 'Aventura', 'Comedia', 'Drama', 'Terror',
-        'Ciencia Ficción', 'Fantasía', 'Romance', 'Documental',
-        'Animación', 'Suspense', 'Crimen', 'Misterio'
+        'FICCION', 'AVENTURA', 'COMEDIA', 'DRAMA', 'TERROR',
+        'CIENCIA_FICCION', 'FANTASIA', 'ROMANCE', 'DOCUMENTAL',
+        'ANIMACION', 'ACCION', 'CRIMEN', 'OTROS', 'MUSICAL', 'SUSPENSE'
       ]
     };
   },
@@ -734,8 +729,6 @@ export default {
     },
     async handleSaveRodaje(rodajeData) {
       try {
-        rodajeData.produccionId = this.formData.id;
-
         if (rodajeData.id) {
           await RodajesService.updateRodaje(rodajeData.id, rodajeData);
           this.$toast.success('Rodaje actualizado correctamente');

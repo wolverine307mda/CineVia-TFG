@@ -64,7 +64,7 @@
                 ></textarea>
               </div>
 
-              <div class="form-field" v-if="isEditMode">
+              <div class="form-field">
                 <label class="form-label">Foto</label>
                 <div class="image-upload-container">
                   <div class="upload-options">
@@ -241,7 +241,6 @@ export default {
       try {
         const profesionalData = {...this.formData};
 
-        // Si hay un archivo seleccionado pero no se ha subido (para edición)
         if (this.selectedFile && this.isEditMode) {
           try {
             const imageUrl = await ProfesionalesService.uploadProfesionalImage(this.profesional.id, this.selectedFile);
@@ -269,7 +268,6 @@ export default {
     triggerFileInput() {
       this.$refs.fileInput.click();
     },
-
     handleFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -283,11 +281,8 @@ export default {
       };
       reader.readAsDataURL(file);
 
-      if (this.isEditMode) {
-        this.uploadImage();
-      }
+      this.uploadImage();
     },
-
     async uploadImage() {
       if (!this.selectedFile || !this.isEditMode) return;
 
@@ -295,7 +290,7 @@ export default {
       this.uploadError = null;
 
       try {
-        const imageUrl = await ProfesionalesService.uploadProfesionalImage(this.profesional.id, this.selectedFile);
+        const imageUrl = await ProfesionalesService.uploadProfesionalImage(this.selectedFile, this.formData.foto);
         this.formData.foto = imageUrl;
         this.$toast.success('Imagen subida correctamente');
         this.selectedFile = null; // Limpiar después de subir
@@ -307,7 +302,6 @@ export default {
         this.isUploading = false;
       }
     },
-
     removeImage() {
       this.formData.foto = null;
       this.previewImage = null;

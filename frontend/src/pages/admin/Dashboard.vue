@@ -172,7 +172,6 @@
 </template>
 
 <script>
-import { Loader } from '@googlemaps/js-api-loader';
 import ProduccionesService from '@/services/producciones.service.js';
 import ProfesionalesService from '@/services/profesional.service.js';
 import SagasService from '@/services/sagas.service.js';
@@ -180,6 +179,7 @@ import UsersService from '@/services/users.service';
 import { useAuthStore } from '@/stores/auth';
 import ConfirmationModal from "@/components/modales/edicion/ConfirmModal.vue";
 import ubicacionesService from "@/services/ubicaciones.service.js";
+import {getGoogleMapsLoader} from "@/utils/googleMapsLoader.js";
 
 export default {
   name: 'Dashboard',
@@ -397,6 +397,7 @@ export default {
         const mapOptions = {
           center: { lat: 20, lng: 0 },
           zoom: 2,
+          mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
           mapTypeControl: true,
           styles: this.darkMode ? this.darkMapStyle : []
         };

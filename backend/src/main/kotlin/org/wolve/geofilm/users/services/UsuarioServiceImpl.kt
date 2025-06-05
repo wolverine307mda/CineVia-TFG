@@ -12,6 +12,7 @@ import org.wolve.geofilm.users.models.RolUsuario
 import org.wolve.geofilm.users.models.Usuario
 import org.wolve.geofilm.users.repositories.UsuarioRepository
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import java.time.LocalDateTime
 
 @Service
 @Transactional
@@ -161,6 +162,45 @@ class UsuarioServiceImpl(
             pageSize = size
         )
     }
+
+    override fun savePasswordResetPin(email: String, pin: String, expirationTime: LocalDateTime) {
+        val usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow { RuntimeException("Usuario no encontrado con email $email") }
+
+        usuario.resetPin = pin
+        usuario.resetPinExpiration = expirationTime
+        usuarioRepository.save(usuario)
+    }
+
+    override fun validatePasswordResetPin(email: String, pin: String): Boolean {
+        val usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow { RuntimeException("Usuario no encontrado con email $email") }
+
+        return usuario.resetPin == pin &&
+                usuario.resetPinExpiration != null &&
+                usuario.resetPinExpiration!!.isAfter(LocalDateTime.now())
+    }
+
+    override fun invalidatePasswordResetPin(email: String) {
+        val usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow { RuntimeException("Usuario no encontrado con email $email") }
+
+        usuario.resetPin = null
+        usuario.resetPinExpiration = null
+        usuarioRepository.save(usuario)
+    }
+
+    override fun resetPassword(email: String, newPassword: String) {
+        val usuario = usuarioRepository.findByEmail(email)
+            .orElseThrow { RuntimeException("Usuario no encontrado con email $email") }
+
+        usuario.password = passwordEncoder.encode(newPassword)
+        usuario.resetPin = null
+        usuario.resetPinExpiration = null
+        usuarioRepository.save(usuario)
+    }
+
+
 
     override fun existsByEmail(email: String): Boolean {
         return usuarioRepository.existsByEmail(email)

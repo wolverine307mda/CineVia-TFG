@@ -7,6 +7,7 @@ import org.wolve.geofilm.users.dto.*
 import org.wolve.geofilm.users.models.RolUsuario
 import org.wolve.geofilm.users.models.Usuario
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import java.time.LocalDateTime
 
 interface UsuarioService : UserDetailsService {
     // CRUD básico
@@ -20,17 +21,13 @@ interface UsuarioService : UserDetailsService {
     fun updateAvatar(id: String, avatarUrl: String): Usuario
     fun deleteUser(id: String)
 
-    // Funcionalidades adicionales
     fun getCurrentUserProfile(email: String): UsuarioProfileResponse
-    fun findAllFiltered(
-        search: String?,
-        rol: RolUsuario?,
-        isDeleted: Boolean?,
-        page: Int,
-        size: Int,
-        sortBy: List<String>,
-        sortDirection: String
-    ): PaginatedResponse<UsuarioResponse>
+    fun findAllFiltered( search: String?, rol: RolUsuario?, isDeleted: Boolean?, page: Int, size: Int, sortBy: List<String>, sortDirection: String): PaginatedResponse<UsuarioResponse>
+
+    fun invalidatePasswordResetPin(email: String)
+    fun validatePasswordResetPin(email: String, pin: String): Boolean
+    fun resetPassword(email: String, newPassword: String)
+    fun savePasswordResetPin(email: String, pin: String, expirationTime: LocalDateTime)
 
     fun softDelete(id: String)
     fun restoreUser(id: String)

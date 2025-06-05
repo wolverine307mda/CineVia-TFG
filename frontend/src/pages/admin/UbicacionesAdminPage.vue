@@ -149,7 +149,6 @@
 </template>
 
 <script>
-import { Loader } from '@googlemaps/js-api-loader';
 import UbicacionModal from "@/components/modales/edicion/UbicacionModal.vue";
 import {getGoogleMapsLoader} from "@/utils/googleMapsLoader.js";
 
@@ -327,6 +326,7 @@ export default {
         this.map = new google.maps.Map(this.$refs.map, {
           center: {lat: 20, lng: 0},
           zoom: 2,
+          mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
           styles: this.darkMode ? this.darkMapStyle : [],
           mapTypeControl: true,
           streetViewControl: false

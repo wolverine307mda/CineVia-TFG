@@ -18,6 +18,16 @@
             <span class="nav-badge" v-if="item.badge && !isCollapsed">{{ item.badge }}</span>
           </router-link>
         </li>
+
+        <!-- Nuevo elemento para copias de seguridad -->
+        <li>
+          <a href="#" class="nav-link" @click.prevent="showBackupModal = true">
+            <span class="nav-icon">
+              <i class="fas fa-database"></i>
+            </span>
+            <span class="nav-text" v-if="!isCollapsed">Copias de Seguridad</span>
+          </a>
+        </li>
       </ul>
     </nav>
 
@@ -29,12 +39,56 @@
         <span class="logout-text" v-if="!isCollapsed">Cerrar Sesión</span>
       </button>
     </div>
+
+    <!-- Modal de copias de seguridad -->
+    <div v-if="showBackupModal" class="modal-overlay" @click.self="showBackupModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Gestión de Copias de Seguridad</h3>
+          <button class="close-btn" @click="showBackupModal = false">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="backup-actions">
+            <button class="action-btn export-btn" @click="handleExport">
+              <i class="fas fa-file-export"></i> Exportar Backup
+            </button>
+          </div>
+
+          <div class="import-section">
+            <h4>Importar Backup</h4>
+            <div v-if="loading" class="loading-spinner">
+              <i class="fas fa-spinner fa-spin"></i> Cargando...
+            </div>
+
+            <div v-else>
+              <div v-if="backups.length === 0" class="no-backups">
+                No hay copias de seguridad disponibles
+              </div>
+
+              <ul v-else class="backup-list">
+                <li v-for="backup in backups" :key="backup" class="backup-item">
+                  <span class="backup-name">{{ backup }}</span>
+                  <button class="restore-btn" @click="handleImport(backup)">
+                    <i class="fas fa-undo"></i> Restaurar
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </aside>
 </template>
 
 <script>
 import {useAuthStore} from "@/stores/auth.js";
 import router from "@/router/index.js";
+import BackupService from '@/services/backup.service.js';
+import { saveAs } from 'file-saver';
 
 export default {
   name: 'AdminMenu',
@@ -53,20 +107,244 @@ export default {
       ]
     }
   },
-  setup() {
-    const authStore = useAuthStore();
-    const logout = () => {
+  data() {
+    return {
+      showBackupModal: false,
+      backups: [],
+      loading: false,
+    }
+  },
+  methods: {
+    async loadBackups() {
+      this.loading = true;
+      try {
+        this.backups = await BackupService.listBackups();
+      } catch (error) {
+        console.error('Error loading backups:', error);
+        alert('Error al cargar las copias de seguridad');
+      } finally {
+        this.loading = false;
+      }
+    },
+    async handleExport() {
+      try {
+        const response = await BackupService.exportBackup();
+        const contentDisposition = response.headers['content-disposition'];
+        const filename = contentDisposition
+            ? contentDisposition.split('filename=')[1]
+            : `backup_${new Date().toISOString().slice(0, 10)}.sql`;
+
+        saveAs(new Blob([response.data]), filename);
+        alert('Backup exportado correctamente');
+      } catch (error) {
+        console.error('Error exporting backup:', error);
+        alert('Error al exportar el backup');
+      }
+    },
+    async handleImport(filename) {
+      if (!confirm(`¿Estás seguro de que quieres restaurar el backup "${filename}"? Esto sobrescribirá todos los datos actuales.`)) {
+        return;
+      }
+
+      try {
+        const result = await BackupService.importBackup(filename);
+        alert(result);
+        this.showBackupModal = false;
+      } catch (error) {
+        console.error('Error importing backup:', error);
+        alert('Error al importar el backup');
+      }
+    },
+    logout() {
+      const authStore = useAuthStore();
       authStore.logout();
       router.push('/');
     }
-    return {
-      logout,
+  },
+  watch: {
+    showBackupModal(val) {
+      if (val) {
+        this.loadBackups();
+      }
     }
   }
 }
 </script>
 
 <style scoped>
+/* Estilos anteriores del sidebar... */
+
+/* Estilos del modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  color: #333;
+}
+
+.modal-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.backup-actions {
+  margin-bottom: 2rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.export-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #3e8e41;
+}
+
+.import-section h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: #444;
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+}
+
+.no-backups {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  text-align: center;
+  color: #666;
+}
+
+.backup-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.backup-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.backup-item:last-child {
+  border-bottom: none;
+}
+
+.backup-name {
+  flex-grow: 1;
+}
+
+.restore-btn {
+  padding: 0.5rem 1rem;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.restore-btn:hover {
+  background-color: #0b7dda;
+}
+
+/* Dark mode para el modal */
+.dark-mode .modal-content {
+  background-color: #2d3748;
+  color: #f7fafc;
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: #4a5568;
+}
+
+.dark-mode .close-btn {
+  color: #a0aec0;
+}
+
+.dark-mode .close-btn:hover {
+  color: #f7fafc;
+}
+
+.dark-mode .import-section h4 {
+  color: #e2e8f0;
+}
+
+.dark-mode .no-backups {
+  background-color: #4a5568;
+  color: #cbd5e0;
+}
+
+.dark-mode .backup-item {
+  border-bottom-color: #4a5568;
+}
+
 :root {
   --color-primary: #7e5bef;
   --color-primary-light: #9a7bff;

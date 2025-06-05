@@ -51,13 +51,9 @@ class ProfesionalServiceImpl(
     override fun updateProfesional(id: String, request: ProfesionalRequest): ProfesionalResponse? {
         return profesionalRepository.findById(id)
             .map { existing ->
-                val updated = existing.copy(
-                    nombre = request.nombre,
-                    foto = request.foto,
-                    fechaNacimiento = request.fechaNacimiento,
-                    fechaInicio = request.fechaInicio,
-                    lugarNacimiento = request.lugarNacimiento,
-                    biografia = request.biografia
+                val updated = profesionalMapper.toEntity(request).copy(
+                    id = existing.id,
+                    participaciones = existing.participaciones
                 )
                 profesionalMapper.toResponse(profesionalRepository.save(updated))
             }

@@ -177,14 +177,89 @@ export async function fetchCurrentUser() {
     }
 }
 
+export async function requestPasswordReset(email) {
+    try {
+        const response = await api.post('/api/v1/auth/request-password-reset', {email});
+        return response.data;
+    } catch (error) {
+        let errorMessage = 'Error al solicitar restablecimiento';
+
+        if (error.response) {
+            if (error.response.status === 404) {
+                errorMessage = 'No se encontró una cuenta con ese correo electrónico';
+            } else if (error.response.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
+    }
+}
+
+export async function verifyResetPin(email, pin) {
+    try {
+        const response = await api.post('/api/v1/auth/verify-reset-pin', {email, pin});
+        return response.data;
+    } catch (error) {
+        let errorMessage = 'Error al verificar el PIN';
+
+        if (error.response) {
+            if (error.response.status === 400) {
+                errorMessage = 'PIN inválido o expirado';
+            } else if (error.response.data?.message) {
+                errorMessage = error.response.data.message;
+            }
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
+    }
+}
+
+export async function resetPassword({email, pin, newPassword, confirmPassword}) {
+    try {
+        const response = await api.post('/api/v1/auth/reset-password', {
+            email,
+            pin,
+            newPassword,
+            confirmPassword
+        });
+        return response.data;
+    } catch (error) {
+        let errorMessage = 'Error al cambiar la contraseña';
+
+        if (error.response) {
+            if (error.response.status === 400) {
+                if (error.response.data?.message === 'Las contraseñas no coinciden') {
+                    errorMessage = 'Las contraseñas no coinciden';
+                } else if (error.response.data?.message === 'PIN inválido o expirado') {
+                    errorMessage = 'PIN inválido o expirado';
+                } else {
+                    errorMessage = error.response.data?.message || errorMessage;
+                }
+            }
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        throw new Error(errorMessage);
+    }
+}
+
 export default {
     signin,
     signup,
     logout,
     isAuthenticated,
+    verifyResetPin,
+    requestPasswordReset,
     getCurrentUserRole,
     getCurrentUserEmail,
     fetchCurrentUser,
+    resetPassword,
     checkUsernameAvailability,
     checkEmailAvailability,
 };
