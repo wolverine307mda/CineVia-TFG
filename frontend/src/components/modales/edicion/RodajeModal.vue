@@ -259,7 +259,7 @@ export default {
       try {
         const rodajeData = {
           id: this.formData.id,
-          produccionId: this.produccionId, // viene por props
+          produccionId: this.produccionId,
           ubicacionId: this.formData.ubicacionId,
           notas: this.formData.notas,
           imagenes: this.formData.imagenes.filter(img => img.trim() !== '')

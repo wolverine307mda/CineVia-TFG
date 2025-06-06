@@ -1,18 +1,15 @@
 package org.wolve.geofilm.utils.storage.backup.controller
 
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.media.Content
 import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.utils.storage.backup.service.BackupService
-import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
+import javax.annotation.security.PermitAll
 
 @RestController
+@PermitAll
 @RequestMapping("/api/backups")
 class BackupController(
     private val backupService: BackupService

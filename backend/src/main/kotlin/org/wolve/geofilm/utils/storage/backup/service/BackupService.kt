@@ -10,6 +10,12 @@ class BackupService {
 
     private val backupDir = File("data/backups")
 
+    private val dbHost = "postgres"
+    private val dbPort = "5432"
+    private val dbUser = "wolverine307"
+    private val dbName = "geofilm"
+    private val dbPassword = "admin307204"
+
     init {
         if (!backupDir.exists()) backupDir.mkdirs()
     }
@@ -19,17 +25,19 @@ class BackupService {
         val filename = "backup_$timestamp.sql"
         val file = File(backupDir, filename)
 
-        // Ejecutamos pg_dump desde el contenedor de Docker
         val command = listOf(
-            "docker", "exec", "postgres_db",
-            "pg_dump", "-U", "wolverine307", "-d", "geofilm",
-            "--data-only", "--no-owner", "--no-privileges",
-            "--inserts"
+            "pg_dump",
+            "-h", dbHost,
+            "-p", dbPort,
+            "-U", dbUser,
+            "-d", dbName,
+            "--data-only", "--no-owner", "--no-privileges", "--inserts"
         )
 
-        val processBuilder = ProcessBuilder(command)
-        processBuilder.redirectOutput(file)
-        processBuilder.environment()["PGPASSWORD"] = "admin307204"
+        val processBuilder = ProcessBuilder(command).apply {
+            redirectOutput(file)
+            environment()["PGPASSWORD"] = dbPassword
+        }
 
         val process = processBuilder.start()
         val exitCode = process.waitFor()
@@ -43,50 +51,43 @@ class BackupService {
     }
 
     fun importBackup(file: File): String {
-        // Script para eliminar todas las tablas (si existen)
         val dropScript = """
-        DROP TABLE IF EXISTS participaciones CASCADE;
-        DROP TABLE IF EXISTS produccion_categorias CASCADE;
-        DROP TABLE IF EXISTS profesionales CASCADE;
-        DROP TABLE IF EXISTS reviews CASCADE;
-        DROP TABLE IF EXISTS rodaje_imagenes CASCADE;
-        DROP TABLE IF EXISTS rodajes CASCADE;
-        DROP TABLE IF EXISTS producciones CASCADE;
-        DROP TABLE IF EXISTS sagas CASCADE;
-        DROP TABLE IF EXISTS ubicaciones CASCADE;
-        DROP TABLE IF EXISTS usuarios CASCADE;
-        DROP TABLE IF EXISTS flyway_schema_history CASCADE;
-    """.trimIndent()
+            DO $$
+            DECLARE
+                _r RECORD;
+            BEGIN
+                -- Elimina todas las tablas del esquema público
+                FOR _r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+                    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(_r.tablename) || ' CASCADE';
+                END LOOP;
+            END $$;
+        """.trimIndent()
 
-        // Ejecutar el script de borrado dentro del contenedor
         val dropCommand = listOf(
-            "docker", "exec", "-i", "postgres_db", "bash", "-c",
-            "echo \"$dropScript\" | psql -U wolverine307 -d geofilm"
+            "psql", "-h", dbHost, "-p", dbPort,
+            "-U", dbUser, "-d", dbName, "-c", dropScript
         )
 
         val dropProcess = ProcessBuilder(dropCommand).apply {
-            environment()["PGPASSWORD"] = "admin307204"
+            environment()["PGPASSWORD"] = dbPassword
         }.start()
 
-        val dropExitCode = dropProcess.waitFor()
-        if (dropExitCode != 0) {
+        if (dropProcess.waitFor() != 0) {
             val error = dropProcess.errorStream.bufferedReader().readText()
             throw RuntimeException("Error al eliminar las tablas: $error")
         }
 
-        // Importar el archivo SQL
         val importCommand = listOf(
-            "docker", "exec", "-i", "postgres_db",
-            "psql", "-U", "wolverine307", "-d", "geofilm"
+            "psql", "-h", dbHost, "-p", dbPort,
+            "-U", dbUser, "-d", dbName
         )
 
         val importProcess = ProcessBuilder(importCommand).apply {
-            environment()["PGPASSWORD"] = "admin307204"
+            environment()["PGPASSWORD"] = dbPassword
             redirectInput(file)
         }.start()
 
-        val importExitCode = importProcess.waitFor()
-        if (importExitCode != 0) {
+        if (importProcess.waitFor() != 0) {
             val error = importProcess.errorStream.bufferedReader().readText()
             throw RuntimeException("Error al importar backup: $error")
         }

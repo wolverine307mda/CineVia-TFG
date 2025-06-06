@@ -28,8 +28,8 @@ class ProfesionalMapperTest {
   val request = ProfesionalRequest(
    nombre = "Juan Perez",
    foto = "foto.jpg",
-   fechaNacimiento = fechaNac,
-   fechaInicio = fechaIni,
+   fechaNacimiento = fechaNac.toString(),
+   fechaInicio = fechaIni.toString(),
    lugarNacimiento = "Madrid",
    biografia = "Actor famoso"
   )

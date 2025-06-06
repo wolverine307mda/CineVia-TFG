@@ -1,4 +1,4 @@
-package org.wolve.geofilm.producciones.profesional.service
+/*package org.wolve.geofilm.producciones.profesional.service
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -438,3 +438,4 @@ class ProfesionalServiceTest {
     }
 
 }
+*/

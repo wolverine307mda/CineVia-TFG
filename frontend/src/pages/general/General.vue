@@ -698,20 +698,18 @@ export default {
   min-height: 100vh;
   position: relative;
   background: linear-gradient(-45deg,
-  #4b0082,
-  #ff6b00,
-  #6a0dad,
-  #e85d04,
-  #8a2be2,
-  #ff8800,
-  #9d4edd,
-  #f48c06);
+  #218690,
+  #324F61,
+  #2B3849,
+  #6C0A71,
+  #BD21BF,
+  #500C59,
+  #100126);
   background-size: 500% 500%;
   animation: gradientBackground 50s ease infinite;
   transition: background 0.3s ease;
 }
 
-/* 🌌 Animación fluida del degradado */
 @keyframes gradientBackground {
   0% {
     background-position: 0% 50%;
