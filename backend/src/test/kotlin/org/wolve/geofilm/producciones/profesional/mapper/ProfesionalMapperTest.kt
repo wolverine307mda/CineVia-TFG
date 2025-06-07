@@ -10,11 +10,14 @@ import org.wolve.geofilm.producciones.participacion.models.Participacion
 import org.wolve.geofilm.utils.pagination.PaginationUtils.PaginatedResponse
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ProfesionalMapperTest {
 
  private lateinit var mapper: ProfesionalMapper
+
+ private val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
 
  @BeforeEach
  fun setUp() {
@@ -23,15 +26,19 @@ class ProfesionalMapperTest {
 
  @Test
  fun toEntity() {
-  val fechaNac = Date(1000000)
-  val fechaIni = Date(2000000)
+  val fechaNacDate = Date(1000000)
+  val fechaIniDate = Date(2000000)
+
+  val fechaNacStr = dateFormatter.format(fechaNacDate)
+  val fechaIniStr = dateFormatter.format(fechaIniDate)
+
   val request = ProfesionalRequest(
-   nombre = "Juan Perez",
-   foto = "foto.jpg",
-   fechaNacimiento = fechaNac.toString(),
-   fechaInicio = fechaIni.toString(),
-   lugarNacimiento = "Madrid",
-   biografia = "Actor famoso"
+   nombre           = "Juan Perez",
+   foto             = "foto.jpg",
+   fechaNacimiento  = fechaNacStr,
+   fechaInicio      = fechaIniStr,
+   lugarNacimiento  = "Madrid",
+   biografia        = "Actor famoso"
   )
 
   val entity: Profesional = mapper.toEntity(request)
@@ -39,8 +46,16 @@ class ProfesionalMapperTest {
   assertNotNull(entity.id)
   assertEquals(request.nombre, entity.nombre)
   assertEquals(request.foto, entity.foto)
-  assertEquals(request.fechaNacimiento, entity.fechaNacimiento)
-  assertEquals(request.fechaInicio, entity.fechaInicio)
+
+  assertEquals(
+   dateFormatter.parse(fechaNacStr),
+   entity.fechaNacimiento
+  )
+  assertEquals(
+   dateFormatter.parse(fechaIniStr),
+   entity.fechaInicio
+  )
+
   assertEquals(request.lugarNacimiento, entity.lugarNacimiento)
   assertEquals(request.biografia, entity.biografia)
   assertTrue(entity.participaciones.isEmpty())

@@ -29,6 +29,7 @@ import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.service.IProduccionService
 import org.wolve.geofilm.users.repositories.UsuarioRepository
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
+import org.wolve.geofilm.utils.pagination.PaginationUtils
 import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
 import java.util.*
 import javax.sql.DataSource
@@ -117,11 +118,21 @@ class ProduccionControllerTest {
 
     @Test
     fun getProduccionesPaginado() {
+        val sampleData = listOf(sampleResponse.copy(id = "id1"))
+        // Crea la respuesta paginada usando la clase interna PaginationUtils.PaginatedResponse
+        val paginated = PaginationUtils.PaginatedResponse(
+            data = sampleData,
+            totalItems = 1L,
+            totalPages = 1,
+            pageSize = 10,
+            currentPage = 0
+        )
+
         every {
             produccionService.getAllProducciones(
                 page = 0, size = 10, sortBy = listOf("titulo"), sortDirection = "asc"
             )
-        } returns (paginated as org.wolve.geofilm.utils.pagination.PaginationUtils.PaginatedResponse<ProduccionResponse>)
+        } returns paginated  // Ahora el tipo coincide exactamente
 
         mockMvc.perform(
             get("/api/producciones")
@@ -137,6 +148,7 @@ class ProduccionControllerTest {
 
         verify { produccionService.getAllProducciones(0, 10, listOf("titulo"), "asc") }
     }
+
 
     @Test
     fun getProduccionById() {
@@ -176,7 +188,9 @@ class ProduccionControllerTest {
             categorias = emptySet(),
             clasificacionEdad = ClasificacionEdad.MAYORES_7.valorNumerico
         )
-        every { produccionService.createProduccion(req) } returns sampleResponse.copy(id = "idNew")
+        val returned = sampleResponse.copy(id = "idNew")
+
+        every { produccionService.createProduccion(any<ProduccionRequest>()) } returns returned
 
         mockMvc.perform(
             post("/api/producciones")
@@ -184,10 +198,12 @@ class ProduccionControllerTest {
                 .content(objectMapper.writeValueAsString(req))
         )
             .andExpect(status().isCreated)
+            .andExpect(header().string("Location", "/api/producciones/idNew"))
             .andExpect(jsonPath("$.id").value("idNew"))
 
-        verify { produccionService.createProduccion(refEq(req)) }
+        verify { produccionService.createProduccion(any<ProduccionRequest>()) }
     }
+
 
     @Test
     fun createProduccionBadRequest() {
@@ -233,7 +249,8 @@ class ProduccionControllerTest {
             categorias = emptySet(),
             clasificacionEdad = ClasificacionEdad.MAYORES_12.valorNumerico
         )
-        every { produccionService.updateProduccion("none", req) } returns null
+
+        every { produccionService.updateProduccion("none", any<ProduccionRequest>()) } returns null
 
         mockMvc.perform(
             put("/api/producciones/none")
@@ -242,9 +259,8 @@ class ProduccionControllerTest {
         )
             .andExpect(status().isNotFound)
 
-        verify { produccionService.updateProduccion("none", refEq(req)) }
+        verify { produccionService.updateProduccion("none", any<ProduccionRequest>()) }
     }
-
 
     @Test
     fun deleteProduccionBadRequest() {

@@ -200,8 +200,6 @@ class UsuarioServiceImpl(
         usuarioRepository.save(usuario)
     }
 
-
-
     override fun existsByEmail(email: String): Boolean {
         return usuarioRepository.existsByEmail(email)
     }

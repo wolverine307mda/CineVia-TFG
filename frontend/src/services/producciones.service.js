@@ -49,7 +49,8 @@ class ProduccionesService {
                 estreno: item.estreno,
                 duracion: item.duracion,
                 sinopsis: item.sinopsis,
-                imagen: item.imagen || 'default-poster.jpg',
+                informacion: item.informacion,
+                imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
                 clasificacionEdad: item.clasificacionEdad,
                 categorias: item.categorias || [],
                 puntuacion: item.puntuacion || 0,
@@ -57,7 +58,7 @@ class ProduccionesService {
                 type: item.tipo,
                 plot: item.sinopsis,
                 year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
-                poster: item.imagen || 'default-poster.jpg',
+                poster: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
                 duration: item.duracion,
                 isFavorite: false
             })) || [];
@@ -94,6 +95,7 @@ class ProduccionesService {
 
     async createProduccion(produccionData) {
         try {
+            produccionData.inf
             const response = await api.post('/api/producciones', produccionData);
             return this.formatProduccion(response.data);
         } catch (error) {
@@ -103,13 +105,16 @@ class ProduccionesService {
     }
 
     async updateProduccion(id, produccionData) {
-        try {
-            const response = await api.put(`/api/producciones/${id}`, produccionData);
-            return this.formatProduccion(response.data);
-        } catch (error) {
-            console.error('Error updating produccion:', error);
-            throw error;
-        }
+        const payload = {
+            informacion: produccionData.informacion ?? null,
+            ...produccionData
+        };
+
+        const response = await api.put(`/api/producciones/${id}`, payload);
+        return this.formatProduccion(response.data);
+    } catch (error) {
+        console.error('Error updating produccion:', error);
+        throw error;
     }
 
     async deleteProduccion(id) {
@@ -130,7 +135,7 @@ class ProduccionesService {
             estreno: item.estreno,
             duracion: item.duracion,
             sinopsis: item.sinopsis,
-            imagen: item.imagen || 'default-poster.jpg',
+            imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
             clasificacionEdad: item.clasificacionEdad,
             categorias: item.categorias || [],
             puntuacion: item.puntuacion || 0

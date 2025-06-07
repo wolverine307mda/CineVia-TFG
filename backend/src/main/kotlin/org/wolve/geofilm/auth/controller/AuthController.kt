@@ -194,7 +194,6 @@ class AuthController(
         }
     }
 
-    // DTOs para los nuevos endpoints
     data class PasswordResetRequest(val email: String)
     data class VerifyPinRequest(val email: String, val pin: String)
     data class ResetPasswordRequest(

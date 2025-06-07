@@ -21,6 +21,7 @@ import org.wolve.geofilm.producciones.produccion.service.IProduccionService
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.net.URI
 import java.time.LocalDateTime
 
 @RestController
@@ -87,27 +88,43 @@ class ProduccionController(
     @Operation(summary = "Crea una nueva producción")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "201", description = "Producción creada",
+            ApiResponse(
+                responseCode = "201",
+                description = "Producción creada",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "400", description = "Datos inválidos",
-                content = [Content()])
+                    schema = Schema(implementation = ProduccionResponse::class))]
+            ),
+            ApiResponse(responseCode = "400", description = "Datos inválidos", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @PostMapping
-    fun createProduccion(@RequestBody request: ProduccionRequest): ResponseEntity<ProduccionResponse> {
-        val produccionResponse = produccionService.createProduccion(request)
-        return ResponseEntity.status(HttpStatus.CREATED).body(produccionResponse)
+    fun createProduccion(
+        @RequestBody request: ProduccionRequest
+    ): ResponseEntity<ProduccionResponse> {
+        return try {
+            val produccionResponse = produccionService.createProduccion(request)
+            val location = URI("/api/producciones/${produccionResponse.id}")
+            ResponseEntity.created(location).body(produccionResponse)
+        } catch (ex: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
     }
 
     @Operation(summary = "Actualiza una producción existente")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Producción actualizada",
+            ApiResponse(
+                responseCode = "200",
+                description = "Producción actualizada",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ProduccionResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada",
-                content = [Content()])
+                    schema = Schema(implementation = ProduccionResponse::class))]
+            ),
+            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()]),
+            ApiResponse(responseCode = "400", description = "Datos inválidos", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @PutMapping("/{id}")
@@ -115,27 +132,42 @@ class ProduccionController(
         @PathVariable id: String,
         @RequestBody request: ProduccionRequest
     ): ResponseEntity<ProduccionResponse> {
-        val produccionResponse = produccionService.updateProduccion(id, request)
-        return if (produccionResponse != null) {
-            ResponseEntity.ok(produccionResponse)
-        } else {
-            ResponseEntity(HttpStatus.NOT_FOUND)
+        return try {
+            val produccionResponse = produccionService.updateProduccion(id, request)
+            if (produccionResponse == null) {
+                ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+            } else {
+                ResponseEntity.ok(produccionResponse)
+            }
+        } catch (ex: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
+
 
     @Operation(summary = "Elimina una producción por ID")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "204", description = "Producción eliminada",
-                content = [Content()]),
-            ApiResponse(responseCode = "404", description = "Producción no encontrada",
-                content = [Content()])
+            ApiResponse(responseCode = "204", description = "Producción eliminada", content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Producción no encontrada", content = [Content()]),
+            ApiResponse(responseCode = "400", description = "Solicitud inválida", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @DeleteMapping("/{id}")
     fun deleteProduccion(@PathVariable id: String): ResponseEntity<Void> {
-        produccionService.deleteProduccion(id)
-        return ResponseEntity.noContent().build()
+        return try {
+            produccionService.deleteProduccion(id)
+            ResponseEntity.noContent().build()
+        } catch (ex: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+        } catch (ex: IllegalArgumentException) {
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
     }
 
     @Operation(summary = "Filtrar producciones con múltiples criterios")

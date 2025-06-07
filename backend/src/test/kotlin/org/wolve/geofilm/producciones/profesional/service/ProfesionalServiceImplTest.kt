@@ -1,17 +1,14 @@
-/*package org.wolve.geofilm.producciones.profesional.service
+package org.wolve.geofilm.producciones.profesional.service
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
-import org.mockito.Mockito.mock
-import org.mockito.kotlin.any
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.data.domain.Example
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -20,8 +17,8 @@ import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.profesional.mapper.ProfesionalMapper
 import org.wolve.geofilm.producciones.profesional.model.Profesional
 import org.wolve.geofilm.producciones.profesional.repository.IProfesionalRepository
-import org.wolve.geofilm.producciones.profesional.exception.ProfesionalNotFoundException
 import org.wolve.geofilm.utils.pagination.PaginationUtils
+import java.text.SimpleDateFormat
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -34,6 +31,8 @@ class ProfesionalServiceTest {
     private lateinit var profesionalMapper: ProfesionalMapper
 
     private lateinit var service: ProfesionalServiceImpl
+
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd")
 
     @BeforeEach
     fun setUp() {
@@ -85,35 +84,42 @@ class ProfesionalServiceTest {
 
     @Test
     fun createProfesional() {
+        val fechaNacimientoStr = dateFormatter.format(Date(1000))
+        val fechaInicioStr     = dateFormatter.format(Date(2000))
+
         val request = ProfesionalRequest(
-            nombre = "New",
-            foto = "new.png",
-            fechaNacimiento = Date(1000),
-            fechaInicio = Date(2000),
+            nombre          = "New",
+            foto            = "new.png",
+            fechaNacimiento = fechaNacimientoStr,
+            fechaInicio     = fechaInicioStr,
             lugarNacimiento = "Lugar",
-            biografia = "Bio"
+            biografia       = "Bio"
         )
+
         val entityToSave = Profesional(
-            id = "",
-            nombre = "New",
-            foto = "new.png",
-            fechaNacimiento = request.fechaNacimiento,
-            fechaInicio = request.fechaInicio,
+            id              = "",
+            nombre          = "New",
+            foto            = "new.png",
+            fechaNacimiento = dateFormatter.parse(request.fechaNacimiento),
+            fechaInicio     = dateFormatter.parse(request.fechaInicio),
             lugarNacimiento = "Lugar",
-            biografia = "Bio",
+            biografia       = "Bio",
             participaciones = emptyList()
         )
+
         val savedEntity = entityToSave.copy(id = "prof2")
-            val response = ProfesionalResponse(
-            id = "prof2",
-            nombre = "New",
-            foto = "new.png",
-            fechaNacimiento = request.fechaNacimiento,
-            fechaInicio = request.fechaInicio,
-            lugarNacimiento = "Lugar",
-            biografia = "Bio",
+
+        val response = ProfesionalResponse(
+            id                  = "prof2",
+            nombre              = "New",
+            foto                = "new.png",
+            fechaNacimiento     = dateFormatter.parse(request.fechaNacimiento),
+            fechaInicio         = dateFormatter.parse(request.fechaInicio),
+            lugarNacimiento     = "Lugar",
+            biografia           = "Bio",
             participacionesCount = 0
         )
+
         whenever(profesionalMapper.toEntity(request)).thenReturn(entityToSave)
         whenever(profesionalRepository.save(entityToSave)).thenReturn(savedEntity)
         whenever(profesionalMapper.toResponse(savedEntity)).thenReturn(response)
@@ -129,42 +135,62 @@ class ProfesionalServiceTest {
     @Test
     fun updateProfesional() {
         val id = "prof3"
+
+        val fechaNacimientoStr = dateFormatter.format(Date(3000))
+        val fechaInicioStr     = dateFormatter.format(Date(4000))
+
         val request = ProfesionalRequest(
-            nombre = "Upd",
-            foto = "upd.png",
-            fechaNacimiento = Date(3000),
-            fechaInicio = Date(4000),
+            nombre          = "Upd",
+            foto            = "upd.png",
+            fechaNacimiento = fechaNacimientoStr,
+            fechaInicio     = fechaInicioStr,
             lugarNacimiento = "Lugar2",
-            biografia = "Bio2"
+            biografia       = "Bio2"
         )
+
         val existing = Profesional(
-            id = id,
-            nombre = "Old",
-            foto = "old.png",
-            fechaNacimiento = Date(500),
-            fechaInicio = Date(1500),
-            lugarNacimiento = "LugarOld",
-            biografia = "BioOld",
-            participaciones = emptyList()
+            id               = id,
+            nombre           = "Old",
+            foto             = "old.png",
+            fechaNacimiento  = Date(500),
+            fechaInicio      = Date(1500),
+            lugarNacimiento  = "LugarOld",
+            biografia        = "BioOld",
+            participaciones  = emptyList()
         )
+
+        val requestEntity = Profesional(
+            id               = "",
+            nombre           = request.nombre,
+            foto             = request.foto,
+            fechaNacimiento  = dateFormatter.parse(request.fechaNacimiento),
+            fechaInicio      = dateFormatter.parse(request.fechaInicio),
+            lugarNacimiento  = request.lugarNacimiento,
+            biografia        = request.biografia,
+            participaciones  = emptyList()
+        )
+        whenever(profesionalMapper.toEntity(request)).thenReturn(requestEntity)
+
         val updated = existing.copy(
-            nombre = request.nombre,
-            foto = request.foto,
-            fechaNacimiento = request.fechaNacimiento,
-            fechaInicio = request.fechaInicio,
-            lugarNacimiento = request.lugarNacimiento,
-            biografia = request.biografia
+            nombre          = requestEntity.nombre,
+            foto            = requestEntity.foto,
+            fechaNacimiento = requestEntity.fechaNacimiento,
+            fechaInicio     = requestEntity.fechaInicio,
+            lugarNacimiento = requestEntity.lugarNacimiento,
+            biografia       = requestEntity.biografia
         )
+
         val response = ProfesionalResponse(
-            id = id,
-            nombre = request.nombre,
-            foto = request.foto,
-            fechaNacimiento = request.fechaNacimiento,
-            fechaInicio = request.fechaInicio,
-            lugarNacimiento = request.lugarNacimiento,
-            biografia = request.biografia,
+            id                  = id,
+            nombre              = request.nombre,
+            foto                = request.foto,
+            fechaNacimiento     = requestEntity.fechaNacimiento,
+            fechaInicio         = requestEntity.fechaInicio,
+            lugarNacimiento     = request.lugarNacimiento,
+            biografia           = request.biografia,
             participacionesCount = 0
         )
+
         whenever(profesionalRepository.findById(id)).thenReturn(Optional.of(existing))
         whenever(profesionalRepository.save(eq(updated))).thenReturn(updated)
         whenever(profesionalMapper.toResponse(updated)).thenReturn(response)
@@ -173,9 +199,11 @@ class ProfesionalServiceTest {
 
         assertEquals(response, result)
         verify(profesionalRepository).findById(id)
+        verify(profesionalMapper).toEntity(request)
         verify(profesionalRepository).save(eq(updated))
         verify(profesionalMapper).toResponse(updated)
     }
+
 
     @Test
     fun updateProfesionalIdNull() {
@@ -183,8 +211,8 @@ class ProfesionalServiceTest {
         val request = ProfesionalRequest(
             nombre = "X",
             foto = "x.png",
-            fechaNacimiento = Date(),
-            fechaInicio = Date(),
+            fechaNacimiento = Date().toString(),
+            fechaInicio = Date().toString(),
             lugarNacimiento = "",
             biografia = ""
         )
@@ -437,5 +465,99 @@ class ProfesionalServiceTest {
         assertTrue(exception.message!!.contains("Formato de fecha inválido"))
     }
 
+    @Test
+    fun filtrarProfesionalesPorTodosLosParametros() {
+        val fmt = SimpleDateFormat("yyyy-MM-dd")
+        val profA = Profesional(
+            id = "pA",
+            nombre = "Alfa",
+            foto = null,
+            fechaNacimiento = fmt.parse("1990-05-10"),
+            fechaInicio = fmt.parse("2010-01-15"),
+            lugarNacimiento = "CiudadX",
+            biografia = "",
+            participaciones = emptyList()
+        )
+        val profB = Profesional(
+            id = "pB",
+            nombre = "Beta",
+            foto = null,
+            // fechaNacimiento fuera del rango
+            fechaNacimiento = fmt.parse("1980-03-20"),
+            fechaInicio = fmt.parse("2015-06-01"),
+            lugarNacimiento = "CiudadY",
+            biografia = "",
+            participaciones = emptyList()
+        )
+        val profC = Profesional(
+            id = "pC",
+            nombre = "Gamma",
+            foto = null,
+            fechaNacimiento = fmt.parse("1995-11-30"),
+            // fechaInicio fuera del rango
+            fechaInicio = fmt.parse("2005-12-31"),
+            lugarNacimiento = "CiudadX",
+            biografia = "",
+            participaciones = emptyList()
+        )
+        val profD = Profesional(
+            id = "pD",
+            nombre = "Delta",
+            foto = null,
+            fechaNacimiento = fmt.parse("1992-07-25"),
+            fechaInicio = fmt.parse("2012-08-20"),
+            // lugarNacimiento no coincide
+            lugarNacimiento = "OtraCiudad",
+            biografia = "",
+            participaciones = emptyList()
+        )
+        // Único que debería pasar todos los filtros
+        val profE = Profesional(
+            id = "pE",
+            nombre = "Omega",
+            foto = null,
+            fechaNacimiento = fmt.parse("1991-09-05"),
+            fechaInicio = fmt.parse("2011-03-10"),
+            lugarNacimiento = "CiudadX",
+            biografia = "",
+            participaciones = emptyList()
+        )
+
+        whenever(profesionalRepository.findAll()).thenReturn(listOf(profA, profB, profC, profD, profE))
+        // Mapeamos cada entidad filtrada a su respuesta
+        val respE = ProfesionalResponse(
+            id = "pE",
+            nombre = "Omega",
+            foto = null,
+            fechaNacimiento = profE.fechaNacimiento,
+            fechaInicio = profE.fechaInicio,
+            lugarNacimiento = profE.lugarNacimiento,
+            biografia = profE.biografia,
+            participacionesCount = 0
+        )
+        whenever(profesionalMapper.toResponse(profE)).thenReturn(respE)
+
+        // Ejecutamos con todos los parámetros
+        val resultado = service.filtrarProfesionales(
+            nombre = "meg",                      // coincide con "Omega"
+            fechaNacimientoDesde = "1990-01-01", // rango que incluye 1991-09-05
+            fechaNacimientoHasta = "1993-12-31",
+            fechaInicioDesde = "2010-01-01",     // rango que incluye 2011-03-10
+            fechaInicioHasta = "2012-12-31",
+            lugarNacimiento = "ciudadx",         // case-insensitive match con "CiudadX"
+            page = 0,
+            size = 10,
+            sortBy = listOf("nombre"),
+            sortDirection = "asc"
+        )
+
+        // Solo profE debe permanecer tras filtrar
+        assertEquals(1, resultado.totalItems)
+        assertEquals(1, resultado.data.size)
+        assertEquals(respE, resultado.data.first())
+
+        verify(profesionalRepository).findAll()
+        verify(profesionalMapper).toResponse(profE)
+    }
+
 }
-*/

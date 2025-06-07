@@ -16,6 +16,7 @@ import org.wolve.geofilm.producciones.profesional.service.IProfesionalService
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
+import java.net.URI
 import java.time.LocalDateTime
 
 @RestController
@@ -88,27 +89,43 @@ class ProfesionalController(
     @Operation(summary = "Crea un nuevo profesional")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "201", description = "Profesional creado",
+            ApiResponse(
+                responseCode = "201",
+                description = "Profesional creado",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ProfesionalResponse::class))]),
-            ApiResponse(responseCode = "400", description = "Datos inválidos",
-                content = [Content()])
+                    schema = Schema(implementation = ProfesionalResponse::class))]
+            ),
+            ApiResponse(responseCode = "400", description = "Datos inválidos", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @PostMapping
-    fun createProfesional(@RequestBody request: ProfesionalRequest): ResponseEntity<ProfesionalResponse> {
-        val profesionalResponse = profesionalService.createProfesional(request)
-        return ResponseEntity.status(HttpStatus.CREATED).body(profesionalResponse)
+    fun createProfesional(
+        @RequestBody request: ProfesionalRequest
+    ): ResponseEntity<ProfesionalResponse> {
+        return try {
+            val profesionalResponse = profesionalService.createProfesional(request)
+            val location = URI("/api/profesionales/${profesionalResponse.id}")
+            ResponseEntity.created(location).body(profesionalResponse)
+        } catch (ex: IllegalArgumentException) {
+            // Si el service lanza IllegalArgumentException en caso de datos inválidos
+            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
     }
 
     @Operation(summary = "Actualiza un profesional existente")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "200", description = "Profesional actualizado",
+            ApiResponse(
+                responseCode = "200",
+                description = "Profesional actualizado",
                 content = [Content(mediaType = "application/json",
-                    schema = Schema(implementation = ProfesionalResponse::class))]),
-            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
-                content = [Content()])
+                    schema = Schema(implementation = ProfesionalResponse::class))]
+            ),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @PutMapping("/{id}")
@@ -116,27 +133,34 @@ class ProfesionalController(
         @PathVariable id: String,
         @RequestBody request: ProfesionalRequest
     ): ResponseEntity<ProfesionalResponse> {
-        val profesionalResponse = profesionalService.updateProfesional(id, request)
-        return if (profesionalResponse != null) {
+        return try {
+            val profesionalResponse = profesionalService.updateProfesional(id, request)
             ResponseEntity.ok(profesionalResponse)
-        } else {
-            ResponseEntity(HttpStatus.NOT_FOUND)
+        } catch (ex: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
         }
     }
 
     @Operation(summary = "Elimina un profesional por ID")
     @ApiResponses(
         value = [
-            ApiResponse(responseCode = "204", description = "Profesional eliminado",
-                content = [Content()]),
-            ApiResponse(responseCode = "404", description = "Profesional no encontrado",
-                content = [Content()])
+            ApiResponse(responseCode = "204", description = "Profesional eliminado", content = [Content()]),
+            ApiResponse(responseCode = "404", description = "Profesional no encontrado", content = [Content()]),
+            ApiResponse(responseCode = "500", description = "Error interno del servidor", content = [Content()])
         ]
     )
     @DeleteMapping("/{id}")
     fun deleteProfesional(@PathVariable id: String): ResponseEntity<Void> {
-        profesionalService.deleteProfesional(id)
-        return ResponseEntity.noContent().build()
+        return try {
+            profesionalService.deleteProfesional(id)
+            ResponseEntity.noContent().build()
+        } catch (ex: NoSuchElementException) {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+        } catch (ex: Exception) {
+            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        }
     }
 
     @Operation(summary = "Filtrar profesionales con múltiples criterios")

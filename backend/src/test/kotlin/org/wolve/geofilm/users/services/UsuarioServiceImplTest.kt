@@ -684,6 +684,338 @@ class UsuarioServiceImplTest {
   val adminDetails = service.loadUserByUsername(email)
 
   val expectedAuth = SimpleGrantedAuthority("ROLE_ADMINISTRADOR")
-  assertEquals(listOf(expectedAuth), adminDetails.authorities.toList()) // orden y contenido exactos
+  assertEquals(listOf(expectedAuth), adminDetails.authorities.toList())
+ }
+
+  @Test
+  fun savePasswordResetPin() {
+   val email = "user@example.com"
+   val pin = "123456"
+   val expiration = LocalDateTime.now().plusMinutes(30)
+   val usuario = Usuario(
+    id = "u1",
+    username = "u",
+    email = email,
+    password = "p",
+    nombre = "N",
+    apellido = "A",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = null,
+    updatedAt = null
+   )
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+   whenever(usuarioRepository.save(usuario)).thenReturn(usuario)
+
+   service.savePasswordResetPin(email, pin, expiration)
+
+   assertEquals(pin, usuario.resetPin)
+   assertEquals(expiration, usuario.resetPinExpiration)
+   verify(usuarioRepository).save(usuario)
+  }
+
+  @Test
+  fun savePasswordResetPinuserNotFound() {
+   whenever(usuarioRepository.findByEmail("missing")).thenReturn(Optional.empty())
+
+   assertThrows(RuntimeException::class.java) {
+    service.savePasswordResetPin("missing", "0000", LocalDateTime.now())
+   }
+   verify(usuarioRepository, never()).save(any())
+  }
+
+  // validatePasswordResetPin
+  @Test
+  fun validatePasswordResetPin() {
+   val email = "u2@example.com"
+   val pin = "ABCDEF"
+   val expiration = LocalDateTime.now().plusMinutes(5)
+   val usuario = Usuario(
+    id = "u2",
+    username = "u2",
+    email = email,
+    password = "p2",
+    nombre = "N2",
+    apellido = "A2",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = null,
+    updatedAt = null
+   )
+   usuario.resetPin = pin
+   usuario.resetPinExpiration = expiration
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+
+   val result = service.validatePasswordResetPin(email, pin)
+
+   assertTrue(result)
+  }
+
+  @Test
+  fun validatePasswordResetPine() {
+   val email = "u3@example.com"
+   val usuario = Usuario(
+    id = "u3",
+    username = "u3",
+    email = email,
+    password = "p3",
+    nombre = "N3",
+    apellido = "A3",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = null,
+    updatedAt = null
+   )
+   usuario.resetPin = "ZZZZ"
+   usuario.resetPinExpiration = LocalDateTime.now().plusMinutes(5)
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+   assertFalse(service.validatePasswordResetPin(email, "WRONG"))
+
+   usuario.resetPin = "1234"
+   usuario.resetPinExpiration = LocalDateTime.now().minusMinutes(1)
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+   assertFalse(service.validatePasswordResetPin(email, "1234"))
+  }
+
+  @Test
+  fun validatePasswordResetPinMising() {
+   whenever(usuarioRepository.findByEmail("missing")).thenReturn(Optional.empty())
+   assertThrows(RuntimeException::class.java) {
+    service.validatePasswordResetPin("missing", "ANY")
+   }
+  }
+
+  @Test
+  fun invalidatePasswordResetPin() {
+   val email = "u4@example.com"
+   val usuario = Usuario(
+    id = "u4",
+    username = "u4",
+    email = email,
+    password = "p4",
+    nombre = "N4",
+    apellido = "A4",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = null,
+    updatedAt = null
+   )
+   usuario.resetPin = "PIN"
+   usuario.resetPinExpiration = LocalDateTime.now().plusMinutes(10)
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+   whenever(usuarioRepository.save(usuario)).thenReturn(usuario)
+
+   service.invalidatePasswordResetPin(email)
+
+   assertNull(usuario.resetPin)
+   assertNull(usuario.resetPinExpiration)
+   verify(usuarioRepository).save(usuario)
+  }
+
+  @Test
+  fun invalidatePasswordResetPinuserNotFound() {
+   whenever(usuarioRepository.findByEmail("missing")).thenReturn(Optional.empty())
+   assertThrows(RuntimeException::class.java) {
+    service.invalidatePasswordResetPin("missing")
+   }
+   verify(usuarioRepository, never()).save(any())
+  }
+
+  @Test
+  fun resetPasswordClearsPin() {
+   val email = "u5@example.com"
+   val newPassword = "newSecret"
+   val usuario = Usuario(
+    id = "u5",
+    username = "u5",
+    email = email,
+    password = "oldHash",
+    nombre = "N5",
+    apellido = "A5",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = null,
+    updatedAt = null
+   )
+   usuario.resetPin = "SOME"
+   usuario.resetPinExpiration = LocalDateTime.now().plusMinutes(5)
+   whenever(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario))
+   whenever(passwordEncoder.encode(newPassword)).thenReturn("encodedNew")
+   whenever(usuarioRepository.save(usuario)).thenReturn(usuario)
+
+   service.resetPassword(email, newPassword)
+
+   assertEquals("encodedNew", usuario.password)
+   assertNull(usuario.resetPin)
+   assertNull(usuario.resetPinExpiration)
+   verify(passwordEncoder).encode(newPassword)
+   verify(usuarioRepository).save(usuario)
+  }
+
+  @Test
+  fun resetPassworduserNotFound() {
+   whenever(usuarioRepository.findByEmail("missing")).thenReturn(Optional.empty())
+   assertThrows(RuntimeException::class.java) {
+    service.resetPassword("missing", "anyPass")
+   }
+   verify(passwordEncoder, never()).encode(any())
+   verify(usuarioRepository, never()).save(any())
+  }
+
+  @Test
+  fun findAllFilteredsortByEmailDescending() {
+   val u1 = Usuario(
+    id = "u1",
+    username = "u1",
+    email = "c@example.com",
+    password = "p",
+    nombre = "C",
+    apellido = "X",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = LocalDateTime.now().minusDays(1),
+    updatedAt = null,
+    isDelete = false
+   )
+   val u2 = Usuario(
+    id = "u2",
+    username = "u2",
+    email = "a@example.com",
+    password = "p",
+    nombre = "A",
+    apellido = "Y",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = LocalDateTime.now().minusDays(2),
+    updatedAt = null,
+    isDelete = false
+   )
+   val u3 = Usuario(
+    id = "u3",
+    username = "u3",
+    email = "b@example.com",
+    password = "p",
+    nombre = "B",
+    apellido = "Z",
+    rol = RolUsuario.USUARIO,
+    telefono = "681013487",
+    fechaNacimiento = null,
+    avatar = null,
+    createdAt = LocalDateTime.now(),
+    updatedAt = null,
+    isDelete = false
+   )
+   whenever(usuarioRepository.findAll()).thenReturn(listOf(u1, u2, u3))
+
+   val result = service.findAllFiltered(
+    search = null,
+    rol = null,
+    isDeleted = false,
+    page = 0,
+    size = 10,
+    sortBy = listOf("email"),
+    sortDirection = "desc"
+   )
+
+   val emails = result.data.map { it.email }
+   assertEquals(listOf("c@example.com", "b@example.com", "a@example.com"), emails)
+  }
+
+ @Test
+ fun getPassword() {
+  val usuario = Usuario(
+   id = "test-id",
+   username = "user1",
+   email = "u1@example.com",
+   password = "secret123",
+   nombre = "Nombre",
+   apellido = "Apellido",
+   rol = RolUsuario.USUARIO,
+   telefono = "681013487",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+
+  assertEquals("secret123", usuario.password)
+  assertEquals("secret123", usuario.password)
+  assertEquals("secret123", usuario.getPassword())
+ }
+
+ @Test
+ fun generateResetPin() {
+  val usuario = Usuario(
+   id = "test-id",
+   username = "user2",
+   email = "u2@example.com",
+   password = "pwd",
+   nombre = "N2",
+   apellido = "A2",
+   rol = RolUsuario.USUARIO,
+   telefono = "681013487",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+
+  val before = LocalDateTime.now()
+  val generatedPin = usuario.generateResetPin()
+  val after = LocalDateTime.now()
+
+  assertNotNull(generatedPin)
+  assertEquals(6, generatedPin.length)
+  assertTrue(generatedPin.all { it.isDigit() })
+
+  assertEquals(generatedPin, usuario.resetPin)
+
+  assertNotNull(usuario.resetPinExpiration)
+  val expiration = usuario.resetPinExpiration!!
+  val expectedMin = before.plusMinutes(15)
+  val expectedMax = after.plusMinutes(15)
+  assertTrue(expiration.isAfter(expectedMin.minusNanos(1)) && expiration.isBefore(expectedMax.plusNanos(1)))
+ }
+
+ @Test
+ fun isResetPinValid() {
+  val usuario = Usuario(
+   id = "test-id",
+   username = "user3",
+   email = "u3@example.com",
+   password = "pwd",
+   nombre = "N3",
+   apellido = "A3",
+   rol = RolUsuario.USUARIO,
+   telefono = "681013487",
+   fechaNacimiento = null,
+   avatar = null,
+   createdAt = null,
+   updatedAt = null
+  )
+
+  assertFalse(usuario.isResetPinValid("any"))
+
+  val pin = usuario.generateResetPin()
+  assertTrue(usuario.isResetPinValid(pin))
+
+  assertFalse(usuario.isResetPinValid(pin.reversed()))
+
+  usuario.resetPinExpiration = LocalDateTime.now().minusMinutes(1)
+  assertFalse(usuario.isResetPinValid(pin))
  }
 }

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   postgres:
     image: postgres:latest  # Imagen oficial de PostgreSQL
@@ -40,6 +38,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./data/backups:/app/data/backups
     networks:
       - geofilm_network
 

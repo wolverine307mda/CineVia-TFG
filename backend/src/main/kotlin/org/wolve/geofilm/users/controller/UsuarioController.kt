@@ -15,7 +15,6 @@ import org.wolve.geofilm.utils.storage.images.FirebaseStorageService
 import java.time.LocalDateTime
 import java.util.*
 
-
 @RestController
 @RequestMapping("/api/users")
 class UsuarioController(

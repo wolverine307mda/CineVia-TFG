@@ -12,7 +12,7 @@
                 Buscar
               </button>
             </div>
-            <button @click="openModal(null)" class="new-button">
+            <button @click="openCreateModal()" class="new-button">
               <i class="fas fa-plus"></i>
               <span>Nueva Producción</span>
             </button>
@@ -47,7 +47,7 @@
               <td style="width: 10%; text-align: center;">{{ formatClasificacionEdad(produccion.clasificacionEdad) }}</td>
               <td style="width: 10%; text-align: center;">
                 <div class="action-buttons">
-                  <button @click="openModal(produccion)" class="btn-edit" title="Editar">
+                  <button @click="openEditModal(produccion)" class="btn-edit" title="Editar">
                     <i class="fas fa-edit"></i>
                   </button>
                   <button @click="confirmDelete(produccion)" class="btn-delete" title="Eliminar">
@@ -96,13 +96,21 @@
       </div>
     </div>
 
-    <!-- Modal para crear/editar -->
+    <!-- Modal para crear -->
+    <CreateProduccionModal
+        v-if="showCreateModal"
+        :show="showCreateModal"
+        @close="closeCreateModal"
+        @save="handleCreate"
+    />
+
+    <!-- Modal para editar -->
     <ProduccionModal
-        v-if="showModal"
+        v-if="showEditModal"
         :produccion="selectedProduccion"
-        :show="showModal"
-        @close="closeModal"
-        @save="handleSave"
+        :show="showEditModal"
+        @close="closeEditModal"
+        @save="handleEdit"
     />
 
     <!-- Modal de confirmación para eliminar -->
@@ -127,12 +135,14 @@
 
 <script>
 import ProduccionModal from "@/components/modales/edicion/EditarProduccionModal.vue";
+import CreateProduccionModal from "@/components/modales/edicion/CreateProduccionModal.vue";
 import ProduccionesService from '@/services/producciones.service';
 
 export default {
   name: 'AdministracionProducciones',
   components: {
-    ProduccionModal
+    ProduccionModal,
+    CreateProduccionModal
   },
   data() {
     return {
@@ -145,7 +155,8 @@ export default {
       searchQuery: '',
       sortField: 'titulo',
       sortDirection: 'asc',
-      showModal: false,
+      showCreateModal: false,
+      showEditModal: false,
       showConfirmModal: false,
       selectedProduccion: null,
       produccionToDelete: null
@@ -229,31 +240,59 @@ export default {
       }
     },
 
-    openModal(produccion) {
-      this.selectedProduccion = produccion ? {...produccion} : null;
-      this.showModal = true;
+    openCreateModal() {
+      this.showCreateModal = true;
     },
 
-    closeModal() {
-      this.showModal = false;
+    closeCreateModal() {
+      this.showCreateModal = false;
+    },
+
+    openEditModal(produccion) {
+      this.selectedProduccion = produccion ? {...produccion} : null;
+      this.showEditModal = true;
+    },
+
+    closeEditModal() {
+      this.showEditModal = false;
       this.selectedProduccion = null;
     },
 
-    async handleSave(produccionData) {
+    async handleCreate(produccionData) {
       try {
-        if (produccionData.id) {
-          await ProduccionesService.updateProduccion(produccionData.id, produccionData);
-          this.$toast.success('Producción actualizada correctamente');
-        } else {
-          await ProduccionesService.createProduccion(produccionData);
-          this.$toast.success('Producción creada correctamente');
-        }
+        // merge con todos los campos que el backend espera:
+        const payload = {
+          titulo: produccionData.titulo,
+          tipo: produccionData.tipo,
+          estreno: produccionData.estreno,
+          clasificacionEdad: produccionData.clasificacionEdad,
+          categorias: produccionData.categorias,
+          duracion: null,
+          informacion: "",
+          sinopsis: '',
+          imagen: ''
+        };
 
+        const created = await ProduccionesService.createProduccion(payload);
+
+        this.$toast.success('Producción creada correctamente');
         this.fetchProducciones();
-        this.closeModal();
+        this.closeCreateModal();
       } catch (error) {
-        console.error('Error al guardar la producción:', error);
-        this.$toast.error('Error al guardar la producción');
+        console.error('Error al crear la producción:', error);
+        this.$toast.error('Error al crear la producción');
+      }
+    },
+
+    async handleEdit(produccionData) {
+      try {
+        await ProduccionesService.updateProduccion(produccionData.id, produccionData);
+        this.$toast.success('Producción actualizada correctamente');
+        this.fetchProducciones();
+        this.closeEditModal();
+      } catch (error) {
+        console.error('Error al actualizar la producción:', error);
+        this.$toast.error('Error al actualizar la producción');
       }
     },
 
@@ -840,5 +879,3 @@ export default {
   height: 100%;
 }
 </style>
-
-

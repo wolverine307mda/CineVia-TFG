@@ -22,6 +22,7 @@ import org.wolve.geofilm.producciones.produccion.models.Produccion
 import org.wolve.geofilm.producciones.produccion.models.TipoProduccion
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
 import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
+import org.wolve.geofilm.utils.client.TmdbClient
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import java.util.*
 
@@ -34,11 +35,14 @@ class ProduccionServiceImplTest {
     @Mock
     private lateinit var produccionMapper: ProduccionMapper
 
+    @Mock
+    private lateinit var tmdbClient: TmdbClient
+
     private lateinit var service: ProduccionServiceImpl
 
     @BeforeEach
     fun setUp() {
-        service = ProduccionServiceImpl(produccionRepository, produccionMapper)
+        service = ProduccionServiceImpl(produccionRepository, produccionMapper, tmdbClient)
     }
 
     @Test

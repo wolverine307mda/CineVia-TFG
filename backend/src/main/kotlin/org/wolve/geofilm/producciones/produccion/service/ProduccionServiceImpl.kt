@@ -1,6 +1,7 @@
 package org.wolve.geofilm.producciones.produccion.service
 
 import jakarta.transaction.Transactional
+import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
@@ -11,16 +12,20 @@ import org.wolve.geofilm.producciones.produccion.exceptions.ProduccionNotFoundEx
 import org.wolve.geofilm.producciones.produccion.mapper.ProduccionMapper
 import org.wolve.geofilm.producciones.produccion.models.*
 import org.wolve.geofilm.producciones.produccion.repository.ProduccionRepository
-import org.wolve.geofilm.producciones.profesional.dto.ProfesionalResponse
 import org.wolve.geofilm.producciones.saga.exception.SagaNotFoundException
+import org.wolve.geofilm.utils.client.TmdbClient
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
+import java.util.*
 
 @Service
 class ProduccionServiceImpl(
     private val produccionRepository: ProduccionRepository,
-    private val produccionMapper: ProduccionMapper
+    private val produccionMapper: ProduccionMapper,
+    private val tmdbClient: TmdbClient
 ) : IProduccionService {
+
+    private val logger = LoggerFactory.getLogger(ProduccionServiceImpl::class.java)
 
     companion object {
         private val ALLOWED_SORT_FIELDS = setOf(
@@ -48,8 +53,46 @@ class ProduccionServiceImpl(
     @CacheEvict(value = ["producciones", "produccionesByTitulo"], allEntries = true)
     @Transactional
     override fun createProduccion(request: ProduccionRequest): ProduccionResponse {
-        val produccion = produccionMapper.toProduccionEntity(request)
-        val saved = produccionRepository.save(produccion)
+        // 1) Mapeo inicial del DTO a entidad
+        val produccion: Produccion = produccionMapper.toProduccionEntity(request)
+
+        // 2) Calculamos el año de estreno
+        val calendar = Calendar.getInstance().apply { time = request.estreno }
+        val year: Int = calendar.get(Calendar.YEAR)
+
+        logger.info("[Servicio] Antes de TMDb: sinopsis='${produccion.sinopsis}', imagen='${produccion.imagen}', puntuacion=${produccion.puntuacion}")
+
+        // 3) Llamada a TMDb para buscar datos
+        val tmdbMovie = tmdbClient.searchMovie(request.titulo, year)
+        if (tmdbMovie != null) {
+            // 3a) Si TMDb tiene overview, lo asignamos como sinopsis
+            tmdbMovie.overview?.takeIf { it.isNotBlank() }?.let {
+                produccion.sinopsis = it
+            }
+            // 3b) Si TMDb tiene vote_average, lo asignamos
+            tmdbMovie.voteAverage?.let {
+                produccion.puntuacion = it
+            }
+            // 3c) Si TMDb tiene poster_path, construimos la URL y asignamos
+            tmdbClient.buildPosterUrl(tmdbMovie.posterPath)?.let {
+                produccion.imagen = it
+            }
+            logger.info("[Servicio] TMDb encontró: overview='${tmdbMovie.overview}', voteAverage=${tmdbMovie.voteAverage}, posterPath='${tmdbMovie.posterPath}'")
+        } else {
+            produccion.imagen = "https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png"
+            logger.info("[Servicio] TMDb no devolvió datos para '${request.titulo}'")
+        }
+
+        // 4) Verificamos antes de guardar
+        logger.info("[Servicio] Antes de guardar: sinopsis='${produccion.sinopsis}', imagen='${produccion.imagen}', puntuacion=${produccion.puntuacion}")
+
+        // 5) Guardamos la entidad en la BD
+        val saved: Produccion = produccionRepository.save(produccion)
+
+        // 6) Confirmamos tras guardar
+        logger.info("[Servicio] Guardado en BD: sinopsis='${saved.sinopsis}', imagen='${saved.imagen}', puntuacion=${saved.puntuacion}")
+
+        // 7) Devolvemos la respuesta (mapeada con ProduccionMapper)
         return produccionMapper.toProduccionResponse(saved)
     }
 

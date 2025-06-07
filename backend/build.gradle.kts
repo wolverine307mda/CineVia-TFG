@@ -9,7 +9,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
     id("org.flywaydb.flyway") version "10.11.1"
-    id("org.jetbrains.kotlinx.kover") version "0.7.2"
+    id("jacoco")
 }
 
 group = "org.example"
@@ -116,14 +116,8 @@ tasks.withType<BootJar> {
     archiveFileName.set("app.jar")
 }
 
-koverReport {
-    filters {
-        excludes {
-            classes(
-                "org.wolve.geofilm.utils.email.*",
-            )
-        }
-    }
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 tasks.test {
@@ -135,7 +129,42 @@ tasks.test {
         ).joinToString(",")
     )
     outputs.dir(project.extra["snippetsDir"]!!)
+
     include("**/*Test.*", "**/*Tests.*")
+    // Después de ejecutar `test`, dispara el reporte de JaCoCo:
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html.required.set(true)    // Genera HTML (con colores / semáforos)
+        xml.required.set(true)     // Genera XML (útil para CI o SonarQube)
+        csv.required.set(false)    // Normalmente no hace falta CSV
+    }
+
+    // Indica dónde están tus ficheros fuente, para que el HTML pinte las líneas correctamente:
+    sourceDirectories.setFrom(files("src/main/kotlin", "src/main/java"))
+
+    // Indica dónde buscar las clases compiladas (para calcular cobertura):
+    classDirectories.setFrom(
+        fileTree("$buildDir/classes/kotlin/main") {
+            include("**/*.class")
+            // Si quieres excluir clases generadas (por ejemplo, clases synthetic de Kotlin),
+            // puedes añadir aquí exclude("**/*$DefaultImpls.class") o similares.
+        },
+        fileTree("$buildDir/classes/java/main") {
+            include("**/*.class")
+        }
+    )
+
+    // Indica dónde JaCoCo vuelca el fichero .exec con los datos de cobertura:
+    executionData.setFrom(
+        fileTree(buildDir) {
+            include("**/jacoco/*.exec")
+            include("**/jacocoTest.exec")
+        }
+    )
 }
 
 tasks.asciidoctor {

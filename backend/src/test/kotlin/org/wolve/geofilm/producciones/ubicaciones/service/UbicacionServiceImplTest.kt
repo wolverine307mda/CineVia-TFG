@@ -24,6 +24,7 @@ import org.wolve.geofilm.producciones.ubicaciones.repository.UbicacionRepository
 import org.wolve.geofilm.utils.pagination.PaginatedResponse
 import org.wolve.geofilm.utils.pagination.PaginationUtils
 import java.time.LocalDateTime
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class UbicacionServiceTest {
@@ -148,8 +149,16 @@ class UbicacionServiceTest {
   val id = "uDel"
 
   val now = LocalDateTime.now()
-  val entity = Ubicacion(id = id, nombre = "Found", latitud = 2.2, longitud = 3.3, createdAt = now, updatedAt = now)
-  ubicacionRepository.save(entity)
+  val entity = Ubicacion(
+   id        = id,
+   nombre    = "Found",
+   latitud   = 2.2,
+   longitud  = 3.3,
+   createdAt = now,
+   updatedAt = now
+  )
+
+  whenever(ubicacionRepository.findById(id)).thenReturn(Optional.of(entity))
 
   service.deleteUbicacion(id)
 

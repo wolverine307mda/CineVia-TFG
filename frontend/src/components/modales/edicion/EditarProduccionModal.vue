@@ -393,9 +393,9 @@ export default {
         duracion: 90,
         sinopsis: '',
         imagen: null,
-        informacion: null,
         categorias: [],
-        clasificacionEdad: 0
+        clasificacionEdad: 0,
+        informacion: ''
       },
       // Participaciones
       participaciones: {
@@ -494,7 +494,7 @@ export default {
         duracion: 90,
         sinopsis: '',
         imagen: null,
-        informacion: null,
+        informacion: "",
         categorias: [],
         clasificacionEdad: 0
       };
