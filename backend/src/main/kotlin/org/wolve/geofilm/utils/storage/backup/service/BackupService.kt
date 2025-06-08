@@ -1,12 +1,17 @@
 package org.wolve.geofilm.utils.storage.backup.service
 
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Date
 
 @Service
 class BackupService {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     private val backupDir = File("data/backups")
 
@@ -20,86 +25,87 @@ class BackupService {
         if (!backupDir.exists()) backupDir.mkdirs()
     }
 
+    /**
+     * Genera un volcado completo (DDL + DML) con DROP previo de cada objeto,
+     * y lo nombra usando formato dd-MM-yyyy_HH-mm-ss para que sea legible en el front.
+     */
     fun exportBackup(): File {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        // Formato dd-MM-yyyy_HH-mm-ss -> ej. "08-06-2025_23-28-45"
+        val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy_HH-mm-ss")
+        val timestamp = LocalDateTime.now().plusHours(2).format(formatter)
         val filename = "backup_$timestamp.sql"
         val file = File(backupDir, filename)
 
         val command = listOf(
-            "pg_dump",
+            "/usr/bin/pg_dump",
             "-h", dbHost,
             "-p", dbPort,
             "-U", dbUser,
             "-d", dbName,
-            "--data-only", "--no-owner", "--no-privileges", "--inserts"
+            "--clean",          // DROP previo de cada tabla, función, etc.
+            "--no-owner",
+            "--no-privileges"
         )
 
-        val processBuilder = ProcessBuilder(command).apply {
-            redirectOutput(file)
-            environment()["PGPASSWORD"] = dbPassword
+        log.debug("Ejecutando export: {}", command.joinToString(" "))
+        val proc = ProcessBuilder(command)
+            .redirectOutput(file)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .apply { environment()["PGPASSWORD"] = dbPassword }
+            .start()
+
+        val exit = proc.waitFor()
+        if (exit != 0) {
+            val err = proc.errorStream.bufferedReader().readText().trim()
+            log.error("pg_dump falló: {}", err)
+            throw RuntimeException("Error al exportar backup: $err")
         }
 
-        val process = processBuilder.start()
-        val exitCode = process.waitFor()
-
-        if (exitCode != 0) {
-            val error = process.errorStream.bufferedReader().readText()
-            throw RuntimeException("Error al exportar: $error")
-        }
-
+        log.info("Backup exportado a {}", file.absolutePath)
         return file
     }
 
+    /**
+     * Importa un fichero SQL completo (generado por exportBackup),
+     * aplicando todos los DROP, CREATE e INSERT que contenga.
+     */
     fun importBackup(file: File): String {
-        val dropScript = """
-            DO $$
-            DECLARE
-                _r RECORD;
-            BEGIN
-                -- Elimina todas las tablas del esquema público
-                FOR _r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(_r.tablename) || ' CASCADE';
-                END LOOP;
-            END $$;
-        """.trimIndent()
-
-        val dropCommand = listOf(
-            "psql", "-h", dbHost, "-p", dbPort,
-            "-U", dbUser, "-d", dbName, "-c", dropScript
-        )
-
-        val dropProcess = ProcessBuilder(dropCommand).apply {
-            environment()["PGPASSWORD"] = dbPassword
-        }.start()
-
-        if (dropProcess.waitFor() != 0) {
-            val error = dropProcess.errorStream.bufferedReader().readText()
-            throw RuntimeException("Error al eliminar las tablas: $error")
+        if (!file.exists()) {
+            throw IllegalArgumentException("No existe el archivo de backup: ${file.name}")
         }
 
-        val importCommand = listOf(
-            "psql", "-h", dbHost, "-p", dbPort,
-            "-U", dbUser, "-d", dbName
+        val command = listOf(
+            "/usr/bin/psql",
+            "-h", dbHost,
+            "-p", dbPort,
+            "-U", dbUser,
+            "-d", dbName,
+            "-f", file.absolutePath
         )
 
-        val importProcess = ProcessBuilder(importCommand).apply {
-            environment()["PGPASSWORD"] = dbPassword
-            redirectInput(file)
-        }.start()
+        log.debug("Ejecutando import: {}", command.joinToString(" "))
+        val proc = ProcessBuilder(command)
+            .redirectError(ProcessBuilder.Redirect.PIPE)
+            .apply { environment()["PGPASSWORD"] = dbPassword }
+            .start()
 
-        if (importProcess.waitFor() != 0) {
-            val error = importProcess.errorStream.bufferedReader().readText()
-            throw RuntimeException("Error al importar backup: $error")
+        val exit = proc.waitFor()
+        if (exit != 0) {
+            val err = proc.errorStream.bufferedReader().readText().trim()
+            log.error("psql -f falló: {}", err)
+            throw RuntimeException("Error al importar backup: $err")
         }
 
+        log.info("Backup importado desde {}", file.absolutePath)
         return "Backup importado correctamente desde ${file.name}"
     }
 
-    fun listBackups(): List<File> = backupDir.listFiles()?.sortedByDescending { it.lastModified() } ?: emptyList()
+    fun listBackups(): List<File> =
+        backupDir.listFiles()?.sortedByDescending { it.lastModified() } ?: emptyList()
 
     fun getBackupFile(name: String): File {
         val file = File(backupDir, name)
-        if (!file.exists()) throw IllegalArgumentException("No existe el archivo")
+        if (!file.exists()) throw IllegalArgumentException("No existe el archivo: $name")
         return file
     }
 
