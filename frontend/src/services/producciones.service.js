@@ -50,7 +50,7 @@ class ProduccionesService {
                 duracion: item.duracion,
                 sinopsis: item.sinopsis,
                 informacion: item.informacion,
-                imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
+                imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/producciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
                 clasificacionEdad: item.clasificacionEdad,
                 categorias: item.categorias || [],
                 puntuacion: item.puntuacion || 0,
@@ -58,7 +58,7 @@ class ProduccionesService {
                 type: item.tipo,
                 plot: item.sinopsis,
                 year: item.estreno ? new Date(item.estreno).getFullYear() : 'N/A',
-                poster: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
+                poster: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/producciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
                 duration: item.duracion,
                 isFavorite: false
             })) || [];
@@ -135,7 +135,7 @@ class ProduccionesService {
             estreno: item.estreno,
             duracion: item.duracion,
             sinopsis: item.sinopsis,
-            imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
+            imagen: item.imagen || 'https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/producciones/produccion_pr111_2025-06-07T17:43:46.118486100.png',
             clasificacionEdad: item.clasificacionEdad,
             categorias: item.categorias || [],
             puntuacion: item.puntuacion || 0

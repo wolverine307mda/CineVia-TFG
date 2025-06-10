@@ -66,16 +66,24 @@
                   <p>{{ user.email }}</p>
                   <span class="user-role" :class="user.rol.toLowerCase()">{{ formatRole(user.rol) }}</span>
                 </div>
-                <div class="user-actions">
-                  <button v-if="isAdmin && !user.isDeleted" @click="confirmAction('softDelete', user.id, 'Desactivar usuario', '¿Estás seguro de que quieres desactivar este usuario?')" class="icon-button deactivate-button" title="Desactivar">
-                    <i class="fas fa-user-slash"></i>
-                  </button>
-                  <button v-if="isAdmin && user.isDeleted" @click="confirmAction('restore', user.id, 'Activar usuario', '¿Estás seguro de que quieres activar este usuario?')" class="icon-button activate-button" title="Activar">
-                    <i class="fas fa-user-check"></i>
-                  </button>
-                  <button v-if="isAdmin && user.rol !== 'ADMINISTRADOR'" @click="confirmAction('delete', user.id, 'Eliminar usuario', '¿Estás seguro de que quieres eliminar permanentemente este usuario?')" class="icon-button delete-button" title="Eliminar">
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
+
+                  <div class="user-actions">
+
+                    <!-- DESACTIVAR -->
+                    <button v-if=" isAdmin && currentUserId !== user.id && !user.isDeleted && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin' ) " @click="confirmAction( 'softDelete', user.id, 'Desactivar usuario', '¿Estás seguro de que quieres desactivar este usuario?')" class="icon-button deactivate-button" title="Desactivar" >
+                      <i class="fas fa-user-slash"></i>
+                    </button>
+
+                    <!-- ACTIVAR (restore) -->
+                    <button v-if=" isAdmin &&  currentUserId !== user.id &&  user.isDeleted && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin' ) " @click="confirmAction( 'restore', user.id, 'Activar usuario', '¿Estás seguro de que quieres activar este usuario?' )" class="icon-button activate-button" title="Activar" >
+                      <i class="fas fa-user-check"></i>
+                    </button>
+
+                    <!-- ELIMINAR PERMANENTE -->
+                    <button v-if=" isAdmin && currentUserId !== user.id &&  user.rol !== 'ADMINISTRADOR' " @click="confirmAction( 'delete', user.id, 'Eliminar usuario', '¿Estás seguro de que quieres eliminar permanentemente este usuario?' )" class="icon-button delete-button" title="Eliminar" >
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+
                 </div>
               </div>
             </div>
@@ -265,7 +273,7 @@ export default {
 
         if (success) {
           this.$toast.success(message);
-          this.fetchUsers();
+          this.fetchRecentUsers();
         }
       } catch (error) {
         console.error('Error performing action:', error);

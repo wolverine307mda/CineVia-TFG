@@ -32,17 +32,21 @@
         <!-- Basic Info Section -->
         <section class="info-section">
           <div class="info-item">
-            <span class="info-label">Nacimiento:
-            <span class="info-value" style="color: white">{{ professional.birthDate }}</span></span>
+          <span class="info-label">Nacimiento:
+            <span class="info-value" :style="{ color: darkMode ? 'white' : 'black' }">{{ professional.birthDate }}</span>
+          </span>
           </div>
           <div class="info-item">
-            <span class="info-label">Lugar:
-            <span class="info-value" style="color: white">{{ professional.lugarNacimiento }}</span></span>
+          <span class="info-label">Lugar:
+            <span class="info-value" :style="{ color: darkMode ? 'white' : 'black' }">{{ professional.lugarNacimiento }}</span>
+          </span>
           </div>
           <div class="info-item">
-            <span class="info-label">Carrera:
-            <span class="info-value" style="color: white">Desde {{ professional.startDate }}</span></span>
+          <span class="info-label">Carrera:
+            <span class="info-value" :style="{ color: darkMode ? 'white' : 'black' }">Desde {{ professional.startDate }}</span>
+          </span>
           </div>
+
         </section>
 
         <!-- Biography -->
@@ -303,9 +307,6 @@ export default {
   font-size: 0.95rem;
 }
 
-.info-value {
-  font-size: 1.05rem;
-}
 
 /* Bio Section */
 .bio-section {

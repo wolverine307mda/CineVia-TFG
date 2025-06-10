@@ -16,15 +16,23 @@ class EmailService(
     private val templateEngine: TemplateEngine
 ) {
 
-    // Enviar correo de bienvenida al registrarse
-    fun sendWelcomeEmail(to: String, name: String, email: String) {
+    fun sendWelcomeEmail(
+        to: String,
+        name: String,
+        email: String,
+        username: String,
+        registrationDate: LocalDateTime = LocalDateTime.now()
+    ) {
         val context = Context().apply {
             setVariable("name", name)
             setVariable("email", email)
+            setVariable("username", username)
+            setVariable("registrationDate", formatDateTime(registrationDate))
+            setVariable("currentYear", LocalDate.now().year)
+            setVariable("welcomeMessage", "¡Gracias por unirte a MovieTrip! Esperamos que disfrutes de la experiencia.")
         }
         val htmlContent = templateEngine.process("welcome-email", context)
-
-        sendEmail(to, "¡Bienvenido a nuestra aplicación!", htmlContent)
+        sendEmail(to, "¡Bienvenido a MovieTrip!", htmlContent)
     }
 
     fun sendLoginAlertEmail(

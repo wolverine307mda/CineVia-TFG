@@ -79,7 +79,7 @@ class ProduccionServiceImpl(
             }
             logger.info("[Servicio] TMDb encontró: overview='${tmdbMovie.overview}', voteAverage=${tmdbMovie.voteAverage}, posterPath='${tmdbMovie.posterPath}'")
         } else {
-            produccion.imagen = "https://storage-download.googleapis.com/movietrip-e3a91.firebasestorage.app/prucciones/produccion_pr111_2025-06-07T17:43:46.118486100.png"
+            produccion.imagen = "https://storage.cloud.google.com/movietrip-e3a91.firebasestorage.app/producciones/imagen_defecto.png?authuser=1"
             logger.info("[Servicio] TMDb no devolvió datos para '${request.titulo}'")
         }
 
@@ -155,7 +155,6 @@ class ProduccionServiceImpl(
             pageResult.map { produccionMapper.toProduccionResponse(it) }
         )
     }
-
 
     override fun filtrarProducciones(
         titulo: String?,

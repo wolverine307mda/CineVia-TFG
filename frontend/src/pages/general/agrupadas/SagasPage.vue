@@ -144,7 +144,7 @@
             </div>
           </div>
 
-          <!-- Filtro por imagen -->
+          <!-- Filtro por imagen
           <div class="filter-section">
             <div class="section-header" @click="toggleSection('image')">
               <i class="fas fa-image"></i>
@@ -167,7 +167,7 @@
                 </button>
               </div>
             </div>
-          </div>
+          </div>-->
         </div>
 
         <div class="modal-footer">

@@ -291,7 +291,7 @@ class ProduccionController(
 
         val time: LocalDateTime = LocalDateTime.now()
         val filename = "produccion_${id}_${time}.png"
-        val nuevaUrl = firebaseStorageService.uploadImage(file, "prucciones", filename)
+        val nuevaUrl = firebaseStorageService.uploadImage(file, "producciones", filename)
         produccionService.actualizarImagen(id, nuevaUrl)
         return ResponseEntity.ok(nuevaUrl)
     }

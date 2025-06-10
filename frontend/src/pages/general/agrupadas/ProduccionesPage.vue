@@ -348,15 +348,18 @@ export default {
         duracionMin: null,
         duracionMax: null,
       },
-      tiposProduccion: [],
-      categoriasDisponibles: [],
+      tiposProduccion: ["PELICULA", "SERIE", "CORTOMETRAGE"],
+      categoriasDisponibles: [
+        'FICCION', 'AVENTURA', 'COMEDIA', 'DRAMA', 'TERROR',
+        'CIENCIA_FICCION', 'FANTASIA', 'ROMANCE', 'DOCUMENTAL',
+        'ANIMACION', 'ACCION', 'CRIMEN', 'OTROS', 'MUSICAL', 'SUSPENSE'
+      ],
       clasificacionesEdad: []
     };
   },
   methods: {
     async fetchProducciones() {
       this.isLoading = true;
-
       // Preparar filtros (eliminar valores null o vacíos)
       const cleanFilters = Object.fromEntries(
           Object.entries(this.filters).filter(([_, v]) => v !== null && v !== '' && !(Array.isArray(v) && v.length === 0))
@@ -498,11 +501,11 @@ export default {
 
     // Métodos de formato que usan el servicio
     formatTipoProduccion(tipo) {
-      return ProduccionesService.formatTipoProduccion(tipo);
+      return tipo
     },
 
     formatCategoria(categoria) {
-      return ProduccionesService.formatCategoria(categoria);
+      return categoria
     },
 
     formatClasificacionEdad(clasificacion) {

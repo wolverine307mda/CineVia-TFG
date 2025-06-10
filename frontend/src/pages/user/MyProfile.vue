@@ -29,7 +29,7 @@
               <i class="fas fa-camera"></i>
             </button>
           </div>
-          <h2 class="profile-title">{{ user.nombre }}</h2>
+          <h2 class="profile-title">{{ user.nombre }} {{ user.apellido }}</h2>
           <p class="profile-subtitle">
             <span class="badge" :class="user.rol === 'ADMINISTRADOR' ? 'bg-admin' : 'bg-user'">
               {{ user.rol === 'ADMINISTRADOR' ? 'Administrador' : 'Usuario' }}
@@ -65,11 +65,8 @@
 
         <!-- Acciones -->
         <div class="profile-actions mt-4">
-          <button class="btn btn-primary w-100 mb-3" @click="showEditModal = true">
+          <button class="btn btn-primary w-100 mb-3" @click="openEditModal">
             <i class="fas fa-edit me-2"></i>Editar perfil
-          </button>
-          <button class="btn btn-outline-secondary w-100 mb-3" @click="changePassword">
-            <i class="fas fa-lock me-2"></i>Cambiar contraseña
           </button>
           <button v-if="isAdmin" class="btn btn-admin w-100" @click="adminPanel">
             <i class="fas fa-shield-alt me-2"></i>Panel de Administración
@@ -246,7 +243,8 @@ export default {
       nombre: '',
       apellido: '',
       telefono: '',
-      fechaNacimiento: ''
+      fechaNacimiento: '',
+      avatar: ''
     });
 
     const errors = ref({});
@@ -256,7 +254,6 @@ export default {
     const fileInput = ref(null);
     const previewContainer = ref(null);
     const imagePreview = ref(null);
-    const cropper = ref(null);
     const selectedFile = ref(null);
     const imagePreviewUrl = ref('');
     const isSavingAvatar = ref(false);
@@ -346,7 +343,8 @@ export default {
           nombre: editForm.value.nombre,
           apellido: editForm.value.apellido,
           telefono: editForm.value.telefono,
-          fechaNacimiento: editForm.value.fechaNacimiento
+          fechaNacimiento: editForm.value.fechaNacimiento,
+          avatar: editForm.value.avatar || user.value.avatar
         };
 
         await userService.updateUser(authStore.user.id, updateData);
@@ -362,35 +360,19 @@ export default {
       }
     };
 
-    // Métodos para editar avatar
-    const initCropper = () => {
-      if (imagePreview.value && !cropper.value) {
-        cropper.value = new Cropper(imagePreview.value, {
-          aspectRatio: 1,
-          viewMode: 1,
-          autoCropArea: 0.8,
-          responsive: true,
-          guides: false,
-          center: false,
-          background: false,
-          movable: true,
-          rotatable: true,
-          scalable: false,
-          zoomable: true,
-          zoomOnTouch: true,
-          zoomOnWheel: true,
-          cropBoxMovable: true,
-          cropBoxResizable: true,
-          toggleDragModeOnDblclick: false,
-          minContainerWidth: 300,
-          minContainerHeight: 300,
-          ready() {
-            updateImageStyle();
-          }
-        });
+    const handleDrop = (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        processFile(file);
       }
     };
 
+    const dragOver = (e) => {
+      e.preventDefault();
+    };
+
+// Quita todo lo de cropper y solo usa selectedFile
     const handleFileSelect = (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -405,90 +387,24 @@ export default {
         return;
       }
 
-      processFile(file);
-    };
-
-    const handleDrop = (e) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        processFile(file);
-      }
-    };
-
-    const dragOver = (e) => {
-      e.preventDefault();
-    };
-
-    const processFile = (file) => {
       selectedFile.value = file;
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imagePreviewUrl.value = e.target.result;
-        nextTick(() => {
-          initCropper();
-        });
-      };
-      reader.readAsDataURL(file);
-    };
-
-    const cancelSelection = () => {
-      selectedFile.value = null;
-      imagePreviewUrl.value = '';
-      if (cropper.value) {
-        cropper.value.destroy();
-        cropper.value = null;
-      }
-    };
-
-    const rotate = (degrees) => {
-      if (cropper.value) {
-        cropper.value.rotate(degrees);
-        rotation.value += degrees;
-        updateImageStyle();
-      }
-    };
-
-    const updateImageStyle = () => {
-      if (cropper.value) {
-        imageStyle.value = {
-          transform: `scale(${zoom.value}) rotate(${rotation.value}deg)`
-        };
-      }
+      imagePreviewUrl.value = URL.createObjectURL(file);
     };
 
     const saveAvatar = async () => {
-      if (!cropper.value) return;
+      if (!selectedFile.value) {
+        alert('Selecciona una imagen primero');
+        return;
+      }
 
       isSavingAvatar.value = true;
-
       try {
-        const canvas = cropper.value.getCroppedCanvas({
-          width: 400,
-          height: 400,
-          minWidth: 256,
-          minHeight: 256,
-          maxWidth: 1024,
-          maxHeight: 1024,
-          fillColor: '#fff',
-          imageSmoothingEnabled: true,
-          imageSmoothingQuality: 'high'
-        });
-
-        canvas.toBlob(async (blob) => {
-          const croppedFile = new File([blob], 'avatar.jpg', {
-            type: 'image/jpeg',
-            lastModified: Date.now()
-          });
-
-          const response = await userService.uploadAvatar(authStore.user.id, croppedFile);
-          await authStore.fetchCurrentUser();
-          showAvatarModal.value = false;
-        }, 'image/jpeg', 0.9);
+        await userService.uploadAvatar(authStore.user.id, selectedFile.value);
+        await authStore.fetchCurrentUser();
+        showAvatarModal.value = false;
       } catch (error) {
-        console.error('Error cropping image:', error);
-        alert('Ocurrió un error al procesar la imagen');
+        console.error('Error subiendo imagen:', error);
+        alert('Ocurrió un error al subir la imagen');
       } finally {
         isSavingAvatar.value = false;
       }
@@ -534,6 +450,12 @@ export default {
       }
     });
 
+    // Dentro de setup, antes del return:
+    const cancelSelection = () => {
+      selectedFile.value = null;
+      imagePreviewUrl.value = '';
+    };
+
     return {
       darkMode,
       defaultAvatar,
@@ -571,8 +493,6 @@ export default {
       handleDrop,
       dragOver,
       cancelSelection,
-      rotate,
-      updateImageStyle,
       saveAvatar
     };
   }

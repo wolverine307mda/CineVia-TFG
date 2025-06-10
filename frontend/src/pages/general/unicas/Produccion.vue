@@ -166,8 +166,11 @@
       <section class="movie-section full-width-section" style="margin: 4rem" v-if="movie.rodajesCompletos && movie.rodajesCompletos.length > 0">
         <h2 class="section-title">Ubicaciones de rodaje</h2>
         <div class="locations-container">
-          <div v-for="rodaje in movie.rodajesCompletos" :key="rodaje.id" class="location-card">
-            <div class="location-map" ref="mapContainer"></div>
+          <div v-for="(rodaje, index) in movie.rodajesCompletos" :key="rodaje.id" class="location-card">
+            <div
+                class="location-map"
+                :ref="el => registerMapContainer(el, index)"
+            ></div>
             <div class="location-info">
               <h3>{{ rodaje.ubicacion.nombre }}</h3>
               <p v-if="rodaje.notas" class="location-notes">{{ rodaje.notas }}</p>
@@ -193,9 +196,6 @@
               </div>
 
               <div class="location-actions">
-                <button class="btn btn-ver-mapa">
-                  <i class="fas fa-map-marker-alt"></i> Ver en mapa
-                </button>
                 <button
                     class="btn btn-gallery"
                     v-if="rodaje.imagenes && rodaje.imagenes.length > 0"
@@ -294,6 +294,7 @@ export default {
       error: null,
       mapsLoaded: false,
       showGalleryModal: false,
+      mapContainers: [],
       currentGalleryImages: [],
       currentGalleryTitle: '',
       currentImageIndex: 0,
@@ -316,6 +317,7 @@ export default {
     async loadProductionData() {
       this.loading = true;
       this.error = null;
+      this.mapContainers = [];
       try {
         const idProduccion = this.$route.params.id;
         this.movie = await peliculaService.fetchPeliculaCompleta(idProduccion);
@@ -418,7 +420,6 @@ export default {
     },
 
     loadMaps() {
-
       const loader = getGoogleMapsLoader();
       loader.load()
           .then(() => {
@@ -431,6 +432,12 @@ export default {
           });
     },
 
+    registerMapContainer(el, index) {
+      if (!this.mapContainers) this.mapContainers = [];
+      if (el) {
+        this.mapContainers[index] = el;
+      }
+    },
     initLocationMaps() {
       this.$nextTick(() => {
         if (!this.movie.rodajesCompletos) return;
@@ -438,26 +445,26 @@ export default {
         this.movie.rodajesCompletos.forEach((rodaje, index) => {
           if (!rodaje.ubicacion) return;
 
-          const mapContainer = this.$refs.mapContainer?.[index];
+          const mapContainer = this.mapContainers[index];
           if (!mapContainer) return;
 
           const map = new google.maps.Map(mapContainer, {
             center: {
               lat: rodaje.ubicacion.latitud,
-              lng: rodaje.ubicacion.longitud
+              lng: rodaje.ubicacion.longitud,
             },
             mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
             zoom: 12,
             disableDefaultUI: true,
           });
 
-          new google.maps.marker.AdvancedMarkerElement({
+          new google.maps.Marker({
             position: {
               lat: rodaje.ubicacion.latitud,
-              lng: rodaje.ubicacion.longitud
+              lng: rodaje.ubicacion.longitud,
             },
             map,
-            title: rodaje.ubicacion.nombre
+            title: rodaje.ubicacion.nombre,
           });
         });
       });

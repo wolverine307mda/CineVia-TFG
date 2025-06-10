@@ -494,6 +494,43 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.pagination-button {
+  background: var(--primary-color, #7e5bef);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-button:disabled {
+  background: #e2e8f0;
+  color: #a0aec0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.page-info {
+  font-size: 1rem;
+  color: var(--text-secondary, #64748b);
+  min-width: 120px;
+  text-align: center;
+}
 </style>
 
 <style scoped src="@/assets/styles/modalesAdmin.css" />

@@ -20,10 +20,11 @@ import AdminLayout from "@/layouts/AdminLayout.vue"
 import Dashboard from "@/pages/admin/Dashboard.vue"
 import UbicacionesAdminPage from "@/pages/admin/UbicacionesAdminPage.vue"
 import ProduccionesAdminPage from "@/pages/admin/ProduccionesAdminPage.vue"
-import NotFound from "@/pages/NotFound.vue"
+import NotFound from "@/pages/errors/NotFound.vue"
 import SagasAdminPages from "@/pages/admin/SagasAdminPages.vue"
 import UsuariosAdminPages from "@/pages/admin/UsuariosAdmin.vue"
 import ProfesionalesAdminPage from "@/pages/admin/ProfesionalesAdminPage.vue"
+import NotAutoriced from "@/pages/errors/NotAutoriced.vue";
 
 const routes = [
     {
@@ -158,6 +159,12 @@ const routes = [
         meta: { public: true }
     },
     {
+        path: '/not-authorized',
+        name: 'NotAuthorized',
+        component: NotAutoriced,
+        meta: { public: true }
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: NotFound,
@@ -205,7 +212,7 @@ router.beforeEach(async (to, from, next) => {
 
     // Rutas que requieren ser admin
     if (to.meta.requiresAdmin && !authStore.isAdmin) {
-        return next(from.path || '/')
+        return next('/not-authorized')
     }
 
     next()

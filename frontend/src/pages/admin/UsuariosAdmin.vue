@@ -128,7 +128,14 @@
           <td class="user-cell actions-cell">
             <div class="action-buttons">
               <!-- EDITAR -->
-              <button v-if=" isAdmin && currentUserId !== user.id && ( user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin')" @click="openEditModal(user)" class="icon-button edit-button" title="Editar" >
+              <!-- EDITAR -->
+              <button
+                  v-if="currentUserId === user.id
+       || (isAdmin
+            && (user.rol !== 'ADMINISTRADOR' || currentUsername === 'superAdmin'))"
+                  @click="openEditModal(user)"
+                  class="icon-button edit-button"
+                  title="Editar">
                 <i class="fas fa-edit"></i>
               </button>
 
@@ -840,6 +847,7 @@ export default {
   background-color: #fff5f5;
 }
 
+
 /* Paginación */
 .pagination-container {
   display: flex;
@@ -881,7 +889,6 @@ export default {
   min-width: 120px;
   text-align: center;
 }
-
 /* ==================== */
 /* ESTILOS PARA MODO OSCURO */
 /* ==================== */

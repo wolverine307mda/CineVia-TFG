@@ -43,7 +43,7 @@ data class Usuario(
     @Column(nullable = true)
     var fechaNacimiento: LocalDate? = null,
 
-    @Column(nullable = true, length = 1024)
+    @Column(columnDefinition = "TEXT", nullable = true)
     var avatar: String? = null,
 
     @Column(nullable = true)

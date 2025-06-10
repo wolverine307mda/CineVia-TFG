@@ -65,20 +65,6 @@ describe('Autenticación - MovieTrip', () => {
             cy.get('button.login-button').contains('Iniciar sesión');
         });
 
-        it('ofrece login social con Google y Facebook', () => {
-            cy.get('button.social-button.google')
-                .should('have.attr', 'type', 'button')
-                .and('contain.text', 'Google')
-                .find('i.fab.fa-google')
-                .should('exist');
-
-            cy.get('button.social-button.facebook')
-                .should('have.attr', 'type', 'button')
-                .and('contain.text', 'Facebook')
-                .find('i.fab.fa-facebook-f')
-                .should('exist');
-        });
-
         it('tiene enlace para registrarse que lleva a /auth/register', () => {
             cy.get('div.signup-link a')
                 .should('have.attr', 'href', '/auth/register')
@@ -322,20 +308,6 @@ describe('Autenticación - MovieTrip', () => {
                 it('muestra el botón "Iniciar sesión" habilitado', () => {
                     cy.get('button.login-button').should('be.visible').and('not.be.disabled');
                     cy.get('button.login-button').contains('Iniciar sesión');
-                });
-
-                it('ofrece login social con Google y Facebook', () => {
-                    cy.get('button.social-button.google')
-                        .should('have.attr', 'type', 'button')
-                        .and('contain.text', 'Google')
-                        .find('i.fab.fa-google')
-                        .should('exist');
-
-                    cy.get('button.social-button.facebook')
-                        .should('have.attr', 'type', 'button')
-                        .and('contain.text', 'Facebook')
-                        .find('i.fab.fa-facebook-f')
-                        .should('exist');
                 });
 
                 it('tiene enlace para registrarse que lleva a /auth/register', () => {

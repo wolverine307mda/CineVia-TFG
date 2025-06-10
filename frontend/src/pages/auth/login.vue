@@ -85,21 +85,6 @@
             <span v-else><i class="fas fa-spinner fa-spin" /> Procesando...</span>
           </button>
 
-          <!-- Divider -->
-          <div class="divider">
-            <span>o continúa con</span>
-          </div>
-
-          <!-- Social login -->
-          <div class="social-login">
-            <button type="button" class="social-button google" @click="socialLogin('google')">
-              <i class="fab fa-google" /> Google
-            </button>
-            <button type="button" class="social-button facebook" @click="socialLogin('facebook')">
-              <i class="fab fa-facebook-f" /> Facebook
-            </button>
-          </div>
-
           <!-- Sign up link -->
           <div class="signup-link">
             ¿No tienes una cuenta? <a href="/auth/register">Regístrate</a>
@@ -116,6 +101,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import AuthLayout from "@/layouts/AuthLayout.vue";
 import { useDeviceStore } from '@/stores/device';
+import toast from "@/utils/toast.js";
 
 export default {
   components: { AuthLayout },
@@ -180,21 +166,24 @@ export default {
         await router.push(targetRoute);
 
       } catch (error) {
-        console.error('Error en el login:', error);
-
-        // Manejar diferentes tipos de errores
         if (error.response) {
-          if (error.response.status === 401) {
+          const status = error.response.status;
+          const message = error.response.data?.message || '';
+
+          if (status === 401) {
             loginError.value = 'Correo electrónico o contraseña incorrectos';
-          } else if (error.response.status === 403) {
-            loginError.value = 'Cuenta desactivada o no verificada';
+          } else if (status === 403) {
+            if (message === 'Usuario desactivado') {
+              toast.error('Tu cuenta ha sido desactivada. Contacta con soporte.');
+              loginError.value = 'Tu cuenta ha sido desactivada. Contacta con soporte.';
+            } else {
+              toast.error('Acceso denegado. Verifica tu cuenta.');
+              loginError.value = 'Acceso denegado. Verifica tu cuenta.';
+            }
           } else {
+            toast.error('Error en el servidor. Por favor intenta más tarde.');
             loginError.value = 'Error en el servidor. Por favor intenta más tarde.';
           }
-        } else if (error.message) {
-          loginError.value = error.message;
-        } else {
-          loginError.value = 'Error desconocido. Por favor intenta nuevamente.';
         }
       } finally {
         loading.value = false;

@@ -10,26 +10,9 @@
           <h1 class="page-title">{{ currentRouteName }}</h1>
         </div>
         <div class="topbar-right">
-          <div class="user-profile" @click="toggleDropdown" ref="userProfile">
+          <div class="user-profile" @click="goToProfile">
             <img :src="user.avatar || defaultAvatar" alt="User" class="avatar">
             <span class="user-name">{{ user.nombre }}</span>
-            <i class="fas fa-chevron-down dropdown-icon" :class="{ 'rotate': showDropdown }"></i>
-
-            <transition name="dropdown">
-              <div class="dropdown-menu" v-show="showDropdown">
-                <ul>
-                  <li @click="goToHome">
-                    <i class="fas fa-home"></i> Ir a Inicio
-                  </li>
-                  <li @click="goToProfile">
-                    <i class="fas fa-user"></i> Ver Perfil
-                  </li>
-                  <li @click="logout">
-                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-                  </li>
-                </ul>
-              </div>
-            </transition>
           </div>
           <button class="theme-toggle" @click="toggleDarkMode">
             <i :class="darkMode ? 'fas fa-sun' : 'fas fa-moon'"></i>

@@ -51,7 +51,6 @@ export async function signin(email, password) {
 
 export async function signup(userData) {
     try {
-        // Validación de contraseña en frontend antes de enviar
         if (userData.password.length < 6) {
             throw new Error('La contraseña debe tener al menos 6 caracteres');
         }
@@ -88,7 +87,12 @@ export async function signup(userData) {
         let errorMessage = 'Error en el registro';
 
         if (error.response) {
-            if (error.response.status === 400 && error.response.data?.errors) {
+            if (
+                error.response.data?.message &&
+                error.response.data.message.includes('El correo electrónico ya está registrado')
+            ) {
+                errorMessage = error.response.data.message;
+            } else if (error.response.status === 400 && error.response.data?.errors) {
                 const errors = Object.values(error.response.data.errors).flat();
                 errorMessage = errors.join(', ');
             } else if (error.response.data?.message) {

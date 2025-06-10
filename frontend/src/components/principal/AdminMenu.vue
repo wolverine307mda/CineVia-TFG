@@ -284,6 +284,7 @@ export default {
     logout() {
       const authStore = useAuthStore();
       authStore.logout();
+      this.showToast('info', 'Sesión cerrada', 'Has cerrado sesión correctamente');
       router.push('/');
     },
     showToast(type, title, message) {
