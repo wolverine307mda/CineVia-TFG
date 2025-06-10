@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionRequest
 import org.wolve.geofilm.producciones.participacion.dto.ParticipacionResponse
@@ -35,6 +36,7 @@ class ParticipacionController(
                 content = [Content()])
         ]
     )
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PostMapping
     fun createParticipacion(@RequestBody request: ParticipacionRequest): ResponseEntity<ParticipacionResponse> {
         val response = participacionService.createParticipacion(request)
@@ -86,6 +88,7 @@ class ParticipacionController(
                 content = [Content()])
         ]
     )
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/produccion/{produccionId}")
     fun getByProduccion(
         @PathVariable produccionId: String,
@@ -129,6 +132,7 @@ class ParticipacionController(
         ]
     )
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun updateParticipacion(
         @PathVariable id: String,
         @RequestBody request: ParticipacionRequest
@@ -146,6 +150,7 @@ class ParticipacionController(
                 content = [Content()])
         ]
     )
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
     fun deleteParticipacion(@PathVariable id: String): ResponseEntity<Void> {
         participacionService.deleteParticipacion(id)

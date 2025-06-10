@@ -4,6 +4,7 @@ import org.springframework.core.io.FileSystemResource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.wolve.geofilm.utils.storage.backup.service.BackupService
 import javax.annotation.security.PermitAll
@@ -11,6 +12,7 @@ import javax.annotation.security.PermitAll
 @RestController
 @PermitAll
 @RequestMapping("/api/backups")
+@PreAuthorize("hasRole('ADMINISTRADOR')")
 class BackupController(
     private val backupService: BackupService
 ) {

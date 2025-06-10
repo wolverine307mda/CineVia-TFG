@@ -1,6 +1,7 @@
 package org.wolve.geofilm.producciones.rodajes.controller
 
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.rodajes.dto.request.RodajeRequest
@@ -22,18 +23,21 @@ class RodajeController(
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun create(@RequestBody request: RodajeRequest): ResponseEntity<RodajeResponse> {
         val rodaje = rodajeService.create(request)
         return ResponseEntity.ok(rodaje)
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun update(@PathVariable id: String, @RequestBody request: RodajeRequest): ResponseEntity<RodajeResponse> {
         val updated = rodajeService.update(id, request)
         return ResponseEntity.ok(updated)
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun delete(@PathVariable id: String): ResponseEntity<Void> {
         rodajeService.delete(id)
         return ResponseEntity.noContent().build()
@@ -50,6 +54,7 @@ class RodajeController(
     }
 
     @PostMapping("/upload-image-temp")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun uploadTempRodajeImage(
         @RequestParam("file") file: MultipartFile
     ): ResponseEntity<String> {

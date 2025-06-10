@@ -165,32 +165,6 @@
                 <img :src="imagePreviewUrl" ref="imagePreview" class="original-image" :style="imageStyle">
               </div>
             </div>
-
-            <div class="controls">
-              <div class="zoom-control">
-                <label>Zoom</label>
-                <input
-                    type="range"
-                    min="1"
-                    max="3"
-                    step="0.1"
-                    v-model="zoom"
-                    @input="updateImageStyle"
-                >
-              </div>
-
-              <div class="rotation-control">
-                <label>Rotación</label>
-                <div class="rotation-buttons">
-                  <button @click="rotate(-90)" title="Rotar 90° izquierda">
-                    <i class="fas fa-undo"></i>
-                  </button>
-                  <button @click="rotate(90)" title="Rotar 90° derecha">
-                    <i class="fas fa-redo"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

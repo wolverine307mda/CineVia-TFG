@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionFilterParams
 import org.wolve.geofilm.producciones.ubicaciones.dto.UbicacionRequest
@@ -88,6 +89,7 @@ class UbicacionController(
         ]
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun createUbicacion(@RequestBody request: UbicacionRequest): ResponseEntity<UbicacionResponse> {
         val ubicacionResponse = ubicacionService.createUbicacion(request)
         return ResponseEntity.status(HttpStatus.CREATED).body(ubicacionResponse)
@@ -103,6 +105,7 @@ class UbicacionController(
                 content = [Content()])
         ]
     )
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PutMapping("/{id}")
     fun updateUbicacion(
         @PathVariable id: String,
@@ -125,6 +128,7 @@ class UbicacionController(
                 content = [Content()])
         ]
     )
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
     fun deleteUbicacion(@PathVariable id: String): ResponseEntity<Void> {
         ubicacionService.deleteUbicacion(id)

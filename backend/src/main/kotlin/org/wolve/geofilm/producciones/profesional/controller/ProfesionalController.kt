@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.profesional.dto.ProfesionalRequest
@@ -100,6 +101,7 @@ class ProfesionalController(
         ]
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun createProfesional(
         @RequestBody request: ProfesionalRequest
     ): ResponseEntity<ProfesionalResponse> {
@@ -129,6 +131,7 @@ class ProfesionalController(
         ]
     )
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun updateProfesional(
         @PathVariable id: String,
         @RequestBody request: ProfesionalRequest
@@ -152,6 +155,7 @@ class ProfesionalController(
         ]
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun deleteProfesional(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             profesionalService.deleteProfesional(id)
@@ -202,6 +206,7 @@ class ProfesionalController(
     }
 
     @PostMapping("/upload-image-temp")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun uploadTempProfesionalImage(
         @RequestParam("file") file: MultipartFile,
         @RequestParam(name = "oldUrl", required = false) oldUrl: String?

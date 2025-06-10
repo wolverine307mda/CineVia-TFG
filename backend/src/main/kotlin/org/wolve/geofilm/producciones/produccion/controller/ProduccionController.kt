@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.produccion.dto.ProduccionCompletaResponse
@@ -99,6 +100,7 @@ class ProduccionController(
         ]
     )
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun createProduccion(
         @RequestBody request: ProduccionRequest
     ): ResponseEntity<ProduccionResponse> {
@@ -128,6 +130,7 @@ class ProduccionController(
         ]
     )
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun updateProduccion(
         @PathVariable id: String,
         @RequestBody request: ProduccionRequest
@@ -157,6 +160,7 @@ class ProduccionController(
         ]
     )
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun deleteProduccion(@PathVariable id: String): ResponseEntity<Void> {
         return try {
             produccionService.deleteProduccion(id)
@@ -269,6 +273,7 @@ class ProduccionController(
     }
 
     @PostMapping("/{id}/upload-image")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun uploadProduccionImage(
         @PathVariable id: String,
         @RequestParam("file") file: MultipartFile
@@ -295,5 +300,4 @@ class ProduccionController(
         produccionService.actualizarImagen(id, nuevaUrl)
         return ResponseEntity.ok(nuevaUrl)
     }
-
 }

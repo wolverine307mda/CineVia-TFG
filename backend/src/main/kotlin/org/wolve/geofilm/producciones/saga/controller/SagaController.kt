@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import org.wolve.geofilm.producciones.saga.dto.SagaFilterParams
@@ -103,6 +104,7 @@ class SagaController(
         ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = [Content()])
     ])
     @PostMapping
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun createSaga(
         @RequestBody request: SagaRequest
     ): ResponseEntity<SagaResponse> {
@@ -117,6 +119,7 @@ class SagaController(
         ApiResponse(responseCode = "404", description = "Saga no encontrada", content = [Content()])
     ])
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun updateSaga(
         @Parameter(description = "ID de la saga") @PathVariable id: String,
         @RequestBody request: SagaRequest
@@ -132,6 +135,7 @@ class SagaController(
         ApiResponse(responseCode = "404", description = "Saga no encontrada", content = [Content()])
     ])
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun deleteSaga(
         @Parameter(description = "ID de la saga") @PathVariable id: String
     ): ResponseEntity<Void> {
@@ -156,6 +160,7 @@ class SagaController(
     }
 
     @PostMapping("/{sagaId}/producciones/{produccionId}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun agregarProduccionASaga(
         @PathVariable sagaId: String,
         @PathVariable produccionId: String
@@ -163,7 +168,9 @@ class SagaController(
         sagaService.agregarProduccionASaga(sagaId, produccionId)
         return ResponseEntity.ok().build()
     }
+
     @DeleteMapping("/{sagaId}/producciones/{produccionId}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun eliminarProduccionDeSaga(
         @PathVariable produccionId: String
     ): ResponseEntity<Void> {
@@ -172,6 +179,7 @@ class SagaController(
     }
 
     @PostMapping("/upload-image-temp")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun uploadTempSagaImage(
         @RequestParam("file") file: MultipartFile,
         @RequestParam(name = "oldUrl", required = false) oldUrl: String?
