@@ -167,16 +167,11 @@
             </div>
           </div>
         </div>
-
         <div class="modal-footer">
           <button class="btn btn-cancel" @click="cancelSelection" v-if="selectedFile">
             <i class="fas fa-times me-2"></i>Cancelar
           </button>
-          <button
-              class="btn btn-save"
-              @click="saveAvatar"
-              :disabled="!selectedFile || isSavingAvatar"
-          >
+          <button class="btn btn-save" @click="saveAvatar" :disabled="!selectedFile || isSavingAvatar">
             <template v-if="isSavingAvatar">
               <i class="fas fa-spinner fa-spin me-2"></i>Guardando...
             </template>

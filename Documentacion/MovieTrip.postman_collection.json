@@ -1,0 +1,2034 @@
+{
+	"info": {
+		"_postman_id": "9296d2c8-1508-4761-8d8f-3b3d32ca85d9",
+		"name": "MovieTrip",
+		"description": "Colección generada a partir de la definición OpenAPI proporcionada.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38648745"
+	},
+	"item": [
+		{
+			"name": "Profesionales",
+			"item": [
+				{
+					"name": "Get Profesional by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del profesional"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profesional",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"foto\": \"\",\n  \"fechaNacimiento\": \"\",\n  \"fechaInicio\": \"\",\n  \"lugarNacimiento\": \"\",\n  \"biografia\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del profesional"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Profesional",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del profesional"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Profesionales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Profesional",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"foto\": \"\",\n  \"fechaNacimiento\": \"\",\n  \"fechaInicio\": \"\",\n  \"lugarNacimiento\": \"\",\n  \"biografia\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Profesional Temp Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/upload-image-temp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								"upload-image-temp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Profesionales",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/filtrar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								"filtrar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Profesionales by Nombre",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/profesionales/buscar?nombre=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"profesionales",
+								"buscar"
+							],
+							"query": [
+								{
+									"key": "nombre",
+									"value": "",
+									"description": "Nombre a buscar"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "Verify Reset PIN",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\",\n  \"pin\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/verify-reset-pin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"verify-reset-pin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sign Up",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"\",\n  \"firstName\": \"\",\n  \"lastName\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"phone\": \"\",\n  \"avatar\": \"\",\n  \"fechaNacimiento\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/signup",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sign In",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\",\n  \"password\": \"\",\n  \"deviceInfo\": {\n    \"type\": \"\",\n    \"os\": \"\",\n    \"browser\": \"\",\n    \"userAgent\": \"\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/signin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"signin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\",\n  \"pin\": \"\",\n  \"newPassword\": \"\",\n  \"confirmPassword\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/reset-password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"reset-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request Password Reset",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/request-password-reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"request-password-reset"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Participaciones",
+			"item": [
+				{
+					"name": "Get Participación by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la participación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Participación",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produccionId\": \"\",\n  \"profesionalId\": \"\",\n  \"rol\": \"\",\n  \"papel\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la participación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Participación",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la participación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Participaciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Participación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produccionId\": \"\",\n  \"profesionalId\": \"\",\n  \"rol\": \"\",\n  \"papel\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Participaciones by Profesional ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones/profesional/:profesionalId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones",
+								"profesional",
+								":profesionalId"
+							],
+							"variable": [
+								{
+									"key": "profesionalId",
+									"value": "456",
+									"description": "ID del profesional"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Participaciones by Producción ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/participaciones/produccion/:produccionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"participaciones",
+								"produccion",
+								":produccionId"
+							],
+							"variable": [
+								{
+									"key": "produccionId",
+									"value": "789",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sagas",
+			"item": [
+				{
+					"name": "Get Saga by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la saga"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Saga",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"descripcion\": \"\",\n  \"isAcabada\": false,\n  \"fechaInicio\": \"\",\n  \"fechaFin\": \"\",\n  \"imagen\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la saga"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Saga",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la saga"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Sagas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Saga",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"descripcion\": \"\",\n  \"isAcabada\": false,\n  \"fechaInicio\": \"\",\n  \"fechaFin\": \"\",\n  \"imagen\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Producción to Saga",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/:sagaId/producciones/:produccionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								":sagaId",
+								"producciones",
+								":produccionId"
+							],
+							"variable": [
+								{
+									"key": "sagaId",
+									"value": "123",
+									"description": "ID de la saga"
+								},
+								{
+									"key": "produccionId",
+									"value": "456",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Producción from Saga",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/:sagaId/producciones/:produccionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								":sagaId",
+								"producciones",
+								":produccionId"
+							],
+							"variable": [
+								{
+									"key": "sagaId",
+									"value": "123",
+									"description": "ID de la saga"
+								},
+								{
+									"key": "produccionId",
+									"value": "456",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Saga Temp Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/upload-image-temp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								"upload-image-temp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Sagas Paginated",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/paginated",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								"paginated"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Sagas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/filter",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								"filter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Saga Exists by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/exists/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								"exists",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la saga"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Saga Exists by Nombre",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sagas/exists/nombre/:nombre",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sagas",
+								"exists",
+								"nombre",
+								":nombre"
+							],
+							"variable": [
+								{
+									"key": "nombre",
+									"value": "",
+									"description": "Nombre de la saga"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Ubicaciones",
+			"item": [
+				{
+					"name": "Get Ubicación by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la ubicación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Ubicación",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"latitud\": 0.0,\n  \"longitud\": 0.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la ubicación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Ubicación",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la ubicación"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Ubicaciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Ubicación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"latitud\": 0.0,\n  \"longitud\": 0.0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Ubicaciones",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones/filter",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones",
+								"filter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Ubicaciones (No Pagination)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ubicaciones/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ubicaciones",
+								"all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Producciones",
+			"item": [
+				{
+					"name": "Get Producción by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Producción",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"\",\n  \"tipo\": \"\",\n  \"estreno\": \"\",\n  \"duracion\": 0,\n  \"sinopsis\": \"\",\n  \"imagen\": \"\",\n  \"informacion\": \"\",\n  \"puntuacion\": 0,\n  \"categorias\": [],\n  \"clasificacionEdad\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Producción",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Producciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Producción",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"titulo\": \"\",\n  \"tipo\": \"\",\n  \"estreno\": \"\",\n  \"duracion\": 0,\n  \"sinopsis\": \"\",\n  \"imagen\": \"\",\n  \"informacion\": \"\",\n  \"puntuacion\": 0,\n  \"categorias\": [],\n  \"clasificacionEdad\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Producción Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/:id/upload-image",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								":id",
+								"upload-image"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Producciones Tipos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/tipos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"tipos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Producciones",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/filtrar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"filtrar"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Producción Completa by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/completa/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"completa",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Clasificaciones de Edad",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/clasificaciones-edad",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"clasificaciones-edad"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Categorías",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/categorias",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"categorias"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Producciones (No Pagination)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/producciones/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"producciones",
+								"all"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Usuarios",
+			"item": [
+				{
+					"name": "Get Usuario by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Usuario",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"\",\n  \"apellido\": \"\",\n  \"telefono\": \"\",\n  \"rol\": \"\",\n  \"fechaNacimiento\": \"\",\n  \"avatar\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"nombre\": \"\",\n  \"apellido\": \"\",\n  \"rol\": \"\",\n  \"telefono\": \"\",\n  \"fechaNacimiento\": \"\",\n  \"avatar\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Usuario Avatar",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/:id/upload-avatar",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id",
+								"upload-avatar"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Restore Usuario",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/restore/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"restore",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Admin Usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"\",\n  \"email\": \"\",\n  \"password\": \"\",\n  \"nombre\": \"\",\n  \"apellido\": \"\",\n  \"rol\": \"\",\n  \"telefono\": \"\",\n  \"fechaNacimiento\": \"\",\n  \"avatar\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/admin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"admin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User (Me)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter Usuarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/filter",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"filter"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Username Availability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/check-username?username=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"check-username"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "",
+									"description": "Username a verificar"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check Email Availability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/check-email?email=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"check-email"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "",
+									"description": "Email a verificar"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Soft Delete Usuario",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/soft/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"soft",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del usuario"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rodajes",
+			"item": [
+				{
+					"name": "Get Rodaje by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del rodaje"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Rodaje",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produccionId\": \"\",\n  \"ubicacionId\": \"\",\n  \"notas\": \"\",\n  \"imagenes\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del rodaje"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Rodaje",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "123",
+									"description": "ID del rodaje"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rodaje",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"produccionId\": \"\",\n  \"ubicacionId\": \"\",\n  \"notas\": \"\",\n  \"imagenes\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Rodaje Temp Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes/upload-image-temp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes",
+								"upload-image-temp"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rodajes by Producción ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/rodajes/produccion/:produccionId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rodajes",
+								"produccion",
+								":produccionId"
+							],
+							"variable": [
+								{
+									"key": "produccionId",
+									"value": "456",
+									"description": "ID de la producción"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Backups",
+			"item": [
+				{
+					"name": "Import Backup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"value": "",
+									"type": "file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/backups/import",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"backups",
+								"import"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Backups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/backups",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"backups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Export Backups",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/backups/export",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"backups",
+								"export"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Backup by Filename",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/backups/download/:fileName",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"backups",
+								"download",
+								":fileName"
+							],
+							"variable": [
+								{
+									"key": "fileName",
+									"value": "",
+									"description": "Nombre del archivo a descargar"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

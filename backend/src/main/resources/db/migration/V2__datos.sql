@@ -39,7 +39,11 @@ Algunos personajes y referencias aparecen en ambos universos, creando una red de
 
 La serie inició en 1996 con el estreno de Misión imposible y relata las misiones de Hunt, quien es forzado a encargarse del equipo principal de la IMF después de que este sea traicionado en la primera cinta de la serie. A diferencia de la serie televisiva que gira alrededor de varios personajes, las películas se centran en un personaje principal (Hunt), aunque otros personajes como Luther Stickell (interpretado por Ving Rhames) y Benji Dunn (interpretado por Simon Pegg) poseen papeles recurrentes a lo largo de la serie cinematográfica.', '1996-05-22', NULL, false, 'https://m.media-amazon.com/images/S/pv-target-images/1b642f970195bc58824ddcb57315348cf896e4468dc10ab61a8e7ff537e40d67.jpg'),
 ('s015', 'Fast & Furious', 'Fast & Furious (también conocida como Rápidos y furiosos en Hispanoamérica, y The Fast and Furious: A todo gas en España) es una franquicia de medios estadounidense centrada en una serie de películas de acción que se ocupan en gran medida de automóviles. La saga también incluye cortometrajes, una serie de televisión, espectáculos en vivo, videojuegos y atracciones de parques temáticos. Está distribuida por Universal Pictures. Si bien la saga ha tenido una baja muy importante del elenco con la muerte de Paul Walker en 2013, Vin Diesel continuó con las series de películas que le prometió al actor ya fallecido, recalcando que junto con el resto del elenco consideran que aun la saga está muy activa.', '2001-06-22', NULL, false, 'https://www.universalpictures.es/tl_files/content/movies/fast9/fast9_header_mobile.jpg'),
-('s016', 'Canción de Hielo y Fuego', 'Una saga de fantasía épica creada por George R.R. Martin que incluye las novelas "Juego de Tronos" y sus secuelas, adaptadas a la televisión como "Game of Thrones" y su precuela "House of the Dragon". La historia se desarrolla en los continentes ficticios de Poniente y Essos, siguiendo las luchas de poder entre familias nobles por el control del Trono de Hierro.', '2011-04-17', '2022-08-21', false, 'https://m.media-amazon.com/images/M/MV5BN2IzYzBiOTQtNGZmMi00NDI5LTgxMzMtN2EzZjA1NjhlOGMxXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg');
+('s016', 'Canción de Hielo y Fuego', 'Una saga de fantasía épica creada por George R.R. Martin que incluye las novelas "Juego de Tronos" y sus secuelas, adaptadas a la televisión como "Game of Thrones" y su precuela "House of the Dragon". La historia se desarrolla en los continentes ficticios de Poniente y Essos, siguiendo las luchas de poder entre familias nobles por el control del Trono de Hierro.', '2011-04-17', '2022-08-21', false, 'https://m.media-amazon.com/images/M/MV5BN2IzYzBiOTQtNGZmMi00NDI5LTgxMzMtN2EzZjA1NjhlOGMxXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg'),
+('S017', 'El Hobbit',
+    'La trilogía cinematográfica de El Hobbit, dirigida por Peter Jackson y basada en la novela homónima de J. R. R. Tolkien, sirve como precuela a la trilogía de El Señor de los Anillos. Está compuesta por tres películas: "El Hobbit: Un viaje inesperado" (2012), "El Hobbit: La desolación de Smaug" (2013) y "El Hobbit: La batalla de los cinco ejércitos" (2014). La historia sigue al hobbit Bilbo Bolsón en una épica aventura junto a un grupo de enanos liderados por Thorin Escudo de Roble y el mago Gandalf, con el objetivo de recuperar el reino perdido de Erebor del temible dragón Smaug. La saga explora temas de valentía, codicia y redención, y expande significativamente el universo de la Tierra Media tanto a nivel narrativo como visual.',
+    '2012-12-14', '2014-12-17', true,
+    'https://www.parquewarner.com/content/dam/war/images/blog/poster-elhobbit-13enanos.jpg');
 
 -- Insertar tus producciones de ejemplo (películas)
 INSERT INTO producciones (id, titulo, tipo, estreno, duracion, clasificacion_edad, sinopsis, informacion, imagen, saga_id, puntuacion) VALUES
@@ -328,6 +332,8 @@ INSERT INTO profesionales (id, nombre, fecha_nacimiento, lugar_nacimiento, biogr
 ('p415', 'Emily Carey', '2003-04-30', 'London, England', 'Actriz británica que interpreta a la joven Alicent Hightower.', 'https://static.wikia.nocookie.net/doblaje/images/e/e5/Emily_Carey.jpg/revision/latest?cb=20240627054317&path-prefix=es', '2014-01-01'),
 ('p416', 'Ryan Condal', '1979-11-25', 'Hasbrouck Heights', 'Creador y showrunner de La Casa del Dragón.', 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcRtaZZ2kTRe_VouqM7P2rM9_Vox3va9_Ut7Bfb_jkzXmeQ-hp7D9McbeCYQJ0I4PsRmGW9RLtvta7Spr9RmyqOqsYQ-MXY1W7WvIWyXTNc', '2010-01-01'),
 ('p417', 'Miguel Sapochnik', '1974-07-01', 'London, England', 'Director y showrunner de La Casa del Dragón.', 'https://i0.wp.com/cdn.visavis.com.ar/wp-content/uploads/2022/09/28235003/Miguel-Sapochnik.jpg?fit=520%2C346&ssl=1', '2000-01-01'),
+('p501', 'Martin Freeman', '1971-09-08', 'Aldershot, Hampshire, Inglaterra', 'Actor británico conocido por su papel como Bilbo Bolsón en El Hobbit y Watson en Sherlock.', 'https://static.wikia.nocookie.net/disney/images/8/82/Freeman.jpg/revision/latest?cb=20200410093146&path-prefix=es', '1997-01-01'),
+('p502', 'Ian McKellen', '1939-05-25', 'Burnley, Lancashire, Inglaterra', 'Actor británico reconocido por interpretar a Gandalf en El Señor de los Anillos y El Hobbit.', 'https://los40.com/resizer/v2/MLUDEYYICNOPZMWZCPGQCC4KSA.jpg?auth=3727e45a434b37dd832276c15f81ae403356ebc08c633b265468172b600153d1&quality=70&width=1200', '1961-01-01'),
 
 -- Directors
 ('p301', 'Louis Leterrier', '1973-06-17', 'Paris, France', 'Director de The Incredible Hulk.', 'https://www.lavanguardia.com/peliculas-series/images/profile/1973/6/w1280/pJl1hNtZOIxrdzQjwGlicWWGSXg.jpg', '2000-01-01'),
@@ -931,7 +937,13 @@ INSERT INTO ubicaciones (id, nombre, latitud, longitud) VALUES
 ('u307', 'Derbyshire, England', 53.1048, -1.5624),
 ('u308', 'Cáceres, Spain', 39.4753, -6.3724),
 ('u309', 'Trujillo, Spain', 39.4596, -5.8804),
-('u310', 'Portugal', 39.3999, -8.2245);
+('u310', 'Portugal', 39.3999, -8.2245),
+
+('u320', 'Matamata - Hobbiton, Nueva Zelanda', -37.8722, 175.6820),
+('u321', 'Pelorus River - Marlborough, Nueva Zelanda', -41.2985, 173.6532),
+('u322', 'Mount Ruapehu - Tongariro National Park, Nueva Zelanda', -39.2810, 175.5706),
+('u323', 'Kaitoke Regional Park - Wellington, Nueva Zelanda', -41.1007, 175.2195),
+('u324', 'Lake Pukaki - Canterbury, Nueva Zelanda', -44.0886, 170.1670);
 
 -- Insertar rodajes con el modelo actual
 INSERT INTO rodajes (id, produccion_id, ubicacion_id, notas, created_at, updated_at) VALUES

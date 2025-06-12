@@ -33,14 +33,40 @@
             </select>
           </div>
 
-          <div class="form-field">
-            <label class="form-label">Fecha de Estreno <span class="required">*</span></label>
-            <input
-                v-model="formData.estreno"
-                type="date"
-                class="form-input"
+          <div class="form-row">
+            <div class="form-field form-col">
+              <label class="form-label">Fecha de Estreno <span class="required">*</span></label>
+              <input
+                  v-model="formData.estreno"
+                  type="date"
+                  class="form-input"
+                  required
+                  :disabled="isUploading || isSaving"
+              >
+            </div>
+
+            <div class="form-field form-col">
+              <label class="form-label">Duración (minutos) <span class="required">*</span></label>
+              <input
+                  v-model="formData.duracion"
+                  type="number"
+                  min="1"
+                  class="form-input"
+                  required
+                  :disabled="isUploading || isSaving"
+              >
+            </div>
+          </div>
+
+          <div class="form-field" style="display: none">
+            <label class="form-label">Sinopsis <span class="required">*</span></label>
+            <textarea
+                v-model="formData.sinopsis"
+                rows="3"
+                class="form-textarea"
                 required
-            >
+                :disabled="isUploading || isSaving"
+            ></textarea>
           </div>
 
           <div class="form-field">
@@ -100,6 +126,7 @@ export default {
     return {
       formData: {
         titulo: '',
+        duracion: 120,
         tipo: 'PELICULA',
         estreno: new Date().toISOString().split('T')[0],
         categorias: [],
@@ -135,6 +162,7 @@ export default {
     resetForm() {
       this.formData = {
         titulo: '',
+        duracion: 120,
         tipo: 'PELICULA',
         estreno: new Date().toISOString().split('T')[0],
         categorias: [],

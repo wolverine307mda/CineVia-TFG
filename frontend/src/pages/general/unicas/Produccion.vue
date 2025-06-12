@@ -139,7 +139,9 @@
                   {{ movie.sagaCompleta.nombre }}
                 </a>
               </h4>
-              <p v-if="movie.sagaCompleta.descripcion">{{ movie.sagaCompleta.descripcion }}</p>
+              <p v-if="movie.sagaCompleta.descripcion" class="saga-description">
+                {{ movie.sagaCompleta.descripcion }}
+              </p>
               <div class="saga-movies">
                 <router-link  v-for="(film, index) in movie.sagaCompleta.producciones" :key="film.id" :to="`/produccion/${film.id}`" class="saga-movie" :class="{ 'current': film.id === movie.id }">
                   <span class="saga-number">{{ index + 1 }}</span>
@@ -473,30 +475,38 @@ export default {
     initFullMap() {
       if (!this.movie.rodajesCompletos || this.movie.rodajesCompletos.length === 0) return;
 
-      const bounds = new google.maps.LatLngBounds();
-      const map = new google.maps.Map(this.$refs.fullMap, {
-        mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
-        zoom: 6,
-      });
+      this.$nextTick(() => {
+        const mapDiv = this.$refs.fullMap;
+        if (!mapDiv) {
+          console.error('El contenedor del mapa completo no está disponible.');
+          return;
+        }
 
-      this.movie.rodajesCompletos.forEach(rodaje => {
-        if (!rodaje.ubicacion) return;
-
-        const position = new google.maps.LatLng(
-            rodaje.ubicacion.latitud,
-            rodaje.ubicacion.longitud
-        );
-
-        new google.maps.marker.AdvancedMarkerElement({
-          position,
-          map,
-          title: rodaje.ubicacion.nombre
+        const bounds = new google.maps.LatLngBounds();
+        const map = new google.maps.Map(mapDiv, {
+          mapId: import.meta.env.VITE_GOOGLE_MAP_ID,
+          zoom: 6,
         });
 
-        bounds.extend(position);
-      });
+        this.movie.rodajesCompletos.forEach(rodaje => {
+          if (!rodaje.ubicacion) return;
 
-      map.fitBounds(bounds);
+          const position = new google.maps.LatLng(
+              rodaje.ubicacion.latitud,
+              rodaje.ubicacion.longitud
+          );
+
+          new google.maps.marker.AdvancedMarkerElement({
+            position,
+            map,
+            title: rodaje.ubicacion.nombre
+          });
+
+          bounds.extend(position);
+        });
+
+        map.fitBounds(bounds);
+      });
     },
   },
   watch: {
@@ -952,6 +962,14 @@ export default {
   padding: 0.8rem;
   border-bottom: 1px solid var(--color-border);
   transition: all 0.3s ease;
+}
+
+.saga-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .saga-movie:hover {

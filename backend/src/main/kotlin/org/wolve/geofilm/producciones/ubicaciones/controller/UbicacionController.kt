@@ -89,7 +89,6 @@ class UbicacionController(
         ]
     )
     @PostMapping
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
     fun createUbicacion(@RequestBody request: UbicacionRequest): ResponseEntity<UbicacionResponse> {
         val ubicacionResponse = ubicacionService.createUbicacion(request)
         return ResponseEntity.status(HttpStatus.CREATED).body(ubicacionResponse)
@@ -105,7 +104,6 @@ class UbicacionController(
                 content = [Content()])
         ]
     )
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @PutMapping("/{id}")
     fun updateUbicacion(
         @PathVariable id: String,
@@ -128,7 +126,6 @@ class UbicacionController(
                 content = [Content()])
         ]
     )
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @DeleteMapping("/{id}")
     fun deleteUbicacion(@PathVariable id: String): ResponseEntity<Void> {
         ubicacionService.deleteUbicacion(id)

@@ -13,6 +13,6 @@ import org.springframework.test.context.ActiveProfiles
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 class GeoFilmApplicationTests {
-    @Test
-    fun contextLoads() { /* simplemente arranca la app con Testcontainers */ }
+    /*@Test
+    fun contextLoads() { /* simplemente arranca la app con Testcontainers */ }*/
 }

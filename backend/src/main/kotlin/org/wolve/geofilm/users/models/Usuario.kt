@@ -15,7 +15,7 @@ import java.time.LocalDate
 data class Usuario(
     @Id
     @Column(nullable = false, unique = true, columnDefinition = "varchar(255)")
-    val id: String = GuidGenerator().generarId(),
+    var id: String = GuidGenerator().generarId(),
 
     @Column(nullable = false, unique = true)
     private val username: String = "",
@@ -27,7 +27,7 @@ data class Usuario(
     var apellido: String = "",
 
     @Column(nullable = false, unique = true)
-    val email: String = "",
+    var email: String = "",
 
     @Column(nullable = true)
     var telefono: String = "",

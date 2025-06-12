@@ -267,7 +267,7 @@ export default {
           estreno: produccionData.estreno,
           clasificacionEdad: produccionData.clasificacionEdad,
           categorias: produccionData.categorias,
-          duracion: null,
+          duracion: produccionData.duracion,
           informacion: "",
           sinopsis: '',
           imagen: ''

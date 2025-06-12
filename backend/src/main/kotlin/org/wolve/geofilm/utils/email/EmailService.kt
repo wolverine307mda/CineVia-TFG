@@ -67,13 +67,12 @@ class EmailService(
         return if (ip == "0:0:0:0:0:0:0:1") "Localhost" else ip
     }
 
-    // Método común para enviar correos electrónicos
     private fun sendEmail(to: String, subject: String, htmlContent: String) {
         val message: MimeMessage = emailSender.createMimeMessage()
         val helper = MimeMessageHelper(message, true)
         helper.setTo(to)
         helper.setSubject(subject)
-        helper.setText(htmlContent, true)  // 'true' para que sea HTML
+        helper.setText(htmlContent, true)
         emailSender.send(message)
     }
 

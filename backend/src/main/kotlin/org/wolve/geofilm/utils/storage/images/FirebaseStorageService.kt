@@ -18,14 +18,12 @@ class FirebaseStorageService {
     private val bucketName = "movietrip-e3a91.firebasestorage.app"
 
     init {
-        // Carga las credenciales desde el archivo JSON
         val serviceAccountStream = this::class.java.classLoader
             .getResourceAsStream("mi-clave-firebase.json")
             ?: throw IllegalStateException("No se encontró el archivo 'mi-clave-firebase.json' en resources.")
 
         val credentials = GoogleCredentials.fromStream(serviceAccountStream)
 
-        // Crea el cliente de Storage usando las credenciales explícitamente
         this.storage = StorageOptions.newBuilder()
             .setCredentials(credentials)
             .build()
@@ -48,13 +46,9 @@ class FirebaseStorageService {
 
         storage.create(blobInfo, file.bytes)
 
-        // Otorga permiso de lectura pública a este objeto específico (no es la forma más recomendada para producción, reglas de seguridad son mejor)
-        // Consulta la documentación de GCP/Firebase para formas más seguras de compartir URLs si es necesario
         storage.createAcl(blobInfo.blobId, Acl.of(Acl.User.ofAllUsers(), Acl.Role.READER))
 
-        // Construye la URL pública. La forma más estándar es storage-download.googleapis.com
         return "https://storage-download.googleapis.com/$bucketName/$fullPath"
-        // La que tenías también funciona para objetos públicos: return "https://storage.googleapis.com/$bucketName/$fullPath"
     }
 
     /**
