@@ -1,0 +1,49 @@
+{
+  "AWSEBDockerrunVersion": 2,
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "869446329554.dkr.ecr.us-west-2.amazonaws.com/geofilm-app:latest",
+      "essential": true,
+      "portMappings": [
+        { "hostPort": 80, "containerPort": 8080 }
+      ],
+      "environment": [
+        { "name": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://postgres:5432/geofilm" },
+        { "name": "SPRING_DATASOURCE_USERNAME", "value": "wolverine307" },
+        { "name": "SPRING_DATASOURCE_PASSWORD", "value": "admin307204" },
+        { "name": "SPRING_REDIS_HOST", "value": "redis" },
+        { "name": "SPRING_REDIS_PORT", "value": "6379" }
+      ]
+    },
+    {
+      "name": "frontend",
+      "image": "869446329554.dkr.ecr.us-west-2.amazonaws.com/geofilm-frontend:latest",
+      "essential": false,
+      "portMappings": [
+        { "hostPort": 5173, "containerPort": 80 }
+      ]
+    },
+    {
+      "name": "postgres",
+      "image": "postgres:latest",
+      "essential": false,
+      "portMappings": [
+        { "hostPort": 5432, "containerPort": 5432 }
+      ],
+      "environment": [
+        { "name": "POSTGRES_DB", "value": "geofilm" },
+        { "name": "POSTGRES_USER", "value": "wolverine307" },
+        { "name": "POSTGRES_PASSWORD", "value": "admin307204" }
+      ]
+    },
+    {
+      "name": "redis",
+      "image": "redis:latest",
+      "essential": false,
+      "portMappings": [
+        { "hostPort": 6379, "containerPort": 6379 }
+      ]
+    }
+  ]
+}

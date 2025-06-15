@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:latest  # Imagen oficial de PostgreSQL
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: geofilm               # Nombre de la base de datos
+      POSTGRES_USER: wolverine307        # Usuario de la base de datos
+      POSTGRES_PASSWORD: admin307204     # Contraseña de la base de datos
+    ports:
+      - "5432:5432"                      # Exposición del puerto
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistencia de datos
+    networks:
+      - geofilm_network
+
+  redis:
+    image: redis:latest  # Imagen oficial de Redis
+    container_name: redis_cache
+    ports:
+      - "6379:6379"       # Puerto de Redis
+    volumes:
+      - redis_data:/data  # Persistencia opcional
+    networks:
+      - geofilm_network
+
+  app:
+    # image: geofilm-app:latest         # ❌ Comentado: causaba error al buscar imagen inexistente
+    build: .                             # ✅ Construye desde el Dockerfile local en ./backend
+    container_name: geofilm_app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/geofilm
+      SPRING_DATASOURCE_USERNAME: wolverine307
+      SPRING_DATASOURCE_PASSWORD: admin307204
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    ports:
+      - "8080:8080"                      # Puerto del backend
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./data/backups:/app/data/backups
+    networks:
+      - geofilm_network
+
+  frontend:
+    build:
+      context: ../frontend               # Ruta relativa al frontend
+      dockerfile: Dockerfile             # Dockerfile del frontend (usa nginx)
+    container_name: geofilm_frontend
+    ports:
+      - "5173:80"                        # Vue/Nginx expuesto en 5173
+    networks:
+      - geofilm_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  geofilm_network:

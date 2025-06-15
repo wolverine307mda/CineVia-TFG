@@ -1,0 +1,11 @@
+﻿<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fondo: escudo moderno para transmitir estabilidad y profesionalismo -->
+    <path d="M50,5 L90,25 L90,75 L50,95 L10,75 L10,25 Z" fill="#846ec6"/>
+    <!-- Círculo central: alude al carrete cinematográfico y la idea de foco -->
+    <circle cx="50" cy="50" r="20" fill="#FFFFFF"/>
+    <circle cx="50" cy="50" r="6" fill="#a78bfa"/>
+    <circle cx="50" cy="30" r="3" fill="#a78bfa"/>
+    <circle cx="50" cy="70" r="3" fill="#a78bfa"/>
+    <circle cx="30" cy="50" r="3" fill="#a78bfa"/>
+    <circle cx="70" cy="50" r="3" fill="#a78bfa"/>
+</svg>
